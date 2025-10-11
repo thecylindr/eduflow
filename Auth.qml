@@ -9,7 +9,7 @@ import QtCore
 ApplicationWindow {
     id: mainWindow
     width: 420
-    height: 480
+    height: 500
     visible: true
     title: "Вход в систему | " + appName
     color: "transparent"
@@ -17,10 +17,10 @@ ApplicationWindow {
     minimumWidth: 420
     maximumWidth: 580
     minimumHeight: 500
-    maximumHeight: 640
+    maximumHeight: 660
 
     property bool isWindowMaximized: false
-    property int normalHeight: 500 // Сохраняем нормальную высоту для восстановления
+    property int normalHeight: 540 // Сохраняем нормальную высоту для восстановления
 
     // Используем settingsManager вместо appSettings
     property bool useLocalServer: settingsManager.useLocalServer
@@ -43,14 +43,13 @@ ApplicationWindow {
         if (!isWindowMaximized) {
             if (useLocalServer) {
                 // Увеличиваем только высоту для локального сервера
-                normalHeight = 600;
-                mainWindow.height = 580;
+                normalHeight = 620;
+                mainWindow.height = 660;
             } else {
                 // Уменьшаем высоту для официального сервера
-                normalHeight = 500;
-                mainWindow.height = 480;
+                normalHeight = 540;
+                mainWindow.height = 560;
             }
-            // УБРАНО ЦЕНТРИРОВАНИЕ - окно остается на своем месте
         }
     }
 
@@ -102,7 +101,6 @@ ApplicationWindow {
             // Восстанавливаем предыдущий размер с сохранением высоты
             mainWindow.width = 420;
             mainWindow.height = normalHeight;
-            // УБРАНО ЦЕНТРИРОВАНИЕ - окно возвращается на прежнюю позицию
             isWindowMaximized = false;
         } else {
             // Запоминаем текущую высоту перед максимизацией
@@ -110,7 +108,6 @@ ApplicationWindow {
             // Устанавливаем максимальный размер
             mainWindow.width = mainWindow.maximumWidth;
             mainWindow.height = mainWindow.maximumHeight;
-            // УБРАНО ЦЕНТРИРОВАНИЕ - окно расширяется на своем месте
             isWindowMaximized = true;
         }
     }
@@ -381,7 +378,7 @@ ApplicationWindow {
                 font.bold: true
             }
 
-            // Иконка GitFlic
+            // Иконка на git
             Rectangle {
                 id: gitflicButton
                 width: 16
@@ -565,7 +562,7 @@ ApplicationWindow {
         Rectangle {
             id: serverConfigBox
             width: parent.width * 0.78
-            height: useLocalServer ? 180 : 60
+            height: useLocalServer ? 210 : 60
             anchors {
                 horizontalCenter: parent.horizontalCenter
                 top: errorMessageContainer.bottom
@@ -723,16 +720,16 @@ ApplicationWindow {
                     // Кнопки управления
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 12
+                        spacing: 10
 
                         Button {
-                            text: "💾 Сохранить"
+                            text: "Сохранить"
                             Layout.fillWidth: true
                             Layout.preferredHeight: 32
                             onClicked: saveServerConfig()
 
                             background: Rectangle {
-                                radius: 6
+                                radius: 8
                                 color: parent.down ? "#27ae60" : "#2ecc71"
                             }
 
@@ -747,13 +744,13 @@ ApplicationWindow {
                         }
 
                         Button {
-                            text: "🔄 Сбросить"
+                            text: "Сбросить"
                             Layout.fillWidth: true
                             Layout.preferredHeight: 32
                             onClicked: resetSettings()
 
                             background: Rectangle {
-                                radius: 6
+                                radius: 8
                                 color: parent.down ? "#c0392b" : "#e74c3c"
                             }
 

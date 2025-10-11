@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(student VERSION 0.0.37 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)  # Явно устанавливаем стандарт C++17
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Quick Core)
@@ -25,7 +25,6 @@ qt_add_qml_module(student
         Main.qml
 )
 
-# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 set_target_properties(student PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER "com.securesystems.student"
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}

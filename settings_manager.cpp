@@ -13,13 +13,12 @@ SettingsManager::SettingsManager(QObject *parent) : QObject(parent)
         dir.mkpath(".");
     }
     m_configPath = dir.filePath("config.json");
-
     qDebug() << "Config file path:" << m_configPath;
 
     // Значения по умолчанию
     m_useLocalServer = false;
     m_serverAddress = "http://localhost:5000";
-    m_apiPath = "/api";
+    m_authToken = "";
 
     loadSettings();
 }
@@ -30,19 +29,16 @@ void SettingsManager::loadSettings()
         std::ifstream file(m_configPath.toStdString());
         if (file.good()) {
             m_settings = nlohmann::json::parse(file);
-
             m_useLocalServer = m_settings.value("useLocalServer", false);
             m_serverAddress = QString::fromStdString(m_settings.value("serverAddress", "http://localhost:5000"));
-            m_apiPath = QString::fromStdString(m_settings.value("apiPath", "/api"));
-
-            qDebug() << "Settings loaded:" << m_useLocalServer << m_serverAddress << m_apiPath;
+            m_authToken = QString::fromStdString(m_settings.value("authToken", ""));
+            qDebug() << "Settings loaded:" << m_useLocalServer << m_serverAddress << "Token:" << (m_authToken.isEmpty() ? "empty" : "present");
         } else {
             qDebug() << "Config file doesn't exist, using defaults";
         }
     } catch (const std::exception &e) {
         qWarning() << "Error loading settings:" << e.what();
     }
-
     emit settingsChanged();
 }
 
@@ -51,12 +47,11 @@ void SettingsManager::saveSettings()
     try {
         m_settings["useLocalServer"] = m_useLocalServer;
         m_settings["serverAddress"] = m_serverAddress.toStdString();
-        m_settings["apiPath"] = m_apiPath.toStdString();
+        m_settings["authToken"] = m_authToken.toStdString();
 
         std::ofstream file(m_configPath.toStdString());
         file << m_settings.dump(4);
         file.close();
-
         qDebug() << "Settings saved to:" << m_configPath;
     } catch (const std::exception &e) {
         qWarning() << "Error saving settings:" << e.what();
@@ -66,7 +61,7 @@ void SettingsManager::saveSettings()
 // Геттеры
 bool SettingsManager::useLocalServer() const { return m_useLocalServer; }
 QString SettingsManager::serverAddress() const { return m_serverAddress; }
-QString SettingsManager::apiPath() const { return m_apiPath; }
+QString SettingsManager::authToken() const { return m_authToken; }
 
 // Сеттеры
 void SettingsManager::setUseLocalServer(bool value) {
@@ -81,8 +76,8 @@ void SettingsManager::setServerAddress(const QString &value) {
     emit settingsChanged();
 }
 
-void SettingsManager::setApiPath(const QString &value) {
-    m_apiPath = value;
+void SettingsManager::setAuthToken(const QString &value) {
+    m_authToken = value;
     saveSettings();
     emit settingsChanged();
 }
