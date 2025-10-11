@@ -3,38 +3,39 @@
 
 #include <QObject>
 #include <QString>
-#include "json.hpp"
 
 class SettingsManager : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(bool useLocalServer READ useLocalServer WRITE setUseLocalServer NOTIFY settingsChanged)
-    Q_PROPERTY(QString serverAddress READ serverAddress WRITE setServerAddress NOTIFY settingsChanged)
-    Q_PROPERTY(QString authToken READ authToken WRITE setAuthToken NOTIFY settingsChanged)
+    Q_PROPERTY(bool useLocalServer READ useLocalServer WRITE setUseLocalServer NOTIFY useLocalServerChanged)
+    Q_PROPERTY(QString serverAddress READ serverAddress WRITE setServerAddress NOTIFY serverAddressChanged)
+    Q_PROPERTY(QString apiPath READ apiPath WRITE setApiPath NOTIFY apiPathChanged)
 
 public:
     explicit SettingsManager(QObject *parent = nullptr);
 
     bool useLocalServer() const;
+    void setUseLocalServer(bool useLocalServer);
+
     QString serverAddress() const;
-    QString authToken() const;
+    void setServerAddress(const QString &serverAddress);
 
-public slots:
-    void setUseLocalServer(bool value);
-    void setServerAddress(const QString &value);
-    void setAuthToken(const QString &value);
-    void saveSettings();
-    void loadSettings();
-
-signals:
-    void settingsChanged();
+    QString apiPath() const;
+    void setApiPath(const QString &apiPath);
 
 private:
-    QString m_configPath;
-    nlohmann::json m_settings;
+    QString getConfigPath() const;
+    void loadSettings();
+    void saveSettings();
+
     bool m_useLocalServer;
     QString m_serverAddress;
-    QString m_authToken;
+    QString m_apiPath;
+
+signals:
+    void useLocalServerChanged();
+    void serverAddressChanged();
+    void apiPathChanged();
 };
 
 #endif

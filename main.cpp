@@ -4,11 +4,13 @@
 #include <QQmlContext>
 #include "settings_manager.h"
 
+
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
     // Инициализация менеджера настроек
+
     SettingsManager settingsManager;
 
     QQmlApplicationEngine engine;
@@ -38,3 +40,5 @@ int main(int argc, char *argv[])
 
     return app.exec();
 }
+
+

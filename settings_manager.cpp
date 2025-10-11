@@ -1,83 +1,151 @@
 #include "settings_manager.h"
 #include <QStandardPaths>
 #include <QDir>
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QDebug>
-#include <fstream>
-#include <exception>
+#include <QCoreApplication>
 
-SettingsManager::SettingsManager(QObject *parent) : QObject(parent)
+SettingsManager::SettingsManager(QObject *parent)
+    : QObject(parent)
+    , m_useLocalServer(false)
+    , m_serverAddress("http://localhost:5000")
+    , m_apiPath("/api")
 {
-    QString configDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
-    QDir dir(configDir);
-    if (!dir.exists()) {
-        dir.mkpath(".");
-    }
-    m_configPath = dir.filePath("config.json");
-    qDebug() << "Config file path:" << m_configPath;
-
-    // Значения по умолчанию
-    m_useLocalServer = false;
-    m_serverAddress = "http://localhost:5000";
-    m_authToken = "";
+    // Устанавливаем правильные имена приложения ДО загрузки настроек
+    QCoreApplication::setApplicationName("EduFlow");
+    QCoreApplication::setOrganizationName("EduFlow");
+    QCoreApplication::setOrganizationDomain("eduflow.com");
 
     loadSettings();
 }
 
+bool SettingsManager::useLocalServer() const
+{
+    return m_useLocalServer;
+}
+
+void SettingsManager::setUseLocalServer(bool useLocalServer)
+{
+    if (m_useLocalServer != useLocalServer) {
+        m_useLocalServer = useLocalServer;
+        qDebug() << "Setting useLocalServer to:" << m_useLocalServer;
+        emit useLocalServerChanged();
+        saveSettings();
+    }
+}
+
+QString SettingsManager::serverAddress() const
+{
+    return m_serverAddress;
+}
+
+void SettingsManager::setServerAddress(const QString &serverAddress)
+{
+    if (m_serverAddress != serverAddress) {
+        m_serverAddress = serverAddress;
+        qDebug() << "Setting serverAddress to:" << m_serverAddress;
+        emit serverAddressChanged();
+        saveSettings();
+    }
+}
+
+QString SettingsManager::apiPath() const
+{
+    return m_apiPath;
+}
+
+void SettingsManager::setApiPath(const QString &apiPath)
+{
+    if (m_apiPath != apiPath) {
+        m_apiPath = apiPath;
+        emit apiPathChanged();
+        saveSettings();
+    }
+}
+
+QString SettingsManager::getConfigPath() const
+{
+    QString configDir;
+
+    // Принудительно используем правильные имена
+    QString appName = "EduFlow";
+    QString orgName = "EduFlow";
+
+#ifdef Q_OS_WINDOWS
+    // Windows: AppData/Roaming/EduFlow/EduFlow
+    configDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    // Переопределяем путь с правильными именами
+    configDir = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + "/" + orgName + "/" + appName;
+#else
+    // Linux: ~/.config/EduFlow/EduFlow
+    configDir = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + "/" + orgName + "/" + appName;
+#endif
+
+    QDir dir(configDir);
+    if (!dir.exists()) {
+        bool created = dir.mkpath(".");
+        qDebug() << "Config directory created:" << created << "at:" << configDir;
+    }
+
+    QString configFile = configDir + "/config.json";
+    qDebug() << "Config file path:" << configFile;
+    return configFile;
+}
+
 void SettingsManager::loadSettings()
 {
-    try {
-        std::ifstream file(m_configPath.toStdString());
-        if (file.good()) {
-            m_settings = nlohmann::json::parse(file);
-            m_useLocalServer = m_settings.value("useLocalServer", false);
-            m_serverAddress = QString::fromStdString(m_settings.value("serverAddress", "http://localhost:5000"));
-            m_authToken = QString::fromStdString(m_settings.value("authToken", ""));
-            qDebug() << "Settings loaded:" << m_useLocalServer << m_serverAddress << "Token:" << (m_authToken.isEmpty() ? "empty" : "present");
+    QString configFile = getConfigPath();
+
+    QFile file(configFile);
+    if (file.exists()) {
+        qDebug() << "Config file exists, loading...";
+        if (file.open(QIODevice::ReadOnly)) {
+            QByteArray data = file.readAll();
+            file.close();
+
+            QJsonDocument doc = QJsonDocument::fromJson(data);
+            if (!doc.isNull() && doc.isObject()) {
+                QJsonObject obj = doc.object();
+
+                bool oldUseLocal = m_useLocalServer;
+                QString oldAddress = m_serverAddress;
+
+                m_useLocalServer = obj.value("useLocalServer").toBool(false);
+                m_serverAddress = obj.value("serverAddress").toString("http://localhost:5000");
+                m_apiPath = obj.value("apiPath").toString("/api");
+
+                qDebug() << "Config loaded successfully:";
+            } else {
+                qDebug() << "Invalid JSON in config file, using defaults";
+            }
         } else {
-            qDebug() << "Config file doesn't exist, using defaults";
+            qDebug() << "Failed to open config file for reading, using defaults";
         }
-    } catch (const std::exception &e) {
-        qWarning() << "Error loading settings:" << e.what();
+    } else {
+        qDebug() << "Config file not found, using defaults and creating new config";
+        saveSettings(); // Create with default values
     }
-    emit settingsChanged();
 }
 
 void SettingsManager::saveSettings()
 {
-    try {
-        m_settings["useLocalServer"] = m_useLocalServer;
-        m_settings["serverAddress"] = m_serverAddress.toStdString();
-        m_settings["authToken"] = m_authToken.toStdString();
+    QString configFile = getConfigPath();
 
-        std::ofstream file(m_configPath.toStdString());
-        file << m_settings.dump(4);
+    QFile file(configFile);
+    if (file.open(QIODevice::WriteOnly)) {
+        QJsonObject obj;
+        obj["useLocalServer"] = m_useLocalServer;
+        obj["serverAddress"] = m_serverAddress;
+        obj["apiPath"] = m_apiPath;
+
+        QJsonDocument doc(obj);
+        QByteArray data = doc.toJson(QJsonDocument::Indented);
+
+        qint64 bytesWritten = file.write(data);
         file.close();
-        qDebug() << "Settings saved to:" << m_configPath;
-    } catch (const std::exception &e) {
-        qWarning() << "Error saving settings:" << e.what();
+    } else {
+        qDebug() << "Failed to open config file for writing:" << file.errorString();
     }
-}
-
-// Геттеры
-bool SettingsManager::useLocalServer() const { return m_useLocalServer; }
-QString SettingsManager::serverAddress() const { return m_serverAddress; }
-QString SettingsManager::authToken() const { return m_authToken; }
-
-// Сеттеры
-void SettingsManager::setUseLocalServer(bool value) {
-    m_useLocalServer = value;
-    saveSettings();
-    emit settingsChanged();
-}
-
-void SettingsManager::setServerAddress(const QString &value) {
-    m_serverAddress = value;
-    saveSettings();
-    emit settingsChanged();
-}
-
-void SettingsManager::setAuthToken(const QString &value) {
-    m_authToken = value;
-    saveSettings();
-    emit settingsChanged();
 }

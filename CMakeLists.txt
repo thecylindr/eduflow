@@ -21,8 +21,19 @@ qt_add_qml_module(student
     VERSION 1.0
     QML_FILES
         SplashScreen.qml
-        Auth.qml
         Main.qml
+
+        # Формы для авторизации/регистрации
+        auth/Auth.qml
+        auth/AuthAPI.qml
+        auth/AuthTitleBar.qml
+        auth/ServerConfig.qml
+        auth/LoginForm.qml
+        auth/BackgroundPolygons.qml
+        auth/Message.qml
+        auth/CopyrightFooter.qml
+        auth/LoadingAnimation.qml
+
 )
 
 set_target_properties(student PROPERTIES

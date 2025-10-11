@@ -575,7 +575,7 @@ Window {
     Loader {
         id: mainLoader
         active: false
-        source: "Auth.qml"
+        source: "auth/Auth.qml"
         onLoaded: if (item) item.show()
     }
 }
