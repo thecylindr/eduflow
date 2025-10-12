@@ -22,11 +22,7 @@ Rectangle {
         anchors.centerIn: parent
         text: {
             var baseText = "Вход в систему | " + appName;
-            if (windowWidth > 500) {
-                return baseText + " | " + (useLocalServer ? "Локальный сервер" : "Официальный сервер");
-            } else {
-                return baseText;
-            }
+            return baseText;
         }
         color: "#2c3e50"
         font.pixelSize: {
@@ -45,7 +41,7 @@ Rectangle {
         color: gitflicMouseArea.containsMouse ? "#4CAF50" : "transparent"
         anchors {
             left: parent.left
-            leftMargin: 10
+            leftMargin: 1
             verticalCenter: parent.verticalCenter
         }
 
@@ -146,30 +142,33 @@ Rectangle {
         }
     }
 
-    MouseArea {
-        id: dragArea
-        anchors {
-            left: gitflicButton.right
-            right: buttonRowsPanel.left
-            top: parent.top
-            bottom: parent.bottom
-            leftMargin: 5
-        }
-        property point clickPos: Qt.point(0, 0)
+    // Универсальная область для перетаскивания окна
+                MouseArea {
+                    id: dragArea
+                    anchors {
+                        left: gitflicButton.right
+                        right: buttonRowsPanel.left
+                        top: parent.top
+                        bottom: parent.bottom
+                        leftMargin: 5
+                    }
+                    drag.target: null
+                    property point clickPos: Qt.point(0, 0)
+                    onPressed: function(mouse) {
+                        if (mouse.button === Qt.LeftButton) {
+                            clickPos = Qt.point(mouse.x, mouse.y)
+                            mainWindow.startSystemMove()
+                        }
+                    }
+                    onPositionChanged: function(mouse) {
+                        if (mouse.buttons === Qt.LeftButton && !mainWindow.startSystemMove) {
+                            var delta = Qt.point(mouse.x - clickPos.x, mouse.y - clickPos.y)
+                            mainWindow.x += delta.x
+                            mainWindow.y += delta.y
+                        }
+                    }
 
-        onPressed: function(mouse) {
-            if (mouse.button === Qt.LeftButton) {
-                clickPos = Qt.point(mouse.x, mouse.y)
-            }
-        }
 
-        onPositionChanged: function(mouse) {
-            if (mouse.buttons === Qt.LeftButton) {
-                var delta = Qt.point(mouse.x - clickPos.x, mouse.y - clickPos.y)
-                mainWindow.x += delta.x
-                mainWindow.y += delta.y
-            }
-        }
     }
 
     // Элементы для изменения размера окна

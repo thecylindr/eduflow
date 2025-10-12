@@ -40,7 +40,7 @@ Rectangle {
 
             Rectangle {
                 Layout.fillWidth: true
-                height: 36
+                height: 32
                 radius: 5
                 border.color: loginField.activeFocus ? "#3498db" : "#d0d0d0"
                 border.width: loginField.activeFocus ? 1.5 : 1
@@ -51,7 +51,7 @@ Rectangle {
                     anchors.fill: parent
                     anchors.margins: 8
                     verticalAlignment: TextInput.AlignVCenter
-                    font.pixelSize: 11
+                    font.pixelSize: 12
                     color: "#000000"
                     selectByMouse: true
                 }
@@ -63,7 +63,7 @@ Rectangle {
                     text: "Введите логин или e-mail"
                     color: "#a0a0a0"
                     visible: !loginField.text && !loginField.activeFocus
-                    font.pixelSize: 11
+                    font.pixelSize: 12
                 }
             }
         }
@@ -84,7 +84,7 @@ Rectangle {
 
                 Rectangle {
                     Layout.fillWidth: true
-                    height: 36
+                    height: 32
                     radius: 5
                     border.color: passwordField.activeFocus ? "#3498db" : "#d0d0d0"
                     border.width: passwordField.activeFocus ? 1.5 : 1
@@ -95,7 +95,7 @@ Rectangle {
                         anchors.fill: parent
                         anchors.margins: 8
                         verticalAlignment: TextInput.AlignVCenter
-                        font.pixelSize: 11
+                        font.pixelSize: 12
                         echoMode: showPasswordButton.checked ? TextInput.Normal : TextInput.Password
                         color: "#000000"
                         selectByMouse: true
@@ -108,7 +108,7 @@ Rectangle {
                         text: "Введите пароль"
                         color: "#a0a0a0"
                         visible: !passwordField.text && !passwordField.activeFocus
-                        font.pixelSize: 11
+                        font.pixelSize: 12
                     }
                 }
 
@@ -179,7 +179,7 @@ Rectangle {
 
             Text {
                 text: "Забыли пароль?"
-                font.pixelSize: 11
+                font.pixelSize: 12
                 color: "#3498db"
                 opacity: 0.9
 
@@ -196,7 +196,7 @@ Rectangle {
 
             Text {
                 text: "Регистрация"
-                font.pixelSize: 11
+                font.pixelSize: 12
                 color: "#3498db"
                 opacity: 0.9
 
@@ -204,8 +204,8 @@ Rectangle {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        if (typeof showError === "function") {
-                            showError("Регистрация новых пользователей временно отключена");
+                        if (typeof mainWindow !== "undefined" && mainWindow.showRegistrationForm) {
+                            mainWindow.showRegistrationForm();
                         }
                     }
                 }

@@ -33,6 +33,7 @@ qt_add_qml_module(student
         auth/Message.qml
         auth/CopyrightFooter.qml
         auth/LoadingAnimation.qml
+        auth/RegistrationForm.qml
 
 )
 

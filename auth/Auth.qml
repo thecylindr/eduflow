@@ -32,8 +32,11 @@ ApplicationWindow {
     property int remotePort: 5000
 
     property bool _isLoading: false
-    property int _minLoadingTime: 500 // время ожидания (в миллисекундах)
+    property int _minLoadingTime: 500
     property var _loginResult: null
+
+    property bool _showingRegistration: false
+    property int registrationExtraHeight: 110
 
     // Плавная анимация изменения высоты окна
     Behavior on height {
@@ -45,35 +48,40 @@ ApplicationWindow {
 
     // Инициализация при загрузке
     Component.onCompleted: {
-        console.log("Загружены настройки:",
-            "useLocalServer:", settingsManager.useLocalServer,
-            "serverAddress:", settingsManager.serverAddress);
-
         serverConfig.updateFromSettings();
         updateWindowHeight();
     }
 
-    // Обнови функцию saveServerConfig:
+    // Функции для работы с настройками сервера
     function saveServerConfig(serverAddress) {
         settingsManager.serverAddress = serverAddress;
-        // Принудительно обновляем UI после сохранения
         serverConfig.updateFromSettings();
         showSuccess("Настройки сервера сохранены");
     }
 
-    // Обнови функцию resetSettings:
     function resetSettings() {
         settingsManager.serverAddress = "http://localhost:5000";
         serverConfig.updateFromSettings();
         showSuccess("Настройки сброшены к значениям по умолчанию.");
     }
 
-    // Обновление высоты окна
+    // Переключение между формами
+    function showRegistrationForm() {
+        _showingRegistration = true;
+        updateWindowHeight();
+    }
+
+    function showLoginForm() {
+        _showingRegistration = false;
+        updateWindowHeight();
+    }
+
+    // Обновление высоты окна (исправленная версия)
     function updateWindowHeight() {
         if (!isWindowMaximized) {
             var targetHeight = baseHeight;
 
-            if (settingsManager.useLocalServer) {
+            if (settingsManager.useLocalServer && !_showingRegistration) {
                 targetHeight += localServerExtraHeight;
             }
 
@@ -81,11 +89,14 @@ ApplicationWindow {
                 targetHeight += errorExtraHeight;
             }
 
+            if (_showingRegistration) {
+                targetHeight += registrationExtraHeight;
+            }
+
             mainWindow.height = targetHeight;
         }
     }
 
-    // Функции
     function toggleMaximize() {
         if (isWindowMaximized) {
             mainWindow.showNormal();
@@ -116,6 +127,126 @@ ApplicationWindow {
         }
     }
 
+    // Функция регистрации
+    function attemptRegistration() {
+        if (!isRegistrationFormValid() || _isLoading) return;
+
+        _isLoading = true;
+        var startTime = Date.now();
+        showLoading();
+
+        // Используем parseFullName для получения отдельных компонентов
+        var nameData = registrationForm.parseFullName();
+
+        var userData = {
+            email: registrationForm.emailField.text,
+            password: registrationForm.passwordField.text,
+            firstName: nameData.firstName,
+            lastName: nameData.lastName,
+            middleName: nameData.middleName,
+            phoneNumber: registrationForm.phoneField.text
+        };
+
+        sendRegistrationRequest(userData, function(result) {
+            var elapsed = Date.now() - startTime;
+            var remaining = Math.max(_minLoadingTime - elapsed, 0);
+
+            registrationResultTimer.interval = remaining;
+            registrationResultTimer.result = result;
+            registrationResultTimer.start();
+        });
+    }
+
+    // Таймер для обработки результата регистрации
+    Timer {
+        id: registrationResultTimer
+        property var result
+        onTriggered: {
+            hideLoading();
+            _isLoading = false;
+            if (result.success) {
+                showSuccess(result.message);
+                showLoginForm();
+                registrationForm.clearForm();
+            } else {
+                showError(result.message);
+            }
+        }
+    }
+
+    function sendRegistrationRequest(userData, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.timeout = 10000;
+
+        var baseUrl = settingsManager.useLocalServer ?
+            settingsManager.serverAddress :
+            (remoteApiBaseUrl + ":" + remotePort);
+        var url = baseUrl + "/register";
+
+        console.log("Отправка запроса регистрации на:", url);
+        console.log("Данные:", {
+            email: userData.email,
+            password: "***",
+            firstName: userData.firstName,
+            lastName: userData.lastName
+        });
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.DONE) {
+                console.log("Статус ответа:", xhr.status);
+                console.log("Текст ответа:", xhr.responseText);
+
+                try {
+                    var response = JSON.parse(xhr.responseText);
+
+                    if (xhr.status === 201) {
+                        callback({
+                            success: true,
+                            message: response.message || "Регистрация успешна! Теперь вы можете войти в систему."
+                        });
+                    } else {
+                        callback({
+                            success: false,
+                            message: response.error || "Ошибка регистрации: " + xhr.status
+                        });
+                    }
+                } catch (e) {
+                    console.log("Ошибка парсинга JSON:", e);
+                    callback({
+                        success: false,
+                        message: "Неверный формат ответа сервера"
+                    });
+                }
+            }
+        };
+
+        xhr.ontimeout = function() {
+            callback({ success: false, message: "Таймаут соединения" });
+        };
+
+        xhr.onerror = function() {
+            callback({ success: false, message: "Ошибка сети" });
+        };
+
+        try {
+            xhr.open("POST", url, true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.send(JSON.stringify(userData));
+        } catch (error) {
+            callback({ success: false, message: "Ошибка отправки: " + error });
+        }
+    }
+
+    // Обновленная функция проверки валидности формы регистрации
+    function isRegistrationFormValid() {
+        return registrationForm.hasValidFullName &&
+               registrationForm.emailField.text.length > 0 &&
+               registrationForm.passwordField.text.length > 0 &&
+               registrationForm.confirmPasswordField.text.length > 0 &&
+               registrationForm.passwordField.text === registrationForm.confirmPasswordField.text;
+    }
+
+    // Функция авторизации
     function attemptLogin() {
         if (!isFormValid() || _isLoading) return;
 
@@ -140,7 +271,6 @@ ApplicationWindow {
         var xhr = new XMLHttpRequest();
         xhr.timeout = 10000;
 
-        // Используем настройки напрямую из SettingsManager
         var baseUrl = settingsManager.useLocalServer ?
             settingsManager.serverAddress :
             (remoteApiBaseUrl + ":" + remotePort);
@@ -232,22 +362,34 @@ ApplicationWindow {
     function showLoading() {
         loadingAnimation.visible = true;
         loadingAnimation.opacity = 1;
-        loginForm.opacity = 0.6;
-        loginForm.loginButton.enabled = false;
+        // Исправлено: устанавливаем прозрачность для активной формы
+        if (_showingRegistration) {
+            registrationForm.opacity = 0.6;
+            registrationForm.registerButton.enabled = false;
+        } else {
+            loginForm.opacity = 0.6;
+            loginForm.loginButton.enabled = false;
+        }
     }
 
     function hideLoading() {
         loadingAnimation.opacity = 0;
         loadingAnimation.visible = false;
-        loginForm.opacity = 0.95;
-        loginForm.loginButton.enabled = true;
+        // Исправлено: восстанавливаем прозрачность для активной формы
+        if (_showingRegistration) {
+            registrationForm.opacity = 0.95;
+            registrationForm.registerButton.enabled = true;
+        } else {
+            loginForm.opacity = 0.95;
+            loginForm.loginButton.enabled = true;
+        }
     }
 
     function isFormValid() {
         return loginForm.loginField.text.length > 0 && loginForm.passwordField.text.length > 0;
     }
 
-    // Основной контейнер с скругленными углами
+    // Основной контейнер
     Rectangle {
         id: windowContainer
         anchors.fill: parent
@@ -256,7 +398,6 @@ ApplicationWindow {
         clip: true
         z: -3
 
-        // Градиентный фон
         Rectangle {
             id: background
             anchors.fill: parent
@@ -268,13 +409,11 @@ ApplicationWindow {
             radius: 20
         }
 
-        // Многоугольники на фоне
         BackgroundPolygons {
             id: backgroundPolygons
             anchors.fill: parent
         }
 
-        // Полупрозрачная верхняя панель
         AuthTitleBar {
             id: titleBar
             anchors {
@@ -289,7 +428,6 @@ ApplicationWindow {
             onClose: Qt.quit()
         }
 
-        // Сообщение об ошибке (располагается ПОД заголовком)
         Message {
             id: errorMessage
             anchors {
@@ -305,7 +443,6 @@ ApplicationWindow {
             onCloseMessage: showError("")
         }
 
-        // Сообщение об успехе (располагается ПОД сообщением об ошибке)
         Message {
             id: successMessage
             anchors {
@@ -321,7 +458,6 @@ ApplicationWindow {
             onCloseMessage: showSuccess("")
         }
 
-        // Блок выбора сервера (располагается ПОД сообщениями)
         ServerConfig {
             id: serverConfig
             anchors {
@@ -330,6 +466,7 @@ ApplicationWindow {
                 topMargin: 24
             }
             width: parent.width * 0.78
+            visible: !_showingRegistration // Скрываем настройки сервера при регистрации
 
             onServerTypeToggled: function(useLocal) {
                 settingsManager.useLocalServer = useLocal;
@@ -345,31 +482,43 @@ ApplicationWindow {
             }
         }
 
-        // Форма входа
+        RegistrationForm {
+            id: registrationForm
+            anchors {
+                horizontalCenter: parent.horizontalCenter
+                top: successMessage.bottom
+                topMargin: _showingRegistration ? 24 : 32
+            }
+            width: parent.width * 0.78
+            visible: _showingRegistration
+
+            onAttemptRegistration: mainWindow.attemptRegistration()
+            onShowLoginForm: mainWindow.showLoginForm()
+        }
+
         LoginForm {
             id: loginForm
             anchors {
                 horizontalCenter: parent.horizontalCenter
-                top: serverConfig.bottom
+                top: serverConfig.visible ? serverConfig.bottom : successMessage.bottom // Динамическая привязка
                 topMargin: 32
             }
             width: parent.width * 0.78
+            visible: !_showingRegistration
 
             onAttemptLogin: mainWindow.attemptLogin()
         }
 
-        // Анимация загрузки
         LoadingAnimation {
             id: loadingAnimation
             anchors.centerIn: parent
         }
 
-        // Нижняя информация
         CopyrightFooter {
             anchors {
                 horizontalCenter: parent.horizontalCenter
                 bottom: parent.bottom
-                bottomMargin: 15
+                bottomMargin: 10
             }
         }
 
@@ -386,7 +535,6 @@ ApplicationWindow {
         }
     }
 
-    // Обработчики изменений настроек
     Connections {
         target: settingsManager
 

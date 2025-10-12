@@ -18,14 +18,10 @@ Rectangle {
 
     // Функция синхронизации UI с настройками
     function updateFromSettings() {
-        console.log("ServerConfig: синхронизация с настройками, useLocalServer =", settingsManager.useLocalServer);
         serverAddressField.text = settingsManager.serverAddress;
     }
 
     Component.onCompleted: {
-        console.log("ServerConfig загружен, текущие настройки:",
-            "useLocalServer:", settingsManager.useLocalServer,
-            "serverAddress:", settingsManager.serverAddress);
         updateFromSettings();
     }
 
@@ -33,11 +29,9 @@ Rectangle {
     Connections {
         target: settingsManager
         function onUseLocalServerChanged() {
-            console.log("ServerConfig: обнаружено изменение useLocalServer =", settingsManager.useLocalServer);
             updateFromSettings();
         }
         function onServerAddressChanged() {
-            console.log("ServerConfig: обнаружено изменение serverAddress =", settingsManager.serverAddress);
             serverAddressField.text = settingsManager.serverAddress;
         }
     }
