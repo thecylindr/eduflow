@@ -108,7 +108,6 @@ ApplicationWindow {
         }
     }
 
-    // Таймер для минимального времени загрузки
     Timer {
         id: loadingTimer
         interval: 1
@@ -118,7 +117,19 @@ ApplicationWindow {
             if (_loginResult) {
                 if (_loginResult.success) {
                     showSuccess(_loginResult.message);
-                    console.log("Успешный вход! Токен:", _loginResult.token);
+
+                    // Создаем главное окно
+                    var mainComponent = Qt.createComponent("../main/Main.qml");
+
+                    if (mainComponent.status === Component.Ready) {
+                        var mainWin = mainComponent.createObject(null, {
+                            "authToken": _loginResult.token
+                        });
+                        mainWin.show();
+                        mainWindow.close(); // Закрываем текущее окно авторизации
+                    } else {
+                        showError("Ошибка загрузки главного окна: " + mainComponent.errorString());
+                    }
                 } else {
                     showError(_loginResult.message);
                 }
@@ -214,18 +225,18 @@ ApplicationWindow {
                     console.log("Ошибка парсинга JSON:", e);
                     callback({
                         success: false,
-                        message: "Неверный формат ответа сервера"
+                        message: "Неверный формат ответа сервера."
                     });
                 }
             }
         };
 
         xhr.ontimeout = function() {
-            callback({ success: false, message: "Таймаут соединения" });
+            callback({ success: false, message: "Таймаут соединения." });
         };
 
         xhr.onerror = function() {
-            callback({ success: false, message: "Ошибка сети" });
+            callback({ success: false, message: "Ошибка сети или неверные параметры." });
         };
 
         try {

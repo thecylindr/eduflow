@@ -59,7 +59,7 @@ Rectangle {
         anchors {
             top: parent.top
             right: parent.right
-            margins: 5
+            margins: 2
         }
 
         Text {

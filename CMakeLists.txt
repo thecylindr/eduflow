@@ -21,9 +21,8 @@ qt_add_qml_module(student
     VERSION 1.0
     QML_FILES
         SplashScreen.qml
-        Main.qml
 
-        # Формы для авторизации/регистрации
+        # Формы для авторизации & регистрации
         auth/Auth.qml
         auth/AuthAPI.qml
         auth/AuthTitleBar.qml
@@ -34,6 +33,20 @@ qt_add_qml_module(student
         auth/CopyrightFooter.qml
         auth/LoadingAnimation.qml
         auth/RegistrationForm.qml
+
+        # Формы главного меню
+        main/Main.qml
+        main/MainTitleBar.qml
+        main/TeachersTab.qml
+        main/GroupsTab.qml
+        main/StudentsTab.qml
+        main/PortfolioTab.qml
+        main/EventsTab.qml
+        main/SideBar.qml
+        main/SideBarButton.qml
+        main/ProfileSettingsDialog.qml
+        main/BackgroundShapes.qml
+        main/mainAPI.qml
 
 )
 
