@@ -1,658 +1,570 @@
+// main/Main.qml
 import QtQuick 2.15
 import QtQuick.Window 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import Qt5Compat.GraphicalEffects
 
 ApplicationWindow {
     id: mainWindow
     width: 1200
     height: 800
-    minimumWidth: 1000
-    minimumHeight: 700
     visible: true
-    title: "EduFlow - Управление базой данных"
+    title: "EduFlow - Система управления образованием"
     color: "transparent"
     flags: Qt.Window | Qt.FramelessWindowHint
+    minimumWidth: 1000
+    minimumHeight: 700
 
+    property string authToken: ""
     property bool isWindowMaximized: false
-    property bool isSideBarExpanded: true
-    property string authToken: "test"
-    property string apiBaseUrl: "http://deltablast.fun:5000"
+    property string currentView: "dashboard"
+    property bool isLoading: false
 
-    // Текущая активная вкладка
-    property int currentTabIndex: 0
+    // Сообщения
+    property string _errorMessage: ""
+    property bool _showingError: false
+    property string _successMessage: ""
+    property bool _showingSuccess: false
 
-    // Модели данных
-    ListModel { id: teachersModel }
-    ListModel { id: groupsModel }
-    ListModel { id: studentsModel }
-    ListModel { id: portfolioModel }
-    ListModel { id: eventsModel }
+    // Данные
+    property var teachers: []
+    property var students: []
+    property var groups: []
+    property var portfolio: []
+    property var events: []
 
-    // Главный контейнер
+    // API ошибки
+    property var apiErrors: ({
+        "teachers": "",
+        "students": "",
+        "groups": "",
+        "portfolio": "",
+        "events": "",
+        "dashboard": ""
+    })
+
+    Component.onCompleted: {
+        console.log("Main window initialized with token:", authToken ? "***" + authToken.slice(-8) : "none")
+
+        // Инициализация API
+        var serverAddress = settingsManager.useLocalServer ?
+            settingsManager.serverAddress :
+            (mainApi.remoteApiBaseUrl + ":" + mainApi.remotePort)
+
+        mainApi.setConfig(authToken, serverAddress, settingsManager.useLocalServer)
+
+        loadInitialData()
+    }
+
+    function loadInitialData() {
+        isLoading = true
+        clearAllErrors()
+
+        // Параллельная загрузка данных
+        var loadPromises = [
+            { name: "teachers", func: loadTeachers },
+            { name: "students", func: loadStudents },
+            { name: "groups", func: loadGroups }
+        ]
+
+        var loadedCount = 0
+        var totalToLoad = loadPromises.length
+
+        function checkAllLoaded() {
+            loadedCount++
+            if (loadedCount >= totalToLoad) {
+                isLoading = false
+                if (!hasAnyError()) {
+                    showSuccess("Данные успешно загружены")
+                }
+            }
+        }
+
+        loadPromises.forEach(function(promise) {
+            promise.func.call(this, checkAllLoaded)
+        })
+
+        loadTimeoutTimer.start()
+    }
+
+    function loadTeachers(callback) {
+        mainApi.getTeachers(function(result) {
+            loadTimeoutTimer.stop()
+            if (result.success) {
+                teachers = result.data || []
+                console.log("Loaded teachers:", teachers.length)
+                clearError("teachers")
+            } else {
+                setError("teachers", "Ошибка загрузки преподавателей: " + result.error)
+                showError("Ошибка загрузки преподавателей: " + result.error)
+            }
+            if (callback) callback()
+        })
+    }
+
+    function loadStudents(callback) {
+        mainApi.getStudents(function(result) {
+            if (result.success) {
+                students = result.data || []
+                console.log("Loaded students:", students.length)
+                clearError("students")
+            } else {
+                setError("students", "Ошибка загрузки студентов: " + result.error)
+                showError("Ошибка загрузки студентов: " + result.error)
+            }
+            if (callback) callback()
+        })
+    }
+
+    function loadGroups(callback) {
+        mainApi.getGroups(function(result) {
+            if (result.success) {
+                groups = result.data || []
+                console.log("Loaded groups:", groups.length)
+                clearError("groups")
+            } else {
+                setError("groups", "Ошибка загрузки групп: " + result.error)
+                showError("Ошибка загрузки групп: " + result.error)
+            }
+            if (callback) callback()
+        })
+    }
+
+    function loadPortfolio(callback) {
+        mainApi.getPortfolios(function(result) {
+            if (result.success) {
+                portfolio = result.data || []
+                console.log("Loaded portfolio items:", portfolio.length)
+                clearError("portfolio")
+            } else {
+                setError("portfolio", "Ошибка загрузки портфолио: " + result.error)
+                showError("Ошибка загрузки портфолио: " + result.error)
+            }
+            if (callback) callback()
+        })
+    }
+
+    function loadEvents(callback) {
+        mainApi.getEvents(function(result) {
+            if (result.success) {
+                events = result.data || []
+                console.log("Loaded events:", events.length)
+                clearError("events")
+            } else {
+                setError("events", "Ошибка загрузки событий: " + result.error)
+                showError("Ошибка загрузки событий: " + result.error)
+            }
+            if (callback) callback()
+        })
+    }
+
+    // Управление ошибками
+    function setError(section, message) {
+        apiErrors[section] = message
+        console.error("Error in", section + ":", message)
+    }
+
+    function clearError(section) {
+        apiErrors[section] = ""
+    }
+
+    function clearAllErrors() {
+        for (var key in apiErrors) {
+            apiErrors[key] = ""
+        }
+    }
+
+    function hasError(section) {
+        return apiErrors[section] !== ""
+    }
+
+    function hasAnyError() {
+        for (var key in apiErrors) {
+            if (apiErrors[key] !== "") return true
+        }
+        return false
+    }
+
+    function getError(section) {
+        return apiErrors[section] || ""
+    }
+
+    function showError(message) {
+        _successMessage = ""
+        _showingSuccess = false
+        _errorMessage = message
+        _showingError = message !== ""
+
+        if (_showingError) {
+            errorAutoHideTimer.restart()
+        }
+    }
+
+    function showSuccess(message) {
+        _errorMessage = ""
+        _showingError = false
+        _successMessage = message
+        _showingSuccess = message !== ""
+
+        if (_showingSuccess) {
+            successAutoHideTimer.restart()
+        }
+    }
+
+    function toggleMaximize() {
+        if (isWindowMaximized) {
+            showNormal()
+            isWindowMaximized = false
+        } else {
+            showMaximized()
+            isWindowMaximized = true
+        }
+    }
+
+    function navigateTo(view) {
+        currentView = view
+        console.log("Navigated to:", view)
+
+        // Загружаем данные для выбранного раздела если они еще не загружены
+        if (view === "portfolio" && portfolio.length === 0 && !hasError("portfolio")) {
+            loadPortfolio()
+        } else if (view === "events" && events.length === 0 && !hasError("events")) {
+            loadEvents()
+        }
+    }
+
+    // Основной контейнер
     Rectangle {
         id: windowContainer
         anchors.fill: parent
-        radius: 24
+        radius: 16
         color: "#f0f0f0"
         clip: true
 
+        // Градиентный фон
         Rectangle {
             anchors.fill: parent
             gradient: Gradient {
-                GradientStop { position: 0.0; color: "#6a11cb" }
-                GradientStop { position: 1.0; color: "#2575fc" }
+                GradientStop { position: 0.0; color: "#667eea" }
+                GradientStop { position: 1.0; color: "#764ba2" }
             }
-            radius: 20
         }
 
-        // Анимированные многоугольники на фоне
-        BackgroundShapes {
-            id: backgroundPolygons
+        // Упрощенный фон с полигонами
+        PolygonBackground {
             anchors.fill: parent
         }
 
         // Заголовок
-        Rectangle {
+        MainTitleBar {
             id: titleBar
-            height: 25
-            color: "#ffffff"
-            opacity: 1
-            radius: 12
             anchors {
                 top: parent.top
                 left: parent.left
                 right: parent.right
                 margins: 10
             }
+            isWindowMaximized: mainWindow.isWindowMaximized
+            currentView: getViewTitle(mainWindow.currentView)
 
-            Text {
-                anchors.centerIn: parent
-                text: "🎓 EduFlow - Управление базой данных"
-                color: "#2c3e50"
-                font.pixelSize: 13
-                font.bold: true
-            }
-
-            Row {
-                anchors {
-                    right: parent.right
-                    verticalCenter: parent.verticalCenter
-                    rightMargin: 8
-                }
-                spacing: 6
-
-                Rectangle {
-                    width: 16
-                    height: 16
-                    radius: 8
-                    color: minimizeMouseArea.containsMouse ? "#FFD960" : "transparent"
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "-"
-                        color: minimizeMouseArea.containsMouse ? "white" : "#2c3e50"
-                        font.pixelSize: 12
-                        font.bold: true
-                    }
-
-                    MouseArea {
-                        id: minimizeMouseArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: mainWindow.showMinimized()
-                    }
-                }
-
-                Rectangle {
-                    width: 16
-                    height: 16
-                    radius: 8
-                    color: maximizeMouseArea.containsMouse ? "#3498db" : "transparent"
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: isWindowMaximized ? "❐" : "⛶"
-                        color: maximizeMouseArea.containsMouse ? "white" : "#2c3e50"
-                        font.pixelSize: 10
-                        font.bold: true
-                    }
-
-                    MouseArea {
-                        id: maximizeMouseArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: toggleMaximize()
-                    }
-                }
-
-                Rectangle {
-                    width: 16
-                    height: 16
-                    radius: 8
-                    color: closeMouseArea.containsMouse ? "#ff5c5c" : "transparent"
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "×"
-                        color: closeMouseArea.containsMouse ? "white" : "#2c3e50"
-                        font.pixelSize: 12
-                        font.bold: true
-                    }
-
-                    MouseArea {
-                        id: closeMouseArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: logout()
-                    }
-                }
-            }
-
-            // Область перетаскивания окна
-            MouseArea {
-                id: resizeMouseArea
-                anchors.fill: parent
-                cursorShape: Qt.SizeFDiagCursor
-                drag{ target: null; axis: Drag.XAndYAxis }
-
-                onPressed: {
-                    // Запоминаем начальные размеры
-                    resizeMouseArea.previousWidth = mainWindow.width;
-                    resizeMouseArea.previousHeight = mainWindow.height;
-                }
-
-                onPositionChanged: {
-                    if (pressed) {
-                        var newWidth = resizeMouseArea.previousWidth + mouse.x;
-                        var newHeight = resizeMouseArea.previousHeight + mouse.y;
-
-                        // Ограничиваем размеры в пределах минимальных и максимальных значений
-                        newWidth = Math.max(mainWindow.minimumWidth, Math.min(mainWindow.maximumWidth, newWidth));
-                        newHeight = Math.max(mainWindow.minimumHeight, Math.min(mainWindow.maximumHeight, newHeight));
-
-                        // Устанавливаем новые размеры
-                        mainWindow.width = newWidth;
-                        mainWindow.height = newHeight;
-
-                        // Отправляем сигнал об изменении размера
-                        windowResized(newWidth, newHeight);
-                    }
-                }
-
-                property real previousWidth: 0
-                property real previousHeight: 0
-            }
+            onToggleMaximize: toggleMaximize()
+            onShowMinimized: showMinimized()
+            onClose: Qt.quit()
         }
 
-        // Основное содержимое
-        RowLayout {
+        function getViewTitle(view) {
+            var titles = {
+                "dashboard": "Главная панель",
+                "teachers": "Преподаватели",
+                "students": "Студенты",
+                "groups": "Группы",
+                "portfolio": "Портфолио",
+                "events": "События"
+            }
+            return titles[view] || "Главная панель"
+        }
+
+        // Сообщения
+        MainMessage {
+            id: errorMessage
             anchors {
+                horizontalCenter: parent.horizontalCenter
                 top: titleBar.bottom
+                topMargin: 8
+            }
+            width: Math.min(parent.width * 0.8, 600)
+            messageText: _errorMessage
+            showingMessage: _showingError
+            messageType: "error"
+            onCloseMessage: showError("")
+        }
+
+        MainMessage {
+            id: successMessage
+            anchors {
+                horizontalCenter: parent.horizontalCenter
+                top: errorMessage.bottom
+                topMargin: 4
+            }
+            width: Math.min(parent.width * 0.8, 600)
+            messageText: _successMessage
+            showingMessage: _showingSuccess
+            messageType: "success"
+            onCloseMessage: showSuccess("")
+        }
+
+        // Основной контент
+        Rectangle {
+            id: mainContent
+            anchors {
+                top: successMessage.bottom
+                bottom: parent.bottom
                 left: parent.left
                 right: parent.right
-                bottom: parent.bottom
                 margins: 10
                 topMargin: 15
             }
-            spacing: 10
+            color: "transparent"
 
-            // Боковая панель
+            // Боковая панель навигации (слева)
             Rectangle {
                 id: sideBar
-                Layout.preferredWidth: isSideBarExpanded ? 200 : 60
-                Layout.fillHeight: true
-                color: "#ffffff"
-                opacity: 0.9
-                radius: 12
-
-                Column {
-                    width: parent.width
-                    spacing: 1
-                    padding: 10
-
-                    Repeater {
-                        model: [
-                            {icon: "👨‍🏫", text: "Преподаватели", tabIndex: 0},
-                            {icon: "👥", text: "Группы", tabIndex: 1},
-                            {icon: "🎓", text: "Студенты", tabIndex: 2},
-                            {icon: "📁", text: "Портфолио", tabIndex: 3},
-                            {icon: "📅", text: "Мероприятия", tabIndex: 4}
-                        ]
-
-                        Rectangle {
-                            width: sideBar.width - 20  // Фиксированное вычисление ширины
-                            height: 45
-                            color: currentTabIndex === modelData.tabIndex ? "#3498db" : "transparent"
-                            radius: 8
-
-                            Row {
-                                anchors.centerIn: parent
-                                spacing: 10
-                                Text {
-                                    text: modelData.icon
-                                    font.pixelSize: 16
-                                    color: currentTabIndex === modelData.tabIndex ? "white" : "#2c3e50"
-                                }
-                                Text {
-                                    text: isSideBarExpanded ? modelData.text : ""
-                                    font.pixelSize: 14
-                                    color: currentTabIndex === modelData.tabIndex ? "white" : "#2c3e50"
-                                    visible: isSideBarExpanded
-                                }
-                            }
-
-                            MouseArea {
-                                anchors.fill: parent
-                                onClicked: currentTabIndex = modelData.tabIndex
-                            }
-                        }
-                    }
-
-                    Item { height: 20 }
-
-                    // Кнопка выхода
-                    Rectangle {
-                        width: sideBar.width - 20  // Фиксированное вычисление ширины
-                        height: 45
-                        color: "transparent"
-                        radius: 8
-
-                        Row {
-                            anchors.centerIn: parent
-                            spacing: 10
-                            Text {
-                                text: "🚪"
-                                font.pixelSize: 16
-                                color: "#2c3e50"
-                            }
-                            Text {
-                                text: isSideBarExpanded ? "Выход" : ""
-                                font.pixelSize: 14
-                                color: "#2c3e50"
-                                visible: isSideBarExpanded
-                            }
-                        }
-
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: logout()
-                        }
-                    }
+                width: 280
+                anchors {
+                    top: parent.top
+                    bottom: parent.bottom
+                    left: parent.left
                 }
-            }
-
-            // Основная область контента
-            Rectangle {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                color: "#ffffff"
-                opacity: 0.9
+                color: "#f8f8f8"
                 radius: 12
+                opacity: 0.95
 
-                StackLayout {
-                    id: contentStack
+                ColumnLayout {
                     anchors.fill: parent
-                    currentIndex: currentTabIndex
+                    anchors.margins: 15
+                    spacing: 10
 
-                    // Вкладка преподавателей
-                    Item {
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: 15
-                            spacing: 10
+                    Text {
+                        text: "🎯 Панель управления"
+                        font.pixelSize: 18
+                        font.bold: true
+                        color: "#2c3e50"
+                        Layout.alignment: Qt.AlignHCenter
+                        Layout.bottomMargin: 10
+                    }
 
-                            Button {
-                                text: "🔄 Обновить"
-                                onClicked: loadTestData()
-                                Layout.alignment: Qt.AlignLeft
-                            }
+                    // Основные разделы
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 5
 
-                            Text {
-                                text: "Преподаватели: " + teachersModel.count
-                                font.pixelSize: 16
-                                font.bold: true
-                            }
+                        Text {
+                            text: "📊 Основные разделы"
+                            font.pixelSize: 12
+                            font.bold: true
+                            color: "#7f8c8d"
+                            Layout.bottomMargin: 5
+                        }
 
-                            ScrollView {
+                        Repeater {
+                            model: [
+                                {icon: "🏠", name: "Главная панель", view: "dashboard", errorKey: "dashboard"},
+                                {icon: "👨‍🏫", name: "Преподаватели", view: "teachers", errorKey: "teachers"},
+                                {icon: "👨‍🎓", name: "Студенты", view: "students", errorKey: "students"},
+                                {icon: "👥", name: "Группы", view: "groups", errorKey: "groups"},
+                                {icon: "📁", name: "Портфолио", view: "portfolio", errorKey: "portfolio"},
+                                {icon: "📅", name: "События", view: "events", errorKey: "events"}
+                            ]
+
+                            Rectangle {
                                 Layout.fillWidth: true
-                                Layout.fillHeight: true
+                                height: 50
+                                radius: 8
+                                color: mainWindow.currentView === modelData.view ? "#3498db" :
+                                      (navMouseArea.containsMouse ? "#ecf0f1" : "transparent")
+                                border.color: mainWindow.currentView === modelData.view ? "#2980b9" : "transparent"
+                                border.width: 2
 
-                                ListView {
-                                    id: teachersList
-                                    model: teachersModel
-                                    spacing: 5
+                                Row {
+                                    anchors.fill: parent
+                                    anchors.margins: 10
+                                    spacing: 12
 
-                                    // Исправление: добавляем явную ширину для ListView
-                                    width: parent.width
+                                    Text {
+                                        text: modelData.icon
+                                        font.pixelSize: 16
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
 
-                                    delegate: Item {
-                                        width: teachersList.width
-                                        height: 70
+                                    Column {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 2
 
-                                        Rectangle {
-                                            anchors.fill: parent
-                                            anchors.margins: 2
-                                            radius: 8
-                                            color: index % 2 ? "#f8f9fa" : "#ffffff"
-                                            border.color: "#e9ecef"
-                                            border.width: 1
+                                        Text {
+                                            text: modelData.name
+                                            color: mainWindow.currentView === modelData.view ? "white" : "#2c3e50"
+                                            font.pixelSize: 13
+                                            font.bold: true
+                                        }
 
-                                            RowLayout {
-                                                anchors.fill: parent
-                                                anchors.margins: 10
-                                                spacing: 10
-
-                                                ColumnLayout {
-                                                    Layout.fillWidth: true
-                                                    Text {
-                                                        text: model.last_name + " " + model.first_name + (model.middle_name ? " " + model.middle_name : "")
-                                                        font.bold: true
-                                                        font.pixelSize: 14
-                                                    }
-                                                    Text {
-                                                        text: "Специализация: " + model.specialization + " | Опыт: " + model.experience + " лет"
-                                                        font.pixelSize: 12
-                                                        color: "#6c757d"
-                                                    }
-                                                }
-
-                                                ColumnLayout {
-                                                    Text {
-                                                        text: model.email
-                                                        font.pixelSize: 12
-                                                    }
-                                                    Text {
-                                                        text: model.phone_number
-                                                        font.pixelSize: 12
-                                                        color: "#6c757d"
-                                                    }
-                                                }
-                                            }
+                                        // Показать ошибку для раздела
+                                        Text {
+                                            text: hasError(modelData.errorKey) ? "❌ Ошибка загрузки" : ""
+                                            font.pixelSize: 9
+                                            color: "#e74c3c"
+                                            visible: hasError(modelData.errorKey)
                                         }
                                     }
+
+                                    Item {
+                                        Layout.fillWidth: true
+                                    }
+
+                                    // Индикатор загрузки/ошибки
+                                    Rectangle {
+                                        width: 8
+                                        height: 8
+                                        radius: 4
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        color: {
+                                            if (hasError(modelData.errorKey)) return "#e74c3c"
+                                            if (isLoading && mainWindow.currentView === modelData.view) return "#f39c12"
+                                            return mainWindow.currentView === modelData.view ? "#2ecc71" : "transparent"
+                                        }
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: navMouseArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: navigateTo(modelData.view)
                                 }
                             }
                         }
                     }
 
-                    // Вкладка групп
                     Item {
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: 15
-                            spacing: 10
+                        Layout.fillHeight: true
+                    }
 
-                            Button {
-                                text: "🔄 Обновить"
-                                onClicked: loadTestData()
-                                Layout.alignment: Qt.AlignLeft
-                            }
+                    // Статистика и быстрые действия
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 10
 
-                            Text {
-                                text: "Группы: " + groupsModel.count
-                                font.pixelSize: 16
-                                font.bold: true
-                            }
+                        // Статистика
+                        Rectangle {
+                            Layout.fillWidth: true
+                            height: 100
+                            radius: 8
+                            color: "#e8f4f8"
+                            border.color: "#bde0fe"
+                            border.width: 1
 
-                            ScrollView {
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 3
 
-                                ListView {
-                                    id: groupsList
-                                    model: groupsModel
-                                    spacing: 5
-                                    width: parent.width
+                                Text {
+                                    text: "📈 Статистика системы"
+                                    font.pixelSize: 12
+                                    font.bold: true
+                                    color: "#2c3e50"
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
 
-                                    delegate: Item {
-                                        width: groupsList.width
-                                        height: 50
+                                Text {
+                                    text: "👨‍🏫 " + teachers.length + " преподавателей"
+                                    font.pixelSize: 10
+                                    color: hasError("teachers") ? "#e74c3c" : "#7f8c8d"
+                                }
 
-                                        Rectangle {
-                                            anchors.fill: parent
-                                            anchors.margins: 2
-                                            radius: 8
-                                            color: index % 2 ? "#f8f9fa" : "#ffffff"
-                                            border.color: "#e9ecef"
-                                            border.width: 1
+                                Text {
+                                    text: "👨‍🎓 " + students.length + " студентов"
+                                    font.pixelSize: 10
+                                    color: hasError("students") ? "#e74c3c" : "#7f8c8d"
+                                }
 
-                                            RowLayout {
-                                                anchors.fill: parent
-                                                anchors.margins: 10
+                                Text {
+                                    text: "👥 " + groups.length + " групп"
+                                    font.pixelSize: 10
+                                    color: hasError("groups") ? "#e74c3c" : "#7f8c8d"
+                                }
 
-                                                Text {
-                                                    text: model.name
-                                                    font.bold: true
-                                                    font.pixelSize: 14
-                                                    Layout.fillWidth: true
-                                                }
-
-                                                Text {
-                                                    text: "Студентов: " + model.student_count
-                                                    font.pixelSize: 12
-                                                    color: "#6c757d"
-                                                }
-
-                                                Text {
-                                                    text: "Преподаватель ID: " + model.teacher_id
-                                                    font.pixelSize: 12
-                                                    color: "#6c757d"
-                                                }
-                                            }
-                                        }
-                                    }
+                                Text {
+                                    text: "📊 " + (portfolio.length + events.length) + " записей"
+                                    font.pixelSize: 10
+                                    color: (hasError("portfolio") || hasError("events")) ? "#e74c3c" : "#7f8c8d"
                                 }
                             }
                         }
-                    }
 
-                    // Вкладка студентов
-                    Item {
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: 15
-                            spacing: 10
+                        // Быстрые действия
+                        Rectangle {
+                            Layout.fillWidth: true
+                            height: 80
+                            radius: 8
+                            color: "#fff3cd"
+                            border.color: "#ffeaa7"
+                            border.width: 1
 
-                            Button {
-                                text: "🔄 Обновить"
-                                onClicked: loadTestData()
-                                Layout.alignment: Qt.AlignLeft
-                            }
+                            Column {
+                                anchors.centerIn: parent
+                                spacing: 5
 
-                            Text {
-                                text: "Студенты: " + studentsModel.count
-                                font.pixelSize: 16
-                                font.bold: true
-                            }
+                                Text {
+                                    text: "🚀 Быстрые действия"
+                                    font.pixelSize: 11
+                                    font.bold: true
+                                    color: "#856404"
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                }
 
-                            ScrollView {
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
+                                Row {
+                                    spacing: 8
+                                    anchors.horizontalCenter: parent.horizontalCenter
 
-                                ListView {
-                                    id: studentsList
-                                    model: studentsModel
-                                    spacing: 5
-                                    width: parent.width
+                                    Rectangle {
+                                        width: 70
+                                        height: 25
+                                        radius: 5
+                                        color: quickAddMouseArea.pressed ? "#2980b9" : "#3498db"
 
-                                    delegate: Item {
-                                        width: studentsList.width
-                                        height: 60
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "+ Студент"
+                                            font.pixelSize: 9
+                                            color: "white"
+                                            font.bold: true
+                                        }
 
-                                        Rectangle {
+                                        MouseArea {
+                                            id: quickAddMouseArea
                                             anchors.fill: parent
-                                            anchors.margins: 2
-                                            radius: 8
-                                            color: index % 2 ? "#f8f9fa" : "#ffffff"
-                                            border.color: "#e9ecef"
-                                            border.width: 1
-
-                                            RowLayout {
-                                                anchors.fill: parent
-                                                anchors.margins: 10
-                                                spacing: 10
-
-                                                ColumnLayout {
-                                                    Layout.fillWidth: true
-                                                    Text {
-                                                        text: model.last_name + " " + model.first_name + (model.middle_name ? " " + model.middle_name : "")
-                                                        font.bold: true
-                                                        font.pixelSize: 14
-                                                    }
-                                                    Text {
-                                                        text: "Группа ID: " + model.group_id
-                                                        font.pixelSize: 12
-                                                        color: "#6c757d"
-                                                    }
-                                                }
-
-                                                ColumnLayout {
-                                                    Text {
-                                                        text: model.email
-                                                        font.pixelSize: 12
-                                                    }
-                                                    Text {
-                                                        text: model.phone_number
-                                                        font.pixelSize: 12
-                                                        color: "#6c757d"
-                                                    }
-                                                }
-                                            }
+                                            onClicked: showError("Функция добавления студента в разработке")
                                         }
                                     }
-                                }
-                            }
-                        }
-                    }
 
-                    // Вкладка портфолио
-                    Item {
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: 15
-                            spacing: 10
+                                    Rectangle {
+                                        width: 70
+                                        height: 25
+                                        radius: 5
+                                        color: quickEventMouseArea.pressed ? "#27ae60" : "#2ecc71"
 
-                            Button {
-                                text: "🔄 Обновить"
-                                onClicked: loadTestData()
-                                Layout.alignment: Qt.AlignLeft
-                            }
-
-                            Text {
-                                text: "Записей в портфолио: " + portfolioModel.count
-                                font.pixelSize: 16
-                                font.bold: true
-                            }
-
-                            ScrollView {
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
-
-                                ListView {
-                                    id: portfolioList
-                                    model: portfolioModel
-                                    spacing: 5
-                                    width: parent.width
-
-                                    delegate: Item {
-                                        width: portfolioList.width
-                                        height: 70
-
-                                        Rectangle {
-                                            anchors.fill: parent
-                                            anchors.margins: 2
-                                            radius: 8
-                                            color: index % 2 ? "#f8f9fa" : "#ffffff"
-                                            border.color: "#e9ecef"
-                                            border.width: 1
-
-                                            ColumnLayout {
-                                                anchors.fill: parent
-                                                anchors.margins: 10
-
-                                                Text {
-                                                    text: "Студент ID: " + model.student_code + " | Мероприятие: " + model.measure_code
-                                                    font.bold: true
-                                                    font.pixelSize: 14
-                                                }
-
-                                                Text {
-                                                    text: "Дата: " + model.date + " | Паспорт: " + model.passport_series + " " + model.passport_number
-                                                    font.pixelSize: 12
-                                                    color: "#6c757d"
-                                                }
-                                            }
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "+ Событие"
+                                            font.pixelSize: 9
+                                            color: "white"
+                                            font.bold: true
                                         }
-                                    }
-                                }
-                            }
-                        }
-                    }
 
-                    // Вкладка мероприятий
-                    Item {
-                        ColumnLayout {
-                            anchors.fill: parent
-                            anchors.margins: 15
-                            spacing: 10
-
-                            Button {
-                                text: "🔄 Обновить"
-                                onClicked: loadTestData()
-                                Layout.alignment: Qt.AlignLeft
-                            }
-
-                            Text {
-                                text: "Мероприятий: " + eventsModel.count
-                                font.pixelSize: 16
-                                font.bold: true
-                            }
-
-                            ScrollView {
-                                Layout.fillWidth: true
-                                Layout.fillHeight: true
-
-                                ListView {
-                                    id: eventsList
-                                    model: eventsModel
-                                    spacing: 5
-                                    width: parent.width
-
-                                    delegate: Item {
-                                        width: eventsList.width
-                                        height: 80
-
-                                        Rectangle {
+                                        MouseArea {
+                                            id: quickEventMouseArea
                                             anchors.fill: parent
-                                            anchors.margins: 2
-                                            radius: 8
-                                            color: index % 2 ? "#f8f9fa" : "#ffffff"
-                                            border.color: "#e9ecef"
-                                            border.width: 1
-
-                                            ColumnLayout {
-                                                anchors.fill: parent
-                                                anchors.margins: 10
-
-                                                Text {
-                                                    text: model.event_category + " (" + model.event_type + ")"
-                                                    font.bold: true
-                                                    font.pixelSize: 14
-                                                }
-
-                                                Text {
-                                                    text: "Период: " + model.start_date + " - " + model.end_date
-                                                    font.pixelSize: 12
-                                                }
-
-                                                Text {
-                                                    text: "Место: " + (model.location || "Не указано")
-                                                    font.pixelSize: 12
-                                                    color: "#6c757d"
-                                                }
-                                            }
+                                            onClicked: showError("Функция добавления события в разработке")
                                         }
                                     }
                                 }
@@ -661,126 +573,123 @@ ApplicationWindow {
                     }
                 }
             }
+
+            // Область контента (справа)
+            Rectangle {
+                id: contentArea
+                anchors {
+                    top: parent.top
+                    bottom: parent.bottom
+                    left: sideBar.right
+                    right: parent.right
+                    leftMargin: 15
+                }
+                color: "#f8f8f8"
+                radius: 12
+                opacity: 0.95
+
+                Loader {
+                    id: contentLoader
+                    anchors.fill: parent
+                    anchors.margins: 10
+                    source: getViewComponent(mainWindow.currentView)
+                }
+
+                function getViewComponent(view) {
+                    var components = {
+                        "dashboard": "DashboardView.qml",
+                        "teachers": "TeachersView.qml",
+                        "students": "StudentsView.qml",
+                        "groups": "GroupsView.qml",
+                        "portfolio": "PortfolioView.qml",
+                        "events": "EventsView.qml"
+                    }
+                    return components[view] || "DashboardView.qml"
+                }
+            }
         }
 
-        // ТВОЁ перетаскивание для изменения размера окна
-        MouseArea {
-            id: resizeMouseArea
-            anchors {
-                right: parent.right
-                bottom: parent.bottom
+        // Индикатор загрузки
+        Rectangle {
+            id: loadingOverlay
+            anchors.fill: mainContent
+            color: "#80000000"
+            radius: 12
+            visible: isLoading
+            z: 10
+
+            Rectangle {
+                width: 80
+                height: 80
+                radius: 40
+                color: "#40000000"
+                anchors.centerIn: parent
+
+                RotationAnimation on rotation {
+                    from: 0
+                    to: 360
+                    duration: 1200
+                    running: loadingOverlay.visible
+                    loops: Animation.Infinite
+                }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "⏳"
+                    font.pixelSize: 24
+                    color: "white"
+                }
             }
-            width: 15
-            height: 15
-            cursorShape: Qt.SizeFDiagCursor
 
-            property real previousWidth: 0
-            property real previousHeight: 0
+            Column {
+                anchors {
+                    horizontalCenter: parent.horizontalCenter
+                    top: parent.verticalCenter
+                    topMargin: 60
+                }
+                spacing: 5
 
-            onPressed: {
-                previousWidth = mainWindow.width;
-                previousHeight = mainWindow.height;
-            }
+                Text {
+                    text: "Загрузка данных..."
+                    font.pixelSize: 14
+                    color: "white"
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
 
-            onPositionChanged: {
-                if (pressed) {
-                    var newWidth = previousWidth + mouse.x;
-                    var newHeight = previousHeight + mouse.y;
-
-                    newWidth = Math.max(mainWindow.minimumWidth, Math.min(mainWindow.maximumWidth, newWidth));
-                    newHeight = Math.max(mainWindow.minimumHeight, Math.min(mainWindow.maximumHeight, newHeight));
-
-                    mainWindow.width = newWidth;
-                    mainWindow.height = newHeight;
+                Text {
+                    text: "Пожалуйста, подождите"
+                    font.pixelSize: 11
+                    color: "#cccccc"
+                    anchors.horizontalCenter: parent.horizontalCenter
                 }
             }
         }
     }
 
-    // Функции
-    function toggleMaximize() {
-        if (isWindowMaximized) {
-            mainWindow.showNormal();
-            isWindowMaximized = false;
-        } else {
-            mainWindow.showMaximized();
-            isWindowMaximized = true;
-        }
+    MainAPI {
+        id: mainApi
+        property string remoteApiBaseUrl: "https://deltablast.fun"
+        property int remotePort: 5000
     }
 
-    function logout() {
-        console.log("Выход из приложения");
-        Qt.quit();
+    Timer {
+        id: errorAutoHideTimer
+        interval: 8000
+        onTriggered: showError("")
     }
 
-    function loadTestData() {
-        console.log("Загрузка тестовых данных");
-
-        // Тестовые данные для преподавателей
-        teachersModel.clear();
-        for (var i = 0; i < 5; i++) {
-            teachersModel.append({
-                last_name: "Преподаватель",
-                first_name: "Тест",
-                middle_name: i + 1,
-                specialization: 1,
-                experience: 5 + i,
-                email: `teacher${i+1}@edu.ru`,
-                phone_number: "+7999000000" + i
-            });
-        }
-
-        // Тестовые данные для групп
-        groupsModel.clear();
-        for (var j = 0; j < 5; j++) {
-            groupsModel.append({
-                name: `Группа ${j+1}`,
-                student_count: 20 + j,
-                teacher_id: j + 1
-            });
-        }
-
-        // Тестовые данные для студентов
-        studentsModel.clear();
-        for (var k = 0; k < 5; k++) {
-            studentsModel.append({
-                last_name: "Студент",
-                first_name: "Тест",
-                middle_name: k + 1,
-                group_id: k + 1,
-                email: `student${k+1}@edu.ru`,
-                phone_number: "+7999111111" + k
-            });
-        }
-
-        // Тестовые данные для портфолио
-        portfolioModel.clear();
-        for (var l = 0; l < 5; l++) {
-            portfolioModel.append({
-                student_code: l + 1,
-                measure_code: l + 100,
-                date: "2024-01-01",
-                passport_series: "1234",
-                passport_number: "567890"
-            });
-        }
-
-        // Тестовые данные для мероприятий
-        eventsModel.clear();
-        for (var m = 0; m < 5; m++) {
-            eventsModel.append({
-                event_category: ["Конференция", "Семинар", "Олимпиада"][m % 3],
-                event_type: ["Онлайн", "Оффлайн"][m % 2],
-                start_date: "2024-01-01",
-                end_date: "2024-01-02",
-                location: m % 2 ? "Москва" : ""
-            });
-        }
+    Timer {
+        id: successAutoHideTimer
+        interval: 4000
+        onTriggered: showSuccess("")
     }
 
-    // Инициализация
-    Component.onCompleted: {
-        console.log("Главное окно инициализировано");
-        Qt.callLater(loadTestData);
+    Timer {
+        id: loadTimeoutTimer
+        interval: 15000
+        onTriggered: {
+            isLoading = false
+            showError("Таймаут загрузки данных. Проверьте подключение к серверу.")
+        }
     }
 }

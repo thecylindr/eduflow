@@ -36,17 +36,21 @@ qt_add_qml_module(student
 
         # Формы главного меню
         main/Main.qml
+
         main/MainTitleBar.qml
-        main/TeachersTab.qml
-        main/GroupsTab.qml
-        main/StudentsTab.qml
-        main/PortfolioTab.qml
-        main/EventsTab.qml
-        main/SideBar.qml
-        main/SideBarButton.qml
-        main/ProfileSettingsDialog.qml
-        main/BackgroundShapes.qml
-        main/mainAPI.qml
+        main/InteractionsList.qml
+        main/PolygonBackground.qml
+        main/UserSettingsPanel.qml
+        main/MainAPI.qml
+
+        main/TeachersView.qml
+        main/DashboardView.qml
+        main/StudentView.qml
+
+        main/MainMessage.qml
+        main/GroupsView.qml
+        main/EventsView.qml
+
 
 )
 

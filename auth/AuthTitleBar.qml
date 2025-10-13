@@ -167,9 +167,8 @@ Rectangle {
                             mainWindow.y += delta.y
                         }
                     }
+                }
 
-
-    }
 
     // Элементы для изменения размера окна
     Rectangle {

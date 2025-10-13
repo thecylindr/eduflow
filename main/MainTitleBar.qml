@@ -1,156 +1,129 @@
-// MainTitleBar.qml (обновленная версия)
+// main/MainTitleBar.qml
 import QtQuick 2.15
-import QtQuick.Layouts 2.15
 
 Rectangle {
     id: titleBar
     height: 35
     color: "#ffffff"
-    opacity: 0.9
+    opacity: 1
     radius: 12
     z: 10
 
     property bool isWindowMaximized: false
+    property string currentView: "Главная"
 
-    signal toggleMaximize()
-    signal showMinimized()
-    signal close()
-    signal toggleSideBar()
+    signal toggleMaximize
+    signal showMinimized
+    signal close
 
-    RowLayout {
-        anchors.fill: parent
-        anchors.leftMargin: 10
-        anchors.rightMargin: 8
-        spacing: 15
+    Text {
+        anchors.centerIn: parent
+        text: currentView + " | EduFlow"
+        color: "#2c3e50"
+        font.pixelSize: 13
+        font.bold: true
+    }
 
-        // Кнопка меню для боковой панели
+    Row {
+        id: windowButtons
+        anchors {
+            right: parent.right
+            verticalCenter: parent.verticalCenter
+            rightMargin: 8
+        }
+        spacing: 6
+
         Rectangle {
-            id: menuButton
-            width: 25
-            height: 25
-            radius: 12
-            color: menuMouseArea.containsMouse ? "#bdc3c7" : "transparent"
+            id: minimizeButton
+            width: 16
+            height: 16
+            radius: 8
+            color: minimizeMouseArea.containsMouse ? "#FFD960" : "transparent"
 
             Text {
                 anchors.centerIn: parent
-                text: "☰"
-                color: menuMouseArea.containsMouse ? "white" : "#2c3e50"
-                font.pixelSize: 14
+                text: "-"
+                color: minimizeMouseArea.containsMouse ? "white" : "#2c3e50"
+                font.pixelSize: 12
+                font.bold: true
             }
 
             MouseArea {
-                id: menuMouseArea
+                id: minimizeMouseArea
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: toggleSideBar()
+                onClicked: showMinimized()
             }
         }
 
-        Text {
-            text: "🎓 EduFlow - Управление базой данных"
-            color: "#2c3e50"
-            font.pixelSize: 14
-            font.bold: true
-            Layout.fillWidth: true
+        Rectangle {
+            id: maximizeButton
+            width: 16
+            height: 16
+            radius: 8
+            color: maximizeMouseArea.containsMouse ? "#3498db" : "transparent"
+
+            Text {
+                anchors.centerIn: parent
+                text: isWindowMaximized ? "❐" : "⛶"
+                color: maximizeMouseArea.containsMouse ? "white" : "#2c3e50"
+                font.pixelSize: 10
+                font.bold: true
+            }
+
+            MouseArea {
+                id: maximizeMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: toggleMaximize()
+            }
         }
 
-        Row {
-            spacing: 6
+        Rectangle {
+            id: closeButton
+            width: 16
+            height: 16
+            radius: 8
+            color: closeMouseArea.containsMouse ? "#ff5c5c" : "transparent"
 
-            Rectangle {
-                id: minimizeButton
-                width: 20
-                height: 20
-                radius: 10
-                color: minimizeMouseArea.containsMouse ? "#FFD960" : "transparent"
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "-"
-                    color: minimizeMouseArea.containsMouse ? "white" : "#2c3e50"
-                    font.pixelSize: 14
-                    font.bold: true
-                }
-
-                MouseArea {
-                    id: minimizeMouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onClicked: showMinimized()
-                }
+            Text {
+                anchors.centerIn: parent
+                text: "×"
+                color: closeMouseArea.containsMouse ? "white" : "#2c3e50"
+                font.pixelSize: 12
+                font.bold: true
             }
 
-            Rectangle {
-                id: maximizeButton
-                width: 20
-                height: 20
-                radius: 10
-                color: maximizeMouseArea.containsMouse ? "#3498db" : "transparent"
-
-                Text {
-                    anchors.centerIn: parent
-                    text: isWindowMaximized ? "❐" : "⛶"
-                    color: maximizeMouseArea.containsMouse ? "white" : "#2c3e50"
-                    font.pixelSize: 12
-                    font.bold: true
-                }
-
-                MouseArea {
-                    id: maximizeMouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onClicked: toggleMaximize()
-                }
-            }
-
-            Rectangle {
-                id: closeButton
-                width: 20
-                height: 20
-                radius: 10
-                color: closeMouseArea.containsMouse ? "#ff5c5c" : "transparent"
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "×"
-                    color: closeMouseArea.containsMouse ? "white" : "#2c3e50"
-                    font.pixelSize: 14
-                    font.bold: true
-                }
-
-                MouseArea {
-                    id: closeMouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onClicked: close()
-                }
+            MouseArea {
+                id: closeMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: close()
             }
         }
     }
 
-    // Область перетаскивания
     MouseArea {
         anchors {
             left: parent.left
-            right: parent.right
+            right: windowButtons.left
             top: parent.top
             bottom: parent.bottom
-            leftMargin: 50
-            rightMargin: 80
+            margins: 5
         }
         property point clickPos: Qt.point(0, 0)
 
         onPressed: function(mouse) {
             if (mouse.button === Qt.LeftButton) {
-                clickPos = Qt.point(mouse.x, mouse.y);
+                clickPos = Qt.point(mouse.x, mouse.y)
             }
         }
 
         onPositionChanged: function(mouse) {
             if (mouse.buttons === Qt.LeftButton) {
-                var delta = Qt.point(mouse.x - clickPos.x, mouse.y - clickPos.y);
-                mainWindow.x += delta.x;
-                mainWindow.y += delta.y;
+                var delta = Qt.point(mouse.x - clickPos.x, mouse.y - clickPos.y)
+                mainWindow.x += delta.x
+                mainWindow.y += delta.y
             }
         }
     }
