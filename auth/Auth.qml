@@ -38,6 +38,43 @@ ApplicationWindow {
     property bool _showingRegistration: false
     property int registrationExtraHeight: 110
 
+    property string authToken: ""
+    property bool _mainWindowLoaded: false
+
+    // Loader для главного окна
+    Loader {
+        id: mainWindowLoader
+        active: false
+        asynchronous: true
+
+        onLoaded: {
+            console.log("✅ Главное окно загружено через Loader");
+            _mainWindowLoaded = true;
+
+            // Передаем параметры в загруженный компонент
+            if (item) {
+                item.authToken = authToken;
+                item.serverAddress = settingsManager.useLocalServer ?
+                    settingsManager.serverAddress :
+                    (remoteApiBaseUrl + ":" + remotePort);
+                item.useLocalServer = settingsManager.useLocalServer;
+
+                // Показываем главное окно и скрываем окно авторизации
+                item.visible = true;
+                mainWindow.visible = false;
+            }
+        }
+
+        onStatusChanged: {
+            if (status === Loader.Error) {
+                console.error("❌ Ошибка загрузки главного окна:", sourceComponent.errorString());
+                showError("Ошибка загрузки интерфейса: " + sourceComponent.errorString());
+                hideLoading();
+                _isLoading = false;
+            }
+        }
+    }
+
     // Плавная анимация изменения высоты окна
     Behavior on height {
         NumberAnimation {
@@ -118,24 +155,32 @@ ApplicationWindow {
                 if (_loginResult.success) {
                     showSuccess(_loginResult.message);
 
-                    // Создаем главное окно
-                    var mainComponent = Qt.createComponent("../main/Main.qml");
-
-                    if (mainComponent.status === Component.Ready) {
-                        var mainWin = mainComponent.createObject(null, {
-                            "authToken": _loginResult.token
-                        });
-                        mainWin.show();
-                        mainWindow.close(); // Закрываем текущее окно авторизации
-                    } else {
-                        showError("Ошибка загрузки главного окна: " + mainComponent.errorString());
+                    // Сохраняем токен перед переходом
+                    if (_loginResult.token) {
+                        authToken = _loginResult.token;
+                        settingsManager.authToken = _loginResult.token;
+                        console.log("🔑 Токен сохранен, длина:", _loginResult.token.length);
                     }
+
+                    // Загружаем главное окно через Loader
+                    loadMainWindow();
                 } else {
                     showError(_loginResult.message);
                 }
                 _loginResult = null;
             }
         }
+    }
+
+    // Функция загрузки главного окна через Loader
+    function loadMainWindow() {
+        console.log("🔄 Загрузка главного окна через Loader...");
+
+        // Устанавливаем источник для Loader'а
+        mainWindowLoader.source = "../main/Main.qml";
+
+        // Активируем Loader
+        mainWindowLoader.active = true;
     }
 
     // Функция регистрации
@@ -257,7 +302,6 @@ ApplicationWindow {
                registrationForm.passwordField.text === registrationForm.confirmPasswordField.text;
     }
 
-    // Функция авторизации
     function attemptLogin() {
         if (!isFormValid() || _isLoading) return;
 
@@ -275,6 +319,13 @@ ApplicationWindow {
             _loginResult = result;
             loadingTimer.interval = remaining;
             loadingTimer.start();
+
+            // Сохраняем токен в свойстве окна
+            if (result.success && result.token) {
+                authToken = result.token;
+                settingsManager.authToken = result.token;
+                console.log("Токен сохранен локально и в настройках, длина:", result.token.length);
+            }
         });
     }
 
@@ -423,6 +474,7 @@ ApplicationWindow {
         BackgroundPolygons {
             id: backgroundPolygons
             anchors.fill: parent
+            visible: parent !== null
         }
 
         AuthTitleBar {
@@ -550,12 +602,7 @@ ApplicationWindow {
         target: settingsManager
 
         function onUseLocalServerChanged() {
-            console.log("Настройки изменились: useLocalServer =", settingsManager.useLocalServer);
             updateWindowHeight();
-        }
-
-        function onServerAddressChanged() {
-            console.log("Настройки изменились: serverAddress =", settingsManager.serverAddress);
         }
     }
 }

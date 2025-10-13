@@ -12,6 +12,7 @@ SettingsManager::SettingsManager(QObject *parent)
     , m_useLocalServer(false)
     , m_serverAddress("http://localhost:5000")
     , m_apiPath("/api")
+    , m_authToken("")
 {
     // Устанавливаем правильные имена приложения ДО загрузки настроек
     QCoreApplication::setApplicationName("EduFlow");
@@ -65,6 +66,30 @@ void SettingsManager::setApiPath(const QString &apiPath)
     }
 }
 
+QString SettingsManager::authToken() const
+{
+    return m_authToken;
+}
+
+void SettingsManager::setAuthToken(const QString &authToken)
+{
+    if (m_authToken != authToken) {
+        m_authToken = authToken;
+        qDebug() << "Setting authToken, length:" << m_authToken.length();
+        if (m_authToken.length() > 0) {
+            qDebug() << "Auth token first 10 chars:" << m_authToken.left(10) + "...";
+        }
+        emit authTokenChanged();
+        saveSettings();
+    }
+}
+
+bool SettingsManager::hasValidToken() const
+{
+    // Токен считается валидным если он не пустой и имеет достаточную длину
+    return !m_authToken.isEmpty() && m_authToken.length() >= 32;
+}
+
 QString SettingsManager::getConfigPath() const
 {
     QString configDir;
@@ -109,14 +134,18 @@ void SettingsManager::loadSettings()
             if (!doc.isNull() && doc.isObject()) {
                 QJsonObject obj = doc.object();
 
-                bool oldUseLocal = m_useLocalServer;
-                QString oldAddress = m_serverAddress;
-
                 m_useLocalServer = obj.value("useLocalServer").toBool(false);
                 m_serverAddress = obj.value("serverAddress").toString("http://localhost:5000");
                 m_apiPath = obj.value("apiPath").toString("/api");
+                m_authToken = obj.value("authToken").toString("");
 
                 qDebug() << "Config loaded successfully:";
+                qDebug() << "  useLocalServer:" << m_useLocalServer;
+                qDebug() << "  serverAddress:" << m_serverAddress;
+                qDebug() << "  authToken length:" << m_authToken.length();
+                if (m_authToken.length() > 0) {
+                    qDebug() << "  authToken (first 10):" << m_authToken.left(10) + "...";
+                }
             } else {
                 qDebug() << "Invalid JSON in config file, using defaults";
             }
@@ -139,12 +168,19 @@ void SettingsManager::saveSettings()
         obj["useLocalServer"] = m_useLocalServer;
         obj["serverAddress"] = m_serverAddress;
         obj["apiPath"] = m_apiPath;
+        obj["authToken"] = m_authToken;
 
         QJsonDocument doc(obj);
         QByteArray data = doc.toJson(QJsonDocument::Indented);
 
         qint64 bytesWritten = file.write(data);
         file.close();
+
+        qDebug() << "Settings saved to:" << configFile;
+        qDebug() << "  authToken length:" << m_authToken.length();
+        if (m_authToken.length() > 0) {
+            qDebug() << "  authToken (first 10):" << m_authToken.left(10) + "...";
+        }
     } else {
         qDebug() << "Failed to open config file for writing:" << file.errorString();
     }

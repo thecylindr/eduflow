@@ -1,4 +1,3 @@
-// main/MainTitleBar.qml
 import QtQuick 2.15
 
 Rectangle {
@@ -18,10 +17,39 @@ Rectangle {
 
     Text {
         anchors.centerIn: parent
-        text: currentView + " | EduFlow"
+        text: currentView + " | " + appName
         color: "#2c3e50"
         font.pixelSize: 13
         font.bold: true
+    }
+
+    Rectangle {
+        id: gitflicButton
+        width: 16
+        height: 16
+        radius: 8
+        color: gitflicMouseArea.containsMouse ? "#4CAF50" : "transparent"
+        anchors {
+            left: parent.left
+            leftMargin: 1
+            verticalCenter: parent.verticalCenter
+        }
+
+        Text {
+            anchors.centerIn: parent
+            text: "🌐"
+            font.pixelSize: 10
+            color: gitflicMouseArea.containsMouse ? "white" : "#2c3e50"
+        }
+
+        MouseArea {
+            id: gitflicMouseArea
+            anchors.fill: parent
+            hoverEnabled: true
+            onClicked: {
+                Qt.openUrlExternally("https://gitflic.ru/project/cylindr/eduflow");
+            }
+        }
     }
 
     Row {
@@ -103,28 +131,30 @@ Rectangle {
         }
     }
 
+    // Универсальная область для перетаскивания окна (Для Linux & Windows)
     MouseArea {
+        id: dragArea
         anchors {
-            left: parent.left
-            right: windowButtons.left
+            left: gitflicButton.right
+            right: buttonRowsPanel.left
             top: parent.top
             bottom: parent.bottom
-            margins: 5
+            leftMargin: 5
         }
+        drag.target: null
         property point clickPos: Qt.point(0, 0)
-
         onPressed: function(mouse) {
             if (mouse.button === Qt.LeftButton) {
                 clickPos = Qt.point(mouse.x, mouse.y)
+                    mainWindow.startSystemMove()
+                    }
+                }
+                onPositionChanged: function(mouse) {
+                    if (mouse.buttons === Qt.LeftButton && !mainWindow.startSystemMove) {
+                        var delta = Qt.point(mouse.x - clickPos.x, mouse.y - clickPos.y)
+                        mainWindow.x += delta.x
+                        mainWindow.y += delta.y
+                    }
+                }
             }
-        }
-
-        onPositionChanged: function(mouse) {
-            if (mouse.buttons === Qt.LeftButton) {
-                var delta = Qt.point(mouse.x - clickPos.x, mouse.y - clickPos.y)
-                mainWindow.x += delta.x
-                mainWindow.y += delta.y
-            }
-        }
-    }
 }

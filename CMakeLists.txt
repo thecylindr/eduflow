@@ -45,11 +45,12 @@ qt_add_qml_module(student
 
         main/TeachersView.qml
         main/DashboardView.qml
-        main/StudentView.qml
+        main/StudentsView.qml
 
         main/MainMessage.qml
         main/GroupsView.qml
         main/EventsView.qml
+        QML_FILES main/AdaptiveSideBar.qml
 
 
 )

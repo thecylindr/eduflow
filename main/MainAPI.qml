@@ -1,5 +1,5 @@
 // main/MainAPI.qml
-import QtQml 2.15
+import QtQuick 2.15
 
 QtObject {
     id: mainApi
@@ -7,206 +7,134 @@ QtObject {
     property string authToken: ""
     property string baseUrl: ""
     property bool useLocalServer: false
+    property string remoteApiBaseUrl: "https://deltablast.fun"
+    property int remotePort: 5000
 
-    // Кэширование данных
-    property var teachersCache: null
-    property var studentsCache: null
-    property var groupsCache: null
-    property var cacheTimestamp: ({})
-
-    function setConfig(token, serverAddress, isLocal) {
-        authToken = token;
-        baseUrl = serverAddress;
-        useLocalServer = isLocal;
-        clearCache() // Очищаем кэш при смене конфигурации
+    function setConfig(token, url, local) {
+        authToken = token || "";
+        baseUrl = url || "";
+        useLocalServer = local || false;
     }
 
     function clearCache() {
-        teachersCache = null
-        studentsCache = null
-        groupsCache = null
-        cacheTimestamp = {}
+        // Очистка кэша если нужна
     }
 
-    function isCacheValid(key, maxAgeMs = 30000) {
-        if (!cacheTimestamp[key]) return false
-        return (Date.now() - cacheTimestamp[key]) < maxAgeMs
+    function getProfile(callback) {
+        sendRequest("GET", "/profile", null, callback);
     }
 
-    function apiRequest(method, endpoint, data, callback, useCache = false, cacheKey = null) {
-        // Проверка кэша для GET запросов
-        if (method === "GET" && useCache && cacheKey && isCacheValid(cacheKey)) {
-            var cachedData = getCachedData(cacheKey)
-            if (cachedData) {
-                console.log("Using cached data for:", cacheKey)
-                callback({
-                    success: true,
-                    data: cachedData,
-                    cached: true
-                })
-                return
-            }
+    function getTeachers(callback) {
+        sendRequest("GET", "/teachers", null, callback);
+    }
+
+    function getStudents(callback) {
+        sendRequest("GET", "/students", null, callback);
+    }
+
+    function getGroups(callback) {
+        sendRequest("GET", "/groups", null, callback);
+    }
+
+    function getPortfolios(callback) {
+        sendRequest("GET", "/portfolio", null, callback);
+    }
+
+    function getEvents(callback) {
+        sendRequest("GET", "/events", null, callback);
+    }
+
+    function sendRequest(method, endpoint, data, callback) {
+        if (!authToken || authToken.length === 0) {
+            console.error("No auth token available for API request");
+            if (callback) callback({
+                success: false,
+                error: "Токен авторизации отсутствует",
+                status: 401
+            });
+            return;
         }
 
         var xhr = new XMLHttpRequest();
-        xhr.timeout = 8000; // Уменьшен таймаут
+        xhr.timeout = 10000;
 
         var url = baseUrl + endpoint;
+        console.log("🚀 Sending", method, "request to:", url);
+        console.log("🔑 Using token:", authToken ? "***" + authToken.slice(-8) : "none");
 
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.DONE) {
-                try {
-                    var response = xhr.responseText ? JSON.parse(xhr.responseText) : {};
+                console.log("📨 Response status:", xhr.status);
+                console.log("📄 Response text:", xhr.responseText);
 
-                    if (xhr.status >= 200 && xhr.status < 300) {
-                        // Сохраняем в кэш для GET запросов
-                        if (method === "GET" && useCache && cacheKey) {
-                            setCachedData(cacheKey, response)
-                        }
-
-                        callback({
+                if (xhr.status === 200 || xhr.status === 201) {
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        if (callback) callback({
                             success: true,
                             data: response,
-                            message: response.message || "Успешно"
+                            status: xhr.status
                         });
-                    } else {
-                        callback({
+                    } catch (e) {
+                        console.error("❌ JSON parse error:", e);
+                        if (callback) callback({
                             success: false,
-                            error: response.error || "Ошибка: " + xhr.status,
+                            error: "Ошибка формата ответа сервера",
                             status: xhr.status
                         });
                     }
-                } catch (e) {
-                    callback({
-                        success: false,
-                        error: "Ошибка парсинга ответа: " + e
-                    });
+                } else {
+                    try {
+                        var errorResponse = JSON.parse(xhr.responseText);
+                        if (callback) callback({
+                            success: false,
+                            error: errorResponse.error || "Ошибка сервера: " + xhr.status,
+                            status: xhr.status
+                        });
+                    } catch (e) {
+                        if (callback) callback({
+                            success: false,
+                            error: "Ошибка сети: " + xhr.status,
+                            status: xhr.status
+                        });
+                    }
                 }
             }
         };
 
         xhr.ontimeout = function() {
-            callback({ success: false, error: "Таймаут соединения" });
+            if (callback) callback({
+                success: false,
+                error: "Таймаут соединения",
+                status: 408
+            });
         };
 
         xhr.onerror = function() {
-            callback({ success: false, error: "Ошибка сети" });
+            if (callback) callback({
+                success: false,
+                error: "Ошибка сети",
+                status: 0
+            });
         };
 
         try {
             xhr.open(method, url, true);
             xhr.setRequestHeader("Content-Type", "application/json");
-            if (authToken) {
-                xhr.setRequestHeader("Authorization", "Bearer " + authToken);
+            xhr.setRequestHeader("Authorization", "Bearer " + authToken);
+
+            if (data) {
+                xhr.send(JSON.stringify(data));
+            } else {
+                xhr.send();
             }
-            xhr.send(data ? JSON.stringify(data) : null);
         } catch (error) {
-            callback({ success: false, error: "Ошибка отправки: " + error });
+            console.error("❌ Request error:", error);
+            if (callback) callback({
+                success: false,
+                error: "Ошибка отправки запроса: " + error,
+                status: 0
+            });
         }
-    }
-
-    function getCachedData(key) {
-        switch(key) {
-            case "teachers": return teachersCache;
-            case "students": return studentsCache;
-            case "groups": return groupsCache;
-            default: return null;
-        }
-    }
-
-    function setCachedData(key, data) {
-        cacheTimestamp[key] = Date.now()
-        switch(key) {
-            case "teachers": teachersCache = data; break;
-            case "students": studentsCache = data; break;
-            case "groups": groupsCache = data; break;
-        }
-    }
-
-    // Teachers API
-    function getTeachers(callback) {
-        apiRequest("GET", "/teachers", null, callback, true, "teachers");
-    }
-
-    function addTeacher(teacherData, callback) {
-        apiRequest("POST", "/teachers", teacherData, function(result) {
-            if (result.success) clearCache();
-            callback(result);
-        });
-    }
-
-    function updateTeacher(teacherId, teacherData, callback) {
-        apiRequest("PUT", "/teachers/" + teacherId, teacherData, function(result) {
-            if (result.success) clearCache();
-            callback(result);
-        });
-    }
-
-    function deleteTeacher(teacherId, callback) {
-        apiRequest("DELETE", "/teachers/" + teacherId, null, function(result) {
-            if (result.success) clearCache();
-            callback(result);
-        });
-    }
-
-    // Students API
-    function getStudents(callback) {
-        apiRequest("GET", "/students", null, callback, true, "students");
-    }
-
-    function addStudent(studentData, callback) {
-        apiRequest("POST", "/students", studentData, function(result) {
-            if (result.success) clearCache();
-            callback(result);
-        });
-    }
-
-    function updateStudent(studentId, studentData, callback) {
-        apiRequest("PUT", "/students/" + studentId, studentData, function(result) {
-            if (result.success) clearCache();
-            callback(result);
-        });
-    }
-
-    function deleteStudent(studentId, callback) {
-        apiRequest("DELETE", "/students/" + studentId, null, function(result) {
-            if (result.success) clearCache();
-            callback(result);
-        });
-    }
-
-    // Groups API
-    function getGroups(callback) {
-        apiRequest("GET", "/groups", null, callback, true, "groups");
-    }
-
-    function addGroup(groupData, callback) {
-        apiRequest("POST", "/groups", groupData, function(result) {
-            if (result.success) clearCache();
-            callback(result);
-        });
-    }
-
-    function updateGroup(groupId, groupData, callback) {
-        apiRequest("PUT", "/groups/" + groupId, groupData, function(result) {
-            if (result.success) clearCache();
-            callback(result);
-        });
-    }
-
-    function deleteGroup(groupId, callback) {
-        apiRequest("DELETE", "/groups/" + groupId, null, function(result) {
-            if (result.success) clearCache();
-            callback(result);
-        });
-    }
-
-    // Profile API
-    function getProfile(callback) {
-        apiRequest("GET", "/profile", null, callback);
-    }
-
-    function updateProfile(profileData, callback) {
-        apiRequest("PUT", "/profile", profileData, callback);
     }
 }

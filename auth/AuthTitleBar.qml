@@ -142,32 +142,32 @@ Rectangle {
         }
     }
 
-    // Универсальная область для перетаскивания окна
-                MouseArea {
-                    id: dragArea
-                    anchors {
-                        left: gitflicButton.right
-                        right: buttonRowsPanel.left
-                        top: parent.top
-                        bottom: parent.bottom
-                        leftMargin: 5
-                    }
-                    drag.target: null
-                    property point clickPos: Qt.point(0, 0)
-                    onPressed: function(mouse) {
-                        if (mouse.button === Qt.LeftButton) {
-                            clickPos = Qt.point(mouse.x, mouse.y)
-                            mainWindow.startSystemMove()
-                        }
-                    }
-                    onPositionChanged: function(mouse) {
-                        if (mouse.buttons === Qt.LeftButton && !mainWindow.startSystemMove) {
-                            var delta = Qt.point(mouse.x - clickPos.x, mouse.y - clickPos.y)
-                            mainWindow.x += delta.x
-                            mainWindow.y += delta.y
-                        }
+    // Универсальная область для перетаскивания окна (Для Linux & Windows)
+    MouseArea {
+        id: dragArea
+        anchors {
+            left: gitflicButton.right
+            right: buttonRowsPanel.left
+            top: parent.top
+            bottom: parent.bottom
+            leftMargin: 5
+        }
+        drag.target: null
+        property point clickPos: Qt.point(0, 0)
+        onPressed: function(mouse) {
+            if (mouse.button === Qt.LeftButton) {
+                clickPos = Qt.point(mouse.x, mouse.y)
+                    mainWindow.startSystemMove()
                     }
                 }
+                onPositionChanged: function(mouse) {
+                    if (mouse.buttons === Qt.LeftButton && !mainWindow.startSystemMove) {
+                        var delta = Qt.point(mouse.x - clickPos.x, mouse.y - clickPos.y)
+                        mainWindow.x += delta.x
+                        mainWindow.y += delta.y
+                    }
+                }
+            }
 
 
     // Элементы для изменения размера окна
