@@ -15,12 +15,35 @@ ApplicationWindow {
     minimumWidth: 1000
     minimumHeight: 700
 
+    // Необходимые свойства
+    property string appName: "EduFlow"
+
+    // Временная заглушка для settingsManager
+    property var settingsManager: QtObject {
+        property string authToken: ""
+        property string serverAddress: "http://localhost:5000"
+        property bool useLocalServer: true
+    }
+
+    // Свойства для передачи параметров
     property string authToken: ""
+    property string serverAddress: ""
+    property bool useLocalServer: false
+
+    property var viewTitles: ({
+        "dashboard": "Главная панель",
+        "teachers": "Преподаватели",
+        "students": "Студенты",
+        "groups": "Группы",
+        "portfolio": "Портфолио",
+        "events": "События"
+    })
+
     property bool isWindowMaximized: false
     property string currentView: "dashboard"
     property bool isLoading: false
+    property string _previousView: ""
 
-    // Сообщения
     property string _errorMessage: ""
     property bool _showingError: false
     property string _successMessage: ""
@@ -33,207 +56,322 @@ ApplicationWindow {
     property var portfolio: []
     property var events: []
 
-    // API ошибки
-    property var apiErrors: ({
-        "teachers": "",
-        "students": "",
-        "groups": "",
-        "portfolio": "",
-        "events": "",
-        "dashboard": ""
-    })
-
     Component.onCompleted: {
-        console.log("Main window initialized with token:", authToken ? "***" + authToken.slice(-8) : "none")
+        console.log("🔧 Инициализация главного окна");
+        console.log("📡 Токен доступен:", authToken ? "да, длина " + authToken.length : "нет");
+        console.log("🌐 Адрес сервера:", serverAddress);
+        console.log("💻 Локальный сервер:", useLocalServer);
 
-        // Инициализация API
-        var serverAddress = settingsManager.useLocalServer ?
-            settingsManager.serverAddress :
-            (mainApi.remoteApiBaseUrl + ":" + mainApi.remotePort)
-
-        mainApi.setConfig(authToken, serverAddress, settingsManager.useLocalServer)
-
-        loadInitialData()
-    }
-
-    function loadInitialData() {
-        isLoading = true
-        clearAllErrors()
-
-        // Параллельная загрузка данных
-        var loadPromises = [
-            { name: "teachers", func: loadTeachers },
-            { name: "students", func: loadStudents },
-            { name: "groups", func: loadGroups }
-        ]
-
-        var loadedCount = 0
-        var totalToLoad = loadPromises.length
-
-        function checkAllLoaded() {
-            loadedCount++
-            if (loadedCount >= totalToLoad) {
-                isLoading = false
-                if (!hasAnyError()) {
-                    showSuccess("Данные успешно загружены")
-                }
-            }
+        // Инициализируем боковую панель
+        if (sideBar) {
+            sideBar.setCurrentView(currentView);
         }
 
-        loadPromises.forEach(function(promise) {
-            promise.func.call(this, checkAllLoaded)
-        })
+        // Всегда показываем интерфейс, даже без данных
+        if (authToken && authToken.length > 0) {
+            console.log("🚀 Токен передан, инициализируем API...");
+            initializeApiAndLoadData();
+        } else if (settingsManager.authToken && settingsManager.authToken.length > 0) {
+            console.log("🔄 Токен найден в настройках, используем его...");
+            authToken = settingsManager.authToken;
+            serverAddress = settingsManager.useLocalServer ?
+                settingsManager.serverAddress :
+                (mainApi.remoteApiBaseUrl + ":" + mainApi.remotePort);
+            useLocalServer = settingsManager.useLocalServer;
+            initializeApiAndLoadData();
+        } else {
+            console.log("ℹ️ Токен не найден, показываем интерфейс без данных");
+            showSuccess("Добро пожаловать в " + appName + "! Для загрузки данных войдите в систему.");
+        }
+    }
 
-        loadTimeoutTimer.start()
+    function getCurrentViewName() {
+        switch(currentView) {
+            case "dashboard": return "Главная панель";
+            case "teachers": return "Преподаватели";
+            case "students": return "Студенты";
+            case "groups": return "Группы";
+            case "portfolio": return "Портфолио";
+            case "events": return "События";
+            default: return "Главная";
+        }
+    }
+
+    function initializeApiAndLoadData() {
+        if (!authToken || authToken.length === 0) {
+            console.error("❌ Токен не доступен для инициализации API");
+            showError("Токен авторизации не найден. Пожалуйста, войдите заново.");
+            return;
+        }
+
+        // Убедимся, что serverAddress установлен
+        if (!serverAddress || serverAddress === "") {
+            serverAddress = settingsManager.useLocalServer ?
+                settingsManager.serverAddress :
+                (mainApi.remoteApiBaseUrl + ":" + mainApi.remotePort);
+            useLocalServer = settingsManager.useLocalServer;
+        }
+
+        console.log("🔧 Настройка API:");
+        console.log("   🔑 Токен:", authToken ? "***" + authToken.slice(-8) : "нет");
+        console.log("   🌐 Адрес:", serverAddress);
+        console.log("   💻 Локальный:", useLocalServer);
+
+        // Настройка API
+        mainApi.setConfig(authToken, serverAddress, useLocalServer);
+
+        // Пытаемся загрузить данные, но не блокируем интерфейс при ошибках
+        loadAllData();
+    }
+
+    function loadAllData() {
+        console.log("📥 Начинаем загрузку данных...");
+        isLoading = true;
+
+        // Используем задержку для предотвращения рекурсии
+        Qt.callLater(function() {
+            var teachersLoaded = false;
+            var studentsLoaded = false;
+            var groupsLoaded = false;
+
+            function checkAllLoaded() {
+                if (teachersLoaded && studentsLoaded && groupsLoaded) {
+                    isLoading = false;
+                    var hasData = teachers.length > 0 || students.length > 0 || groups.length > 0;
+                    if (hasData) {
+                        showSuccess("✅ Данные успешно загружены!");
+                    } else {
+                        showError("⚠️ Не удалось загрузить данные. Проверьте подключение к серверу.");
+                    }
+                }
+            }
+
+            // Загружаем преподавателей
+            loadTeachers(function() {
+                teachersLoaded = true;
+                checkAllLoaded();
+            });
+
+            // Загружаем студентов
+            loadStudents(function() {
+                studentsLoaded = true;
+                checkAllLoaded();
+            });
+
+            // Загружаем группы
+            loadGroups(function() {
+                groupsLoaded = true;
+                checkAllLoaded();
+            });
+        });
     }
 
     function loadTeachers(callback) {
+        console.log("👨‍🏫 Загрузка преподавателей...");
+
+        if (!authToken || authToken.length === 0) {
+            console.error("❌ Токен не доступен для загрузки преподавателей");
+            if (callback) callback();
+            return;
+        }
+
         mainApi.getTeachers(function(result) {
-            loadTimeoutTimer.stop()
             if (result.success) {
-                teachers = result.data || []
-                console.log("Loaded teachers:", teachers.length)
-                clearError("teachers")
+                teachers = result.data || [];
+                console.log("✅ Преподаватели загружены:", teachers.length);
             } else {
-                setError("teachers", "Ошибка загрузки преподавателей: " + result.error)
-                showError("Ошибка загрузки преподавателей: " + result.error)
+                console.log("⚠️ Ошибка загрузки преподавателей:", result.error);
+                if (result.status === 401) {
+                    console.log("🔐 Ошибка авторизации при загрузке преподавателей");
+                    showError("Ошибка авторизации. Пожалуйста, войдите заново.");
+                }
             }
-            if (callback) callback()
-        })
+            if (callback) callback();
+        });
     }
 
     function loadStudents(callback) {
+        console.log("👨‍🎓 Загрузка студентов...");
+
+        if (!authToken || authToken.length === 0) {
+            console.error("❌ Токен не доступен для загрузки студентов");
+            if (callback) callback();
+            return;
+        }
+
         mainApi.getStudents(function(result) {
             if (result.success) {
-                students = result.data || []
-                console.log("Loaded students:", students.length)
-                clearError("students")
+                students = result.data || [];
+                console.log("✅ Студенты загружены:", students.length);
             } else {
-                setError("students", "Ошибка загрузки студентов: " + result.error)
-                showError("Ошибка загрузки студентов: " + result.error)
+                console.log("⚠️ Ошибка загрузки студентов:", result.error);
+                if (result.status === 401) {
+                    console.log("🔐 Ошибка авторизации при загрузке студентов");
+                    showError("Ошибка авторизации. Пожалуйста, войдите заново.");
+                }
             }
-            if (callback) callback()
-        })
+            if (callback) callback();
+        });
     }
 
     function loadGroups(callback) {
+        console.log("👥 Загрузка групп...");
+
+        if (!authToken || authToken.length === 0) {
+            console.error("❌ Токен не доступен для загрузки групп");
+            if (callback) callback();
+            return;
+        }
+
         mainApi.getGroups(function(result) {
             if (result.success) {
-                groups = result.data || []
-                console.log("Loaded groups:", groups.length)
-                clearError("groups")
+                groups = result.data || [];
+                console.log("✅ Группы загружены:", groups.length);
             } else {
-                setError("groups", "Ошибка загрузки групп: " + result.error)
-                showError("Ошибка загрузки групп: " + result.error)
+                console.log("⚠️ Ошибка загрузки групп:", result.error);
+                if (result.status === 401) {
+                    console.log("🔐 Ошибка авторизации при загрузке групп");
+                    showError("Ошибка авторизации. Пожалуйста, войдите заново.");
+                }
             }
-            if (callback) callback()
-        })
+            if (callback) callback();
+        });
     }
 
-    function loadPortfolio(callback) {
+    function loadPortfolio() {
+        if (!authToken || authToken.length === 0) {
+            console.error("❌ Токен не доступен для загрузки портфолио");
+            return;
+        }
+
         mainApi.getPortfolios(function(result) {
             if (result.success) {
-                portfolio = result.data || []
-                console.log("Loaded portfolio items:", portfolio.length)
-                clearError("portfolio")
+                portfolio = result.data || [];
+                console.log("✅ Портфолио загружено:", portfolio.length);
             } else {
-                setError("portfolio", "Ошибка загрузки портфолио: " + result.error)
-                showError("Ошибка загрузки портфолио: " + result.error)
+                console.log("⚠️ Ошибка загрузки портфолио:", result.error);
             }
-            if (callback) callback()
-        })
+        });
     }
 
-    function loadEvents(callback) {
+    function loadEvents() {
+        if (!authToken || authToken.length === 0) {
+            console.error("❌ Токен не доступен для загрузки событий");
+            return;
+        }
+
         mainApi.getEvents(function(result) {
             if (result.success) {
-                events = result.data || []
-                console.log("Loaded events:", events.length)
-                clearError("events")
+                events = result.data || [];
+                console.log("✅ События загружены:", events.length);
             } else {
-                setError("events", "Ошибка загрузки событий: " + result.error)
-                showError("Ошибка загрузки событий: " + result.error)
+                console.log("⚠️ Ошибка загрузки событий:", result.error);
             }
-            if (callback) callback()
-        })
+        });
     }
 
-    // Управление ошибками
-    function setError(section, message) {
-        apiErrors[section] = message
-        console.error("Error in", section + ":", message)
-    }
+    function navigateTo(view) {
+        console.log("🧭 Навигация запрошена:", view, "текущий вид:", currentView);
 
-    function clearError(section) {
-        apiErrors[section] = ""
-    }
+        // Проверяем, не пытаемся ли перейти на тот же вид
+        if (currentView === view) {
+            console.log("Уже на запрошенном виде, навигация пропущена");
+            return;
+        }
 
-    function clearAllErrors() {
-        for (var key in apiErrors) {
-            apiErrors[key] = ""
+        // Сохраняем предыдущий вид
+        _previousView = currentView;
+
+        // Устанавливаем новый вид
+        currentView = view;
+        console.log("✅ Навигация выполнена. Новый вид:", currentView);
+
+        // Обновляем боковую панель
+        if (sideBar) {
+            sideBar.setCurrentView(view);
+        }
+
+        // Загружаем данные если нужно
+        if (view === "portfolio" && portfolio.length === 0) {
+            loadPortfolio();
+        } else if (view === "events" && events.length === 0) {
+            loadEvents();
         }
     }
 
-    function hasError(section) {
-        return apiErrors[section] !== ""
+    function logout() {
+        console.log("🚪 Выход из системы...");
+
+        // Очищаем токены
+        authToken = "";
+        settingsManager.authToken = "";
+
+        // Очищаем данные
+        teachers = [];
+        students = [];
+        groups = [];
+        portfolio = [];
+        events = [];
+
+        showAuthWindow();
     }
 
-    function hasAnyError() {
-        for (var key in apiErrors) {
-            if (apiErrors[key] !== "") return true
+    function showAuthWindow() {
+        console.log("🔄 Переход к окну авторизации...");
+
+        try {
+            var component = Qt.createComponent("../auth/Auth.qml");
+            if (component.status === Component.Ready) {
+                var window = component.createObject(mainWindow, {
+                    "x": mainWindow.x + (mainWindow.width - 420) / 2,
+                    "y": mainWindow.y + (mainWindow.height - 500) / 2,
+                    "width": 420,
+                    "height": 500
+                });
+                if (window) {
+                    console.log("✅ Окно авторизации создано");
+                    window.show();
+                } else {
+                    console.error("❌ Не удалось создать окно авторизации");
+                    showError("Не удалось открыть окно авторизации");
+                }
+            } else {
+                console.error("❌ Ошибка создания компонента авторизации:", component.errorString());
+                showError("Ошибка загрузки интерфейса авторизации");
+            }
+        } catch (error) {
+            console.error("❌ Критическая ошибка при создании окна авторизации:", error);
+            Qt.quit();
         }
-        return false
-    }
-
-    function getError(section) {
-        return apiErrors[section] || ""
     }
 
     function showError(message) {
-        _successMessage = ""
-        _showingSuccess = false
-        _errorMessage = message
-        _showingError = message !== ""
-
-        if (_showingError) {
-            errorAutoHideTimer.restart()
-        }
+        _successMessage = "";
+        _showingSuccess = false;
+        _errorMessage = message;
+        _showingError = message !== "";
+        if (_showingError) errorAutoHideTimer.restart();
     }
 
     function showSuccess(message) {
-        _errorMessage = ""
-        _showingError = false
-        _successMessage = message
-        _showingSuccess = message !== ""
-
-        if (_showingSuccess) {
-            successAutoHideTimer.restart()
-        }
+        _errorMessage = "";
+        _showingError = false;
+        _successMessage = message;
+        _showingSuccess = message !== "";
+        if (_showingSuccess) successAutoHideTimer.restart();
     }
 
     function toggleMaximize() {
         if (isWindowMaximized) {
-            showNormal()
-            isWindowMaximized = false
+            showNormal();
+            isWindowMaximized = false;
         } else {
-            showMaximized()
-            isWindowMaximized = true
+            showMaximized();
+            isWindowMaximized = true;
         }
     }
 
-    function navigateTo(view) {
-        currentView = view
-        console.log("Navigated to:", view)
-
-        // Загружаем данные для выбранного раздела если они еще не загружены
-        if (view === "portfolio" && portfolio.length === 0 && !hasError("portfolio")) {
-            loadPortfolio()
-        } else if (view === "events" && events.length === 0 && !hasError("events")) {
-            loadEvents()
-        }
-    }
-
-    // Основной контейнер
+    // Основной интерфейс
     Rectangle {
         id: windowContainer
         anchors.fill: parent
@@ -241,7 +379,6 @@ ApplicationWindow {
         color: "#f0f0f0"
         clip: true
 
-        // Градиентный фон
         Rectangle {
             anchors.fill: parent
             gradient: Gradient {
@@ -250,48 +387,30 @@ ApplicationWindow {
             }
         }
 
-        // Упрощенный фон с полигонами
         PolygonBackground {
             anchors.fill: parent
         }
 
-        // Заголовок
         MainTitleBar {
             id: titleBar
             anchors {
                 top: parent.top
                 left: parent.left
                 right: parent.right
-                margins: 10
+                margins: 5
             }
             isWindowMaximized: mainWindow.isWindowMaximized
-            currentView: getViewTitle(mainWindow.currentView)
+            currentView: getCurrentViewName()
+            mainWindow: mainWindow
 
-            onToggleMaximize: toggleMaximize()
-            onShowMinimized: showMinimized()
+            onToggleMaximize: mainWindow.toggleMaximize()
+            onShowMinimized: mainWindow.showMinimized()
             onClose: Qt.quit()
         }
 
-        function getViewTitle(view) {
-            var titles = {
-                "dashboard": "Главная панель",
-                "teachers": "Преподаватели",
-                "students": "Студенты",
-                "groups": "Группы",
-                "portfolio": "Портфолио",
-                "events": "События"
-            }
-            return titles[view] || "Главная панель"
-        }
-
-        // Сообщения
         MainMessage {
             id: errorMessage
-            anchors {
-                horizontalCenter: parent.horizontalCenter
-                top: titleBar.bottom
-                topMargin: 8
-            }
+            anchors { horizontalCenter: parent.horizontalCenter; top: titleBar.bottom; topMargin: 8 }
             width: Math.min(parent.width * 0.8, 600)
             messageText: _errorMessage
             showingMessage: _showingError
@@ -301,11 +420,7 @@ ApplicationWindow {
 
         MainMessage {
             id: successMessage
-            anchors {
-                horizontalCenter: parent.horizontalCenter
-                top: errorMessage.bottom
-                topMargin: 4
-            }
+            anchors { horizontalCenter: parent.horizontalCenter; top: errorMessage.bottom; topMargin: 4 }
             width: Math.min(parent.width * 0.8, 600)
             messageText: _successMessage
             showingMessage: _showingSuccess
@@ -313,275 +428,40 @@ ApplicationWindow {
             onCloseMessage: showSuccess("")
         }
 
-        // Основной контент
         Rectangle {
             id: mainContent
             anchors {
-                top: successMessage.bottom
-                bottom: parent.bottom
-                left: parent.left
-                right: parent.right
-                margins: 10
+                top: successMessage.bottom;
+                bottom: parent.bottom;
+                left: parent.left;
+                right: parent.right;
+                margins: 10;
                 topMargin: 15
             }
             color: "transparent"
 
-            // Боковая панель навигации (слева)
-            Rectangle {
+            // Адаптивная боковая панель
+            AdaptiveSideBar {
                 id: sideBar
-                width: 280
-                anchors {
-                    top: parent.top
-                    bottom: parent.bottom
-                    left: parent.left
+                anchors { top: parent.top; bottom: parent.bottom; left: parent.left }
+
+                onNavigateTo: function(view) {
+                    navigateTo(view)
                 }
-                color: "#f8f8f8"
-                radius: 12
-                opacity: 0.95
 
-                ColumnLayout {
-                    anchors.fill: parent
-                    anchors.margins: 15
-                    spacing: 10
-
-                    Text {
-                        text: "🎯 Панель управления"
-                        font.pixelSize: 18
-                        font.bold: true
-                        color: "#2c3e50"
-                        Layout.alignment: Qt.AlignHCenter
-                        Layout.bottomMargin: 10
-                    }
-
-                    // Основные разделы
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 5
-
-                        Text {
-                            text: "📊 Основные разделы"
-                            font.pixelSize: 12
-                            font.bold: true
-                            color: "#7f8c8d"
-                            Layout.bottomMargin: 5
-                        }
-
-                        Repeater {
-                            model: [
-                                {icon: "🏠", name: "Главная панель", view: "dashboard", errorKey: "dashboard"},
-                                {icon: "👨‍🏫", name: "Преподаватели", view: "teachers", errorKey: "teachers"},
-                                {icon: "👨‍🎓", name: "Студенты", view: "students", errorKey: "students"},
-                                {icon: "👥", name: "Группы", view: "groups", errorKey: "groups"},
-                                {icon: "📁", name: "Портфолио", view: "portfolio", errorKey: "portfolio"},
-                                {icon: "📅", name: "События", view: "events", errorKey: "events"}
-                            ]
-
-                            Rectangle {
-                                Layout.fillWidth: true
-                                height: 50
-                                radius: 8
-                                color: mainWindow.currentView === modelData.view ? "#3498db" :
-                                      (navMouseArea.containsMouse ? "#ecf0f1" : "transparent")
-                                border.color: mainWindow.currentView === modelData.view ? "#2980b9" : "transparent"
-                                border.width: 2
-
-                                Row {
-                                    anchors.fill: parent
-                                    anchors.margins: 10
-                                    spacing: 12
-
-                                    Text {
-                                        text: modelData.icon
-                                        font.pixelSize: 16
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-
-                                    Column {
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        spacing: 2
-
-                                        Text {
-                                            text: modelData.name
-                                            color: mainWindow.currentView === modelData.view ? "white" : "#2c3e50"
-                                            font.pixelSize: 13
-                                            font.bold: true
-                                        }
-
-                                        // Показать ошибку для раздела
-                                        Text {
-                                            text: hasError(modelData.errorKey) ? "❌ Ошибка загрузки" : ""
-                                            font.pixelSize: 9
-                                            color: "#e74c3c"
-                                            visible: hasError(modelData.errorKey)
-                                        }
-                                    }
-
-                                    Item {
-                                        Layout.fillWidth: true
-                                    }
-
-                                    // Индикатор загрузки/ошибки
-                                    Rectangle {
-                                        width: 8
-                                        height: 8
-                                        radius: 4
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        color: {
-                                            if (hasError(modelData.errorKey)) return "#e74c3c"
-                                            if (isLoading && mainWindow.currentView === modelData.view) return "#f39c12"
-                                            return mainWindow.currentView === modelData.view ? "#2ecc71" : "transparent"
-                                        }
-                                    }
-                                }
-
-                                MouseArea {
-                                    id: navMouseArea
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: navigateTo(modelData.view)
-                                }
-                            }
-                        }
-                    }
-
-                    Item {
-                        Layout.fillHeight: true
-                    }
-
-                    // Статистика и быстрые действия
-                    ColumnLayout {
-                        Layout.fillWidth: true
-                        spacing: 10
-
-                        // Статистика
-                        Rectangle {
-                            Layout.fillWidth: true
-                            height: 100
-                            radius: 8
-                            color: "#e8f4f8"
-                            border.color: "#bde0fe"
-                            border.width: 1
-
-                            Column {
-                                anchors.centerIn: parent
-                                spacing: 3
-
-                                Text {
-                                    text: "📈 Статистика системы"
-                                    font.pixelSize: 12
-                                    font.bold: true
-                                    color: "#2c3e50"
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                }
-
-                                Text {
-                                    text: "👨‍🏫 " + teachers.length + " преподавателей"
-                                    font.pixelSize: 10
-                                    color: hasError("teachers") ? "#e74c3c" : "#7f8c8d"
-                                }
-
-                                Text {
-                                    text: "👨‍🎓 " + students.length + " студентов"
-                                    font.pixelSize: 10
-                                    color: hasError("students") ? "#e74c3c" : "#7f8c8d"
-                                }
-
-                                Text {
-                                    text: "👥 " + groups.length + " групп"
-                                    font.pixelSize: 10
-                                    color: hasError("groups") ? "#e74c3c" : "#7f8c8d"
-                                }
-
-                                Text {
-                                    text: "📊 " + (portfolio.length + events.length) + " записей"
-                                    font.pixelSize: 10
-                                    color: (hasError("portfolio") || hasError("events")) ? "#e74c3c" : "#7f8c8d"
-                                }
-                            }
-                        }
-
-                        // Быстрые действия
-                        Rectangle {
-                            Layout.fillWidth: true
-                            height: 80
-                            radius: 8
-                            color: "#fff3cd"
-                            border.color: "#ffeaa7"
-                            border.width: 1
-
-                            Column {
-                                anchors.centerIn: parent
-                                spacing: 5
-
-                                Text {
-                                    text: "🚀 Быстрые действия"
-                                    font.pixelSize: 11
-                                    font.bold: true
-                                    color: "#856404"
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                }
-
-                                Row {
-                                    spacing: 8
-                                    anchors.horizontalCenter: parent.horizontalCenter
-
-                                    Rectangle {
-                                        width: 70
-                                        height: 25
-                                        radius: 5
-                                        color: quickAddMouseArea.pressed ? "#2980b9" : "#3498db"
-
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: "+ Студент"
-                                            font.pixelSize: 9
-                                            color: "white"
-                                            font.bold: true
-                                        }
-
-                                        MouseArea {
-                                            id: quickAddMouseArea
-                                            anchors.fill: parent
-                                            onClicked: showError("Функция добавления студента в разработке")
-                                        }
-                                    }
-
-                                    Rectangle {
-                                        width: 70
-                                        height: 25
-                                        radius: 5
-                                        color: quickEventMouseArea.pressed ? "#27ae60" : "#2ecc71"
-
-                                        Text {
-                                            anchors.centerIn: parent
-                                            text: "+ Событие"
-                                            font.pixelSize: 9
-                                            color: "white"
-                                            font.bold: true
-                                        }
-
-                                        MouseArea {
-                                            id: quickEventMouseArea
-                                            anchors.fill: parent
-                                            onClicked: showError("Функция добавления события в разработке")
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+                onLogout: {
+                    logout()
                 }
             }
 
-            // Область контента (справа)
+            // Область контента
             Rectangle {
                 id: contentArea
                 anchors {
-                    top: parent.top
-                    bottom: parent.bottom
-                    left: sideBar.right
-                    right: parent.right
+                    top: parent.top;
+                    bottom: parent.bottom;
+                    left: sideBar.right;
+                    right: parent.right;
                     leftMargin: 15
                 }
                 color: "#f8f8f8"
@@ -592,19 +472,17 @@ ApplicationWindow {
                     id: contentLoader
                     anchors.fill: parent
                     anchors.margins: 10
-                    source: getViewComponent(mainWindow.currentView)
-                }
-
-                function getViewComponent(view) {
-                    var components = {
-                        "dashboard": "DashboardView.qml",
-                        "teachers": "TeachersView.qml",
-                        "students": "StudentsView.qml",
-                        "groups": "GroupsView.qml",
-                        "portfolio": "PortfolioView.qml",
-                        "events": "EventsView.qml"
+                    source: {
+                        var components = {
+                            "dashboard": "DashboardView.qml",
+                            "teachers": "TeachersView.qml",
+                            "students": "StudentsView.qml",
+                            "groups": "GroupsView.qml",
+                            "portfolio": "PortfolioView.qml",
+                            "events": "EventsView.qml"
+                        }
+                        return components[currentView] || "DashboardView.qml"
                     }
-                    return components[view] || "DashboardView.qml"
                 }
             }
         }
@@ -643,8 +521,8 @@ ApplicationWindow {
 
             Column {
                 anchors {
-                    horizontalCenter: parent.horizontalCenter
-                    top: parent.verticalCenter
+                    horizontalCenter: parent.horizontalCenter;
+                    top: parent.verticalCenter;
                     topMargin: 60
                 }
                 spacing: 5
@@ -673,23 +551,14 @@ ApplicationWindow {
     }
 
     Timer {
-        id: errorAutoHideTimer
-        interval: 8000
+        id: errorAutoHideTimer;
+        interval: 8000;
         onTriggered: showError("")
     }
 
     Timer {
-        id: successAutoHideTimer
-        interval: 4000
+        id: successAutoHideTimer;
+        interval: 4000;
         onTriggered: showSuccess("")
-    }
-
-    Timer {
-        id: loadTimeoutTimer
-        interval: 15000
-        onTriggered: {
-            isLoading = false
-            showError("Таймаут загрузки данных. Проверьте подключение к серверу.")
-        }
     }
 }

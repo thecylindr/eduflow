@@ -62,6 +62,7 @@ ApplicationWindow {
                 // Показываем главное окно и скрываем окно авторизации
                 item.visible = true;
                 mainWindow.visible = false;
+                mainWindow.hide()
             }
         }
 
@@ -483,6 +484,7 @@ ApplicationWindow {
                 top: parent.top
                 left: parent.left
                 right: parent.right
+                margins: 10
             }
             isWindowMaximized: mainWindow.isWindowMaximized
 

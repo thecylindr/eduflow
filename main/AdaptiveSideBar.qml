@@ -11,9 +11,12 @@ Rectangle {
     opacity: 0.95
 
     property int currentWidth: 280
-    property int compactWidth: 80
+    property int compactWidth: 70
     property int fullWidth: 280
     property string currentMode: "full"
+
+    // Внутреннее свойство для отслеживания текущего вида
+    property string _currentView: "dashboard"
 
     signal navigateTo(string view)
     signal logout()
@@ -27,160 +30,109 @@ Rectangle {
         {icon: "📅", name: "События", view: "events"}
     ]
 
+    // Функция для обновления текущего вида извне
+    function setCurrentView(view) {
+        if (_currentView !== view) {
+            _currentView = view;
+        }
+    }
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 10
         spacing: 8
 
-        // Панель режимов
+        // Кнопка переключения режимов
         Rectangle {
             Layout.fillWidth: true
-            height: 30
-            radius: 6
-            color: "#e8f4f8"
-            border.color: "#bde0fe"
+            height: 40
+            radius: 8
+            color: toggleMouseArea.containsMouse ? "#e3f2fd" : "transparent"
+            border.color: "#3498db"
             border.width: 1
 
             Row {
                 anchors.centerIn: parent
                 spacing: 8
 
-                Rectangle {
-                    width: 20
-                    height: 20
-                    radius: 4
-                    color: adaptiveSideBar.currentMode === "icons" ? "#3498db" : "transparent"
-                    border.color: "#3498db"
-                    border.width: 1
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "◼"
-                        font.pixelSize: 8
-                        color: adaptiveSideBar.currentMode === "icons" ? "white" : "#3498db"
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            adaptiveSideBar.currentMode = "icons"
-                            adaptiveSideBar.currentWidth = compactWidth
-                        }
-                    }
+                Text {
+                    text: currentMode === "full" ? "◀" : "▶"
+                    font.pixelSize: 16
+                    color: "#3498db"
                 }
 
-                Rectangle {
-                    width: 20
-                    height: 20
-                    radius: 4
-                    color: adaptiveSideBar.currentMode === "compact" ? "#2ecc71" : "transparent"
-                    border.color: "#2ecc71"
-                    border.width: 1
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "▮"
-                        font.pixelSize: 8
-                        color: adaptiveSideBar.currentMode === "compact" ? "white" : "#2ecc71"
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            adaptiveSideBar.currentMode = "compact"
-                            adaptiveSideBar.currentWidth = compactWidth + 40
-                        }
-                    }
+                Text {
+                    text: "Свернуть"
+                    font.pixelSize: 12
+                    color: "#2c3e50"
+                    visible: currentMode === "full"
                 }
+            }
 
-                Rectangle {
-                    width: 20
-                    height: 20
-                    radius: 4
-                    color: adaptiveSideBar.currentMode === "full" ? "#e74c3c" : "transparent"
-                    border.color: "#e74c3c"
-                    border.width: 1
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: "▮▮"
-                        font.pixelSize: 8
-                        color: adaptiveSideBar.currentMode === "full" ? "white" : "#e74c3c"
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: {
-                            adaptiveSideBar.currentMode = "full"
-                            adaptiveSideBar.currentWidth = fullWidth
-                        }
+            MouseArea {
+                id: toggleMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    if (currentMode === "full") {
+                        currentMode = "compact"
+                        currentWidth = compactWidth
+                    } else {
+                        currentMode = "full"
+                        currentWidth = fullWidth
                     }
                 }
             }
         }
 
+        // Заголовок
         Text {
-            text: {
-                if (currentMode === "icons") return "🎯"
-                if (currentMode === "compact") return "Панель"
-                return "🎯 Панель управления"
-            }
-            font.pixelSize: currentMode === "icons" ? 24 : 18
+            text: currentMode === "full" ? "🎯 Панель управления" : "🎯"
+            font.pixelSize: currentMode === "full" ? 18 : 24
             font.bold: true
             color: "#2c3e50"
             Layout.alignment: Qt.AlignHCenter
             Layout.bottomMargin: 10
         }
 
+        // Основное меню
         ColumnLayout {
             Layout.fillWidth: true
+            Layout.fillHeight: true
             spacing: 5
-
-            Text {
-                text: currentMode === "full" ? "📊 Основные разделы" : ""
-                font.pixelSize: 12
-                font.bold: true
-                color: "#7f8c8d"
-                Layout.bottomMargin: 5
-                visible: currentMode !== "icons"
-            }
 
             Repeater {
                 model: menuItems
 
                 delegate: Rectangle {
+                    id: menuItem
                     Layout.fillWidth: true
-                    height: adaptiveSideBar.currentMode === "icons" ? 40 : 50
+                    height: 50
                     radius: 8
-                    color: mainWindow.currentView === modelData.view ? "#3498db" :
+                    color: adaptiveSideBar._currentView === modelData.view ? "#3498db" :
                           (navMouseArea.containsMouse ? "#ecf0f1" : "transparent")
-                    border.color: mainWindow.currentView === modelData.view ? "#2980b9" : "transparent"
+                    border.color: adaptiveSideBar._currentView === modelData.view ? "#2980b9" : "transparent"
                     border.width: 2
 
                     Row {
                         anchors.fill: parent
-                        anchors.margins: adaptiveSideBar.currentMode === "icons" ? 5 : 10
-                        spacing: adaptiveSideBar.currentMode === "icons" ? 0 : 12
+                        anchors.margins: 10
+                        spacing: 12
 
                         Text {
                             text: modelData.icon
-                            font.pixelSize: adaptiveSideBar.currentMode === "icons" ? 18 : 16
+                            font.pixelSize: 16
                             anchors.verticalCenter: parent.verticalCenter
                         }
 
                         Text {
-                            text: {
-                                if (adaptiveSideBar.currentMode === "compact")
-                                    return modelData.name.split(" ")[0]
-                                if (adaptiveSideBar.currentMode === "full")
-                                    return modelData.name
-                                return ""
-                            }
-                            color: mainWindow.currentView === modelData.view ? "white" : "#2c3e50"
-                            font.pixelSize: adaptiveSideBar.currentMode === "compact" ? 10 : 13
+                            text: modelData.name
+                            color: adaptiveSideBar._currentView === modelData.view ? "white" : "#2c3e50"
+                            font.pixelSize: 13
                             font.bold: true
                             anchors.verticalCenter: parent.verticalCenter
-                            visible: adaptiveSideBar.currentMode !== "icons"
+                            visible: currentMode === "full"
                         }
                     }
 
@@ -189,7 +141,13 @@ Rectangle {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: adaptiveSideBar.navigateTo(modelData.view)
+                        onClicked: {
+                            console.log("Navigation requested:", modelData.view);
+                            if (adaptiveSideBar._currentView !== modelData.view) {
+                                adaptiveSideBar._currentView = modelData.view;
+                                adaptiveSideBar.navigateTo(modelData.view);
+                            }
+                        }
                     }
                 }
             }
@@ -197,86 +155,83 @@ Rectangle {
 
         Item { Layout.fillHeight: true }
 
-        ColumnLayout {
+        // Статистика (только в полном режиме)
+        Rectangle {
             Layout.fillWidth: true
-            spacing: 10
+            height: currentMode === "full" ? 100 : 0
+            radius: 8
+            color: "#e8f4f8"
+            border.color: "#bde0fe"
+            border.width: 1
+            visible: height > 0
 
-            Rectangle {
-                Layout.fillWidth: true
-                height: adaptiveSideBar.currentMode === "icons" ? 60 : 100
-                radius: 8
-                color: "#e8f4f8"
-                border.color: "#bde0fe"
-                border.width: 1
+            Column {
+                anchors.centerIn: parent
+                spacing: 3
 
-                Column {
-                    anchors.centerIn: parent
-                    spacing: 3
+                Text {
+                    text: "📈 Статистика системы"
+                    font.pixelSize: 12
+                    font.bold: true
+                    color: "#2c3e50"
+                    anchors.horizontalCenter: parent.horizontalCenter
+                }
 
-                    Text {
-                        text: {
-                            if (currentMode === "icons") return "📈"
-                            if (currentMode === "compact") return "Статистика"
-                            return "📈 Статистика системы"
-                        }
-                        font.pixelSize: currentMode === "icons" ? 16 : 12
-                        font.bold: currentMode !== "icons"
-                        color: "#2c3e50"
-                        anchors.horizontalCenter: parent.horizontalCenter
-                    }
+                Text {
+                    text: "👨‍🏫 " + (mainWindow.teachers ? mainWindow.teachers.length : 0)
+                    font.pixelSize: 10
+                    color: "#7f8c8d"
+                }
 
-                    Text {
-                        text: currentMode === "icons" ? mainWindow.teachers.length : "👨‍🏫 " + mainWindow.teachers.length
-                        font.pixelSize: currentMode === "icons" ? 12 : 10
-                        color: "#7f8c8d"
-                        visible: currentMode !== "icons"
-                    }
+                Text {
+                    text: "👨‍🎓 " + (mainWindow.students ? mainWindow.students.length : 0)
+                    font.pixelSize: 10
+                    color: "#7f8c8d"
+                }
 
-                    Text {
-                        text: currentMode === "icons" ? mainWindow.students.length : "👨‍🎓 " + mainWindow.students.length
-                        font.pixelSize: currentMode === "icons" ? 12 : 10
-                        color: "#7f8c8d"
-                        visible: currentMode !== "icons"
-                    }
+                Text {
+                    text: "👥 " + (mainWindow.groups ? mainWindow.groups.length : 0)
+                    font.pixelSize: 10
+                    color: "#7f8c8d"
+                }
+            }
+        }
 
-                    Text {
-                        text: currentMode === "icons" ? mainWindow.groups.length : "👥 " + mainWindow.groups.length
-                        font.pixelSize: currentMode === "icons" ? 12 : 10
-                        color: "#7f8c8d"
-                        visible: currentMode !== "icons"
-                    }
+        // Кнопка выхода
+        Rectangle {
+            Layout.fillWidth: true
+            height: 40
+            radius: 8
+            color: logoutMouseArea.containsMouse ? "#c0392b" : "#e74c3c"
+
+            Row {
+                anchors.centerIn: parent
+                spacing: 8
+
+                Text {
+                    text: "🚪"
+                    font.pixelSize: 14
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Text {
+                    text: "Выйти"
+                    color: "white"
+                    font.pixelSize: 12
+                    font.bold: true
+                    anchors.verticalCenter: parent.verticalCenter
+                    visible: currentMode === "full"
                 }
             }
 
-            Rectangle {
-                Layout.fillWidth: true
-                height: adaptiveSideBar.currentMode === "icons" ? 35 : 40
-                radius: 8
-                color: logoutMouseArea.pressed ? "#c0392b" : "#e74c3c"
-
-                Row {
-                    anchors.centerIn: parent
-                    spacing: adaptiveSideBar.currentMode === "icons" ? 0 : 8
-
-                    Text {
-                        text: "🚪"
-                        font.pixelSize: adaptiveSideBar.currentMode === "icons" ? 16 : 14
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-
-                    Text {
-                        text: adaptiveSideBar.currentMode === "icons" ? "" : "Выйти из системы"
-                        color: "white"
-                        font.pixelSize: adaptiveSideBar.currentMode === "icons" ? 0 : 12
-                        font.bold: true
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
-                }
-
-                MouseArea {
-                    id: logoutMouseArea
-                    anchors.fill: parent
-                    onClicked: adaptiveSideBar.logout()
+            MouseArea {
+                id: logoutMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    console.log("Logout requested")
+                    adaptiveSideBar.logout()
                 }
             }
         }

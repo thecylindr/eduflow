@@ -10,6 +10,7 @@ Rectangle {
 
     property bool isWindowMaximized: false
     property string currentView: "Главная"
+    property var mainWindow: null
 
     signal toggleMaximize
     signal showMinimized
@@ -31,7 +32,7 @@ Rectangle {
         color: gitflicMouseArea.containsMouse ? "#4CAF50" : "transparent"
         anchors {
             left: parent.left
-            leftMargin: 1
+            leftMargin: 10
             verticalCenter: parent.verticalCenter
         }
 
@@ -62,7 +63,7 @@ Rectangle {
         spacing: 6
 
         Rectangle {
-            id: minimizeButton
+            id: minimizeBtn
             width: 16
             height: 16
             radius: 8
@@ -80,12 +81,12 @@ Rectangle {
                 id: minimizeMouseArea
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: showMinimized()
+                onClicked: titleBar.showMinimized()
             }
         }
 
         Rectangle {
-            id: maximizeButton
+            id: maximizeBtn
             width: 16
             height: 16
             radius: 8
@@ -93,7 +94,7 @@ Rectangle {
 
             Text {
                 anchors.centerIn: parent
-                text: isWindowMaximized ? "❐" : "⛶"
+                text: titleBar.isWindowMaximized ? "❐" : "⛶"
                 color: maximizeMouseArea.containsMouse ? "white" : "#2c3e50"
                 font.pixelSize: 10
                 font.bold: true
@@ -103,7 +104,7 @@ Rectangle {
                 id: maximizeMouseArea
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: toggleMaximize()
+                onClicked: titleBar.toggleMaximize()
             }
         }
 
@@ -126,7 +127,7 @@ Rectangle {
                 id: closeMouseArea
                 anchors.fill: parent
                 hoverEnabled: true
-                onClicked: close()
+                onClicked: titleBar.close()
             }
         }
     }
@@ -136,7 +137,7 @@ Rectangle {
         id: dragArea
         anchors {
             left: gitflicButton.right
-            right: buttonRowsPanel.left
+            right: windowButtons.left
             top: parent.top
             bottom: parent.bottom
             leftMargin: 5
@@ -146,15 +147,17 @@ Rectangle {
         onPressed: function(mouse) {
             if (mouse.button === Qt.LeftButton) {
                 clickPos = Qt.point(mouse.x, mouse.y)
-                    mainWindow.startSystemMove()
-                    }
-                }
-                onPositionChanged: function(mouse) {
-                    if (mouse.buttons === Qt.LeftButton && !mainWindow.startSystemMove) {
-                        var delta = Qt.point(mouse.x - clickPos.x, mouse.y - clickPos.y)
-                        mainWindow.x += delta.x
-                        mainWindow.y += delta.y
-                    }
+                if (titleBar.mainWindow && typeof titleBar.mainWindow.startSystemMove === "function") {
+                    titleBar.mainWindow.startSystemMove()
                 }
             }
+        }
+        onPositionChanged: function(mouse) {
+            if (mouse.buttons === Qt.LeftButton && titleBar.mainWindow && !titleBar.mainWindow.startSystemMove) {
+                var delta = Qt.point(mouse.x - clickPos.x, mouse.y - clickPos.y)
+                titleBar.mainWindow.x += delta.x
+                titleBar.mainWindow.y += delta.y
+            }
+        }
+    }
 }
