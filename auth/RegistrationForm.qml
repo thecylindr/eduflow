@@ -64,6 +64,7 @@ Rectangle {
     }
 
     function clearForm() {
+        usernameField.text = ""
         fullNameField.text = ""
         emailField.text = ""
         phoneField.text = ""
@@ -86,6 +87,47 @@ Rectangle {
             color: "#2c3e50"
             Layout.alignment: Qt.AlignHCenter
             Layout.bottomMargin: 4
+        }
+
+        // Поле логина
+        ColumnLayout {
+            Layout.fillWidth: true
+            spacing: 3
+
+            Text {
+                text: "👤 Логин"
+                font.pixelSize: 11
+                color: "#2c3e50"
+            }
+
+            Rectangle {
+                Layout.fillWidth: true
+                height: 32
+                radius: 5
+                border.color: usernameField.activeFocus ? "#3498db" : "#d0d0d0"
+                border.width: usernameField.activeFocus ? 1.5 : 1
+                color: "#ffffff"
+
+                TextInput {
+                    id: usernameField
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    verticalAlignment: TextInput.AlignVCenter
+                    font.pixelSize: 12
+                    color: "#000000"
+                    selectByMouse: true
+                }
+
+                Text {
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    verticalAlignment: Text.AlignVCenter
+                    text: "Введите логин"
+                    color: "#a0a0a0"
+                    visible: !usernameField.text && !usernameField.activeFocus
+                    font.pixelSize: 12
+                }
+            }
         }
 
         // Объединенное поле ФИО
@@ -392,7 +434,7 @@ Rectangle {
         }
     }
 
-
+    property alias usernameField: usernameField
     property alias fullNameField: fullNameField
     property alias emailField: emailField
     property alias phoneField: phoneField

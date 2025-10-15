@@ -15,7 +15,7 @@ ApplicationWindow {
     minimumHeight: 700
 
     // Свойства для передачи параметров
-    //property string authToken: ""
+    property string authToken: ""
     //property string serverAddress: ""
     //property bool useLocalServer: false
 
@@ -46,10 +46,6 @@ ApplicationWindow {
     property var events: []
 
     Component.onCompleted: {
-        console.log("🔧 Инициализация главного окна");
-        console.log("📡 Токен доступен:", authToken ? "да, длина " + authToken.length : "нет");
-        console.log("🌐 Адрес сервера:", serverAddress);
-        console.log("💻 Локальный сервер:", useLocalServer);
 
         // Инициализируем боковую панель
         if (sideBar) {

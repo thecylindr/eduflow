@@ -36,31 +36,50 @@ ApplicationWindow {
     property var _loginResult: null
 
     property bool _showingRegistration: false
-    property int registrationExtraHeight: 110
+    property int registrationExtraHeight: 150
 
     property string authToken: ""
 
-    // Loader для главного окна (Main.qml)
+    signal loginSuccessful(string token, var userData)
+
+    // Добавляем AuthAPI
+    AuthAPI {
+        id: authAPI
+        remoteApiBaseUrl: authWindow.remoteApiBaseUrl
+        remotePort: authWindow.remotePort
+    }
+
     Loader {
         id: mainWindowLoader
         active: false
         asynchronous: true
         source: "../main/Main.qml"
 
-        onLoaded: {if (item) item.show()}
-
+        onLoaded: {
+            if (item) {
+                if (authToken) {
+                    item.authToken = authToken;
+                }
+                item.show();
+                closeTimer.start();
+            }
+        }
 
         onStatusChanged: {
             _isLoading = false;
             if (status === Loader.Error) {
-                console.error("❌ Ошибка загрузки главного окна:", sourceComponent.errorString());
                 showError("Ошибка загрузки интерфейса: " + sourceComponent.errorString());
                 hideLoading();
             }
         }
     }
 
-    // Плавная анимация изменения высоты окна
+    Timer {
+        id: closeTimer
+        interval: 100
+        onTriggered: authWindow.hide()
+    }
+
     Behavior on height {
         NumberAnimation {
             duration: 300;
@@ -68,26 +87,37 @@ ApplicationWindow {
         }
     }
 
-    // Инициализация при загрузке
     Component.onCompleted: {
         serverConfig.updateFromSettings();
         updateWindowHeight();
     }
 
-    // Функции для работы с настройками сервера
+    function showAuthWindow() {
+        authWindow.show();
+        authWindow.raise();
+        authWindow.requestActivate();
+    }
+
     function saveServerConfig(serverAddress) {
-        settingsManager.serverAddress = serverAddress;
-        serverConfig.updateFromSettings();
-        showSuccess("Настройки сервера успешно сохранены.");
+        try {
+            settingsManager.serverAddress = serverAddress;
+            serverConfig.updateFromSettings();
+            showSuccess("Настройки сервера успешно сохранены.");
+        } catch (error) {
+            showError("Ошибка сохранения настроек");
+        }
     }
 
     function resetSettings() {
-        settingsManager.serverAddress = "http://localhost:5000";
-        serverConfig.updateFromSettings();
-        showSuccess("Настройки сброшены к значениям по умолчанию.");
+        try {
+            settingsManager.serverAddress = "http://localhost:5000";
+            serverConfig.updateFromSettings();
+            showSuccess("Настройки сброшены к значениям по умолчанию.");
+        } catch (error) {
+            showError("Ошибка сброса настроек");
+        }
     }
 
-    // Переключение между формами
     function showRegistrationForm() {
         _showingRegistration = true;
         updateWindowHeight();
@@ -98,7 +128,6 @@ ApplicationWindow {
         updateWindowHeight();
     }
 
-    // Обновление высоты окна (исправленная версия)
     function updateWindowHeight() {
         if (!isWindowMaximized) {
             var targetHeight = baseHeight;
@@ -108,13 +137,14 @@ ApplicationWindow {
             }
 
             if (_showingError) {
-                targetHeight += errorExtraHeight;
+                targetHeight += 60;
             }
 
             if (_showingRegistration) {
                 targetHeight += registrationExtraHeight;
             }
 
+            targetHeight = Math.max(minimumHeight, Math.min(maximumHeight, targetHeight));
             authWindow.height = targetHeight;
         }
     }
@@ -134,7 +164,7 @@ ApplicationWindow {
         id: loadingTimer
         interval: 1
         running: false
-        repeat: true
+        repeat: false
         onTriggered: {
             hideLoading();
             _isLoading = false;
@@ -142,16 +172,12 @@ ApplicationWindow {
                 if (_loginResult.success) {
                     showSuccess(_loginResult.message);
 
-                    // Сохраняем токен перед переходом
                     if (_loginResult.token) {
                         authToken = _loginResult.token;
                         settingsManager.authToken = _loginResult.token;
                     }
 
-                    // Загружаем главное окно через Loader
                     mainWindowLoader.active = true;
-                    //authWindow.hide();
-
                 } else {
                     showError(_loginResult.message);
                 }
@@ -160,15 +186,17 @@ ApplicationWindow {
         }
     }
 
-    // Функция регистрации
-        function attemptRegistration() {
-            if (!isRegistrationFormValid() || _isLoading) return;
-            _isLoading = true;
-            var startTime = Date.now();
-            showLoading();
-            // Используем parseFullName для получения отдельных компонентов
+    function attemptRegistration() {
+        if (!isRegistrationFormValid() || _isLoading) return;
+
+        _isLoading = true;
+        var startTime = Date.now();
+        showLoading();
+
+        try {
             var nameData = registrationForm.parseFullName();
             var userData = {
+                username: registrationForm.usernameField.text,
                 email: registrationForm.emailField.text,
                 password: registrationForm.passwordField.text,
                 firstName: nameData.firstName,
@@ -176,16 +204,21 @@ ApplicationWindow {
                 middleName: nameData.middleName,
                 phoneNumber: registrationForm.phoneField.text
             };
-            sendRegistrationRequest(userData, function(result) {
+
+            authAPI.sendRegistrationRequest(userData, function(result) {
                 var elapsed = Date.now() - startTime;
                 var remaining = Math.max(_minLoadingTime - elapsed, 0);
                 registrationResultTimer.interval = remaining;
                 registrationResultTimer.result = result;
                 registrationResultTimer.start();
             });
+        } catch (error) {
+            hideLoading();
+            _isLoading = false;
+            showError("Ошибка при регистрации: " + error);
         }
+    }
 
-    // Таймер для обработки результата регистрации
     Timer {
         id: registrationResultTimer
         property var result
@@ -194,80 +227,33 @@ ApplicationWindow {
             _isLoading = false;
             if (result.success) {
                 showSuccess(result.message);
+
+                // Сохраняем email перед очисткой формы
+                var registeredEmail = registrationForm.emailField.text;
+
+                // Переключаемся на форму входа
                 showLoginForm();
-                registrationForm.clearForm();
+
+                // Заполняем поле логина в форме авторизации
+                setLoginEmail(registeredEmail);
+
+                // Очищаем все поля формы регистрации
+                registrationForm.clearAllFields();
             } else {
                 showError(result.message);
             }
         }
     }
 
-    function sendRegistrationRequest(userData, callback) {
-        var xhr = new XMLHttpRequest();
-        xhr.timeout = 10000;
-
-        var baseUrl = settingsManager.useLocalServer ?
-            settingsManager.serverAddress :
-            (remoteApiBaseUrl + ":" + remotePort);
-        var url = baseUrl + "/register";
-
-        console.log("Отправка запроса регистрации на:", url);
-        console.log("Данные:", {
-            email: userData.email,
-            password: "***",
-            firstName: userData.firstName,
-            lastName: userData.lastName
-        });
-
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === XMLHttpRequest.DONE) {
-                console.log("Статус ответа:", xhr.status);
-                console.log("Текст ответа:", xhr.responseText);
-
-                try {
-                    var response = JSON.parse(xhr.responseText);
-
-                    if (xhr.status === 201) {
-                        callback({
-                            success: true,
-                            message: response.message || "Регистрация успешна! Теперь вы можете войти в систему."
-                        });
-                    } else {
-                        callback({
-                            success: false,
-                            message: response.error || "Ошибка регистрации: " + xhr.status
-                        });
-                    }
-                } catch (e) {
-                    console.log("Ошибка парсинга JSON:", e);
-                    callback({
-                        success: false,
-                        message: "Неверный формат ответа сервера."
-                    });
-                }
-            }
-        };
-
-        xhr.ontimeout = function() {
-            callback({ success: false, message: "Таймаут соединения." });
-        };
-
-        xhr.onerror = function() {
-            callback({ success: false, message: "Ошибка сети или неверные параметры." });
-        };
-
-        try {
-            xhr.open("POST", url, true);
-            xhr.setRequestHeader("Content-Type", "application/json");
-            xhr.send(JSON.stringify(userData));
-        } catch (error) {
-            callback({ success: false, message: "Ошибка отправки: " + error });
+    function setLoginEmail(email) {
+        if (loginForm && loginForm.setLogin && email) {
+            loginForm.setLogin(email);
         }
     }
 
-    // Обновленная функция проверки валидности формы регистрации
     function isRegistrationFormValid() {
-        return registrationForm.hasValidFullName &&
+        return registrationForm.usernameField.text.length > 0 &&
+               registrationForm.hasValidFullName &&
                registrationForm.emailField.text.length > 0 &&
                registrationForm.passwordField.text.length > 0 &&
                registrationForm.confirmPasswordField.text.length > 0 &&
@@ -283,147 +269,95 @@ ApplicationWindow {
         var login = loginForm.loginField.text;
         var password = loginForm.passwordField.text;
 
-        sendLoginRequest(login, password, function(result) {
-            var elapsed = Date.now() - startTime;
-            var remaining = Math.max(_minLoadingTime - elapsed, 0);
-
-            _isLoading = true;
-            _loginResult = result;
-            loadingTimer.interval = remaining;
-            loadingTimer.start();
-            //authWindow.close();
-
-            // Сохраняем токен в свойстве окна
-            if (result.success && result.token) {
-                authToken = result.token;
-                settingsManager.authToken = result.token;
-                console.log("Токен сохранен локально и в настройках, длина:", result.token.length);
-            }
-        });
-    }
-
-    function sendLoginRequest(login, password, callback) {
-        var xhr = new XMLHttpRequest();
-        xhr.timeout = 10000;
-
-        var baseUrl = settingsManager.useLocalServer ?
-            settingsManager.serverAddress :
-            (remoteApiBaseUrl + ":" + remotePort);
-        var url = baseUrl + "/login";
-
-        console.log("Отправка запроса на:", url);
-        console.log("Данные:", { email: login, password: "***" });
-
-        xhr.onreadystatechange = function() {
-            if (xhr.readyState === XMLHttpRequest.DONE) {
-                console.log("Статус ответа:", xhr.status);
-                console.log("Текст ответа:", xhr.responseText);
-
-                try {
-                    var response = JSON.parse(xhr.responseText);
-
-                    if (xhr.status === 200) {
-                        callback({
-                            success: true,
-                            message: response.message || "Успешный вход!",
-                            token: response.token
-                        });
-                    } else {
-                        callback({
-                            success: false,
-                            message: response.error || "Ошибка: " + xhr.status
-                        });
-                    }
-                } catch (e) {
-                    console.log("Ошибка парсинга JSON:", e);
-                    callback({
-                        success: false,
-                        message: "Неверный формат ответа сервера"
-                    });
-                }
-            }
-        };
-
-        xhr.ontimeout = function() {
-            callback({ success: false, message: "Таймаут соединения" });
-        };
-
-        xhr.onerror = function() {
-            callback({ success: false, message: "Ошибка сети" });
-        };
-
         try {
-            xhr.open("POST", url, true);
-            xhr.setRequestHeader("Content-Type", "application/json");
-            xhr.send(JSON.stringify({
-                email: login,
-                password: password
-            }));
+            authAPI.sendLoginRequest(login, password, function(result) {
+                var elapsed = Date.now() - startTime;
+                var remaining = Math.max(_minLoadingTime - elapsed, 0);
+
+                _isLoading = true;
+                _loginResult = result;
+                loadingTimer.interval = remaining;
+                loadingTimer.start();
+
+                if (result.success && result.token) {
+                    authToken = result.token;
+                    settingsManager.authToken = result.token;
+                }
+            });
         } catch (error) {
-            callback({ success: false, message: "Ошибка отправки: " + error });
+            hideLoading();
+            _isLoading = false;
+            showError("Ошибка при входе: " + error);
         }
     }
 
     function showError(message) {
-        _successMessage = "";
-        _showingSuccess = false;
-        _errorMessage = message;
-        _showingError = message !== "";
+        try {
+            _successMessage = "";
+            _showingSuccess = false;
+            _errorMessage = message;
+            _showingError = message !== "";
 
-        if (_showingError) {
-            errorExtraHeight = 10;
-            errorAutoHideTimer.restart();
-        } else {
-            errorExtraHeight = 0;
-        }
+            if (_showingError) {
+                errorExtraHeight = 60;
+                errorAutoHideTimer.restart();
+            } else {
+                errorExtraHeight = 0;
+            }
 
-        updateWindowHeight();
+            updateWindowHeight();
+        } catch (error) {}
     }
 
     function showSuccess(message) {
-        _errorMessage = "";
-        _showingError = false;
-        _successMessage = message;
-        _showingSuccess = message !== "";
+        try {
+            _errorMessage = "";
+            _showingError = false;
+            _successMessage = message;
+            _showingSuccess = message !== "";
 
-        if (_showingSuccess) {
-            errorExtraHeight = 0;
-            successAutoHideTimer.restart();
-        }
+            if (_showingSuccess) {
+                successAutoHideTimer.restart();
+            }
 
-        updateWindowHeight();
+            updateWindowHeight();
+        } catch (error) {}
     }
 
     function showLoading() {
-        loadingAnimation.visible = true;
-        loadingAnimation.opacity = 1;
-        // Исправлено: устанавливаем прозрачность для активной формы
-        if (_showingRegistration) {
-            registrationForm.opacity = 0.6;
-            registrationForm.registerButton.enabled = false;
-        } else {
-            loginForm.opacity = 0.6;
-            loginForm.loginButton.enabled = false;
-        }
+        try {
+            loadingAnimation.visible = true;
+            loadingAnimation.opacity = 1;
+
+            if (_showingRegistration) {
+                registrationForm.opacity = 0.6;
+                registrationForm.registerButton.enabled = false;
+            } else {
+                loginForm.opacity = 0.6;
+                loginForm.loginButton.enabled = false;
+            }
+        } catch (error) {}
     }
 
     function hideLoading() {
-        loadingAnimation.opacity = 0;
-        loadingAnimation.visible = false;
-        if (_showingRegistration) {
-            registrationForm.opacity = 0.925;
-            registrationForm.registerButton.enabled = true;
-        } else {
-            loginForm.opacity = 0.925;
-            loginForm.loginButton.enabled = true;
-        }
+        try {
+            loadingAnimation.opacity = 0;
+            loadingAnimation.visible = false;
+
+            if (_showingRegistration) {
+                registrationForm.opacity = 1.0;
+                registrationForm.registerButton.enabled = true;
+            } else {
+                loginForm.opacity = 1.0;
+                loginForm.loginButton.enabled = true;
+            }
+        } catch (error) {}
     }
 
     function isFormValid() {
         return loginForm.loginField.text.length > 0 && loginForm.passwordField.text.length > 0;
     }
 
-    // Основной контейнер
     Rectangle {
         id: windowContainer
         anchors.fill: parent
@@ -536,7 +470,7 @@ ApplicationWindow {
             id: loginForm
             anchors {
                 horizontalCenter: parent.horizontalCenter
-                top: serverConfig.visible ? serverConfig.bottom : successMessage.bottom // Динамическая привязка
+                top: serverConfig.visible ? serverConfig.bottom : successMessage.bottom
                 topMargin: 32
             }
             width: parent.width * 0.78
@@ -561,19 +495,18 @@ ApplicationWindow {
         Timer {
             id: errorAutoHideTimer
             interval: 5000
-            onTriggered: showError("");
+            onTriggered: showError("")
         }
 
         Timer {
             id: successAutoHideTimer
             interval: 5000
-            onTriggered: showSuccess("");
+            onTriggered: showSuccess("")
         }
     }
 
     Connections {
         target: settingsManager
-
         function onUseLocalServerChanged() {
             updateWindowHeight();
         }

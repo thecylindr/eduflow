@@ -50,7 +50,7 @@ qt_add_qml_module(student
         main/MainMessage.qml
         main/GroupsView.qml
         main/EventsView.qml
-        QML_FILES main/AdaptiveSideBar.qml
+        main/AdaptiveSideBar.qml
 
 
 )
