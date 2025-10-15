@@ -14,9 +14,9 @@ ApplicationWindow {
     color: "transparent"
     flags: Qt.Window | Qt.FramelessWindowHint
     minimumWidth: 420
-    maximumWidth: 580
+    maximumWidth: 800
     minimumHeight: 500
-    maximumHeight: 700
+    maximumHeight: 900
 
     property bool isWindowMaximized: false
     property int baseHeight: 500
@@ -29,7 +29,7 @@ ApplicationWindow {
     property bool _showingSuccess: false
     property bool _isLoading: false
 
-    property string remoteApiBaseUrl: "https://deltablast.fun"
+    property string remoteApiBaseUrl: "http://deltablast.fun"
     property int remotePort: 5000
 
     property int _minLoadingTime: 500
@@ -39,6 +39,16 @@ ApplicationWindow {
     property int registrationExtraHeight: 150
 
     property string authToken: ""
+
+    // Фиксированные приращения для масштабирования
+    property int widthIncrement: 90
+    property int heightIncrement: 120
+
+    // Базовые размеры для разных состояний
+    property int baseNormalWidth: 420
+    property int baseNormalHeight: 500
+    property int baseScaledWidth: baseNormalWidth + widthIncrement
+    property int baseScaledHeight: baseNormalHeight + heightIncrement
 
     signal loginSuccessful(string token, var userData)
 
@@ -78,6 +88,13 @@ ApplicationWindow {
         id: closeTimer
         interval: 100
         onTriggered: authWindow.hide()
+    }
+
+    Behavior on width {
+        NumberAnimation {
+            duration: 300;
+            easing.type: Easing.InOutQuad
+        }
     }
 
     Behavior on height {
@@ -128,35 +145,68 @@ ApplicationWindow {
         updateWindowHeight();
     }
 
+    function calculateBaseHeight() {
+        var targetHeight = baseNormalHeight;
+
+        if (settingsManager.useLocalServer && !_showingRegistration) {
+            targetHeight += localServerExtraHeight;
+        }
+
+        if (_showingError) {
+            targetHeight += 60;
+        }
+
+        if (_showingRegistration) {
+            targetHeight += registrationExtraHeight;
+        }
+
+        return Math.max(minimumHeight, Math.min(maximumHeight, targetHeight));
+    }
+
     function updateWindowHeight() {
         if (!isWindowMaximized) {
-            var targetHeight = baseHeight;
-
-            if (settingsManager.useLocalServer && !_showingRegistration) {
-                targetHeight += localServerExtraHeight;
-            }
-
-            if (_showingError) {
-                targetHeight += 60;
-            }
-
-            if (_showingRegistration) {
-                targetHeight += registrationExtraHeight;
-            }
-
-            targetHeight = Math.max(minimumHeight, Math.min(maximumHeight, targetHeight));
-            authWindow.height = targetHeight;
+            authWindow.height = calculateBaseHeight();
+        } else {
+            // В масштабированном режиме учитываем базовую высоту + приращение
+            var baseHeightValue = calculateBaseHeight();
+            authWindow.height = Math.min(maximumHeight, baseHeightValue + heightIncrement);
         }
     }
 
     function toggleMaximize() {
         if (isWindowMaximized) {
-            authWindow.showNormal();
+            // Возвращаем к исходному размеру с учетом текущего состояния
+            authWindow.width = baseNormalWidth;
+            authWindow.height = calculateBaseHeight();
             isWindowMaximized = false;
-            updateWindowHeight();
         } else {
-            authWindow.showMaximized();
+            // Увеличиваем на фиксированные значения с учетом текущего состояния
+            var targetWidth = Math.min(baseNormalWidth + widthIncrement, maximumWidth);
+            var baseHeightValue = calculateBaseHeight();
+            var targetHeight = Math.min(baseHeightValue + heightIncrement, maximumHeight);
+
+            authWindow.width = targetWidth;
+            authWindow.height = targetHeight;
             isWindowMaximized = true;
+        }
+    }
+
+    // Сбрасываем флаг масштабирования при ручном изменении размера
+    onWidthChanged: {
+        if (!isWindowMaximized) return;
+
+        var expectedWidth = baseNormalWidth + widthIncrement;
+        if (Math.abs(width - expectedWidth) > 5) {
+            isWindowMaximized = false;
+        }
+    }
+
+    onHeightChanged: {
+        if (!isWindowMaximized) return;
+
+        var expectedHeight = calculateBaseHeight() + heightIncrement;
+        if (Math.abs(height - expectedHeight) > 5) {
+            isWindowMaximized = false;
         }
     }
 
@@ -392,6 +442,8 @@ ApplicationWindow {
                 margins: 10
             }
             isWindowMaximized: authWindow.isWindowMaximized
+            windowWidth: authWindow.width
+            windowHeight: authWindow.height
 
             onToggleMaximize: authWindow.toggleMaximize()
             onShowMinimized: authWindow.showMinimized()
