@@ -6,7 +6,7 @@ import Qt5Compat.GraphicalEffects
 import QtQml 2.15
 
 ApplicationWindow {
-    id: mainWindow
+    id: authWindow
     width: 420
     height: 500
     visible: true
@@ -27,11 +27,11 @@ ApplicationWindow {
     property bool _showingError: false
     property string _successMessage: ""
     property bool _showingSuccess: false
+    property bool _isLoading: false
 
     property string remoteApiBaseUrl: "https://deltablast.fun"
     property int remotePort: 5000
 
-    property bool _isLoading: false
     property int _minLoadingTime: 500
     property var _loginResult: null
 
@@ -39,39 +39,23 @@ ApplicationWindow {
     property int registrationExtraHeight: 110
 
     property string authToken: ""
-    property bool _mainWindowLoaded: false
 
-    // Loader для главного окна
+    // Loader для главного окна (Main.qml)
     Loader {
         id: mainWindowLoader
         active: false
         asynchronous: true
+        source: "../main/Main.qml"
 
-        onLoaded: {
-            console.log("✅ Главное окно загружено через Loader");
-            _mainWindowLoaded = true;
+        onLoaded: {if (item) item.show()}
 
-            // Передаем параметры в загруженный компонент
-            if (item) {
-                item.authToken = authToken;
-                item.serverAddress = settingsManager.useLocalServer ?
-                    settingsManager.serverAddress :
-                    (remoteApiBaseUrl + ":" + remotePort);
-                item.useLocalServer = settingsManager.useLocalServer;
-
-                // Показываем главное окно и скрываем окно авторизации
-                item.visible = true;
-                mainWindow.visible = false;
-                mainWindow.hide()
-            }
-        }
 
         onStatusChanged: {
+            _isLoading = false;
             if (status === Loader.Error) {
                 console.error("❌ Ошибка загрузки главного окна:", sourceComponent.errorString());
                 showError("Ошибка загрузки интерфейса: " + sourceComponent.errorString());
                 hideLoading();
-                _isLoading = false;
             }
         }
     }
@@ -94,7 +78,7 @@ ApplicationWindow {
     function saveServerConfig(serverAddress) {
         settingsManager.serverAddress = serverAddress;
         serverConfig.updateFromSettings();
-        showSuccess("Настройки сервера сохранены");
+        showSuccess("Настройки сервера успешно сохранены.");
     }
 
     function resetSettings() {
@@ -131,17 +115,17 @@ ApplicationWindow {
                 targetHeight += registrationExtraHeight;
             }
 
-            mainWindow.height = targetHeight;
+            authWindow.height = targetHeight;
         }
     }
 
     function toggleMaximize() {
         if (isWindowMaximized) {
-            mainWindow.showNormal();
+            authWindow.showNormal();
             isWindowMaximized = false;
             updateWindowHeight();
         } else {
-            mainWindow.showMaximized();
+            authWindow.showMaximized();
             isWindowMaximized = true;
         }
     }
@@ -149,6 +133,8 @@ ApplicationWindow {
     Timer {
         id: loadingTimer
         interval: 1
+        running: false
+        repeat: true
         onTriggered: {
             hideLoading();
             _isLoading = false;
@@ -160,11 +146,12 @@ ApplicationWindow {
                     if (_loginResult.token) {
                         authToken = _loginResult.token;
                         settingsManager.authToken = _loginResult.token;
-                        console.log("🔑 Токен сохранен, длина:", _loginResult.token.length);
                     }
 
                     // Загружаем главное окно через Loader
-                    loadMainWindow();
+                    mainWindowLoader.active = true;
+                    //authWindow.hide();
+
                 } else {
                     showError(_loginResult.message);
                 }
@@ -173,46 +160,30 @@ ApplicationWindow {
         }
     }
 
-    // Функция загрузки главного окна через Loader
-    function loadMainWindow() {
-        console.log("🔄 Загрузка главного окна через Loader...");
-
-        // Устанавливаем источник для Loader'а
-        mainWindowLoader.source = "../main/Main.qml";
-
-        // Активируем Loader
-        mainWindowLoader.active = true;
-    }
-
     // Функция регистрации
-    function attemptRegistration() {
-        if (!isRegistrationFormValid() || _isLoading) return;
-
-        _isLoading = true;
-        var startTime = Date.now();
-        showLoading();
-
-        // Используем parseFullName для получения отдельных компонентов
-        var nameData = registrationForm.parseFullName();
-
-        var userData = {
-            email: registrationForm.emailField.text,
-            password: registrationForm.passwordField.text,
-            firstName: nameData.firstName,
-            lastName: nameData.lastName,
-            middleName: nameData.middleName,
-            phoneNumber: registrationForm.phoneField.text
-        };
-
-        sendRegistrationRequest(userData, function(result) {
-            var elapsed = Date.now() - startTime;
-            var remaining = Math.max(_minLoadingTime - elapsed, 0);
-
-            registrationResultTimer.interval = remaining;
-            registrationResultTimer.result = result;
-            registrationResultTimer.start();
-        });
-    }
+        function attemptRegistration() {
+            if (!isRegistrationFormValid() || _isLoading) return;
+            _isLoading = true;
+            var startTime = Date.now();
+            showLoading();
+            // Используем parseFullName для получения отдельных компонентов
+            var nameData = registrationForm.parseFullName();
+            var userData = {
+                email: registrationForm.emailField.text,
+                password: registrationForm.passwordField.text,
+                firstName: nameData.firstName,
+                lastName: nameData.lastName,
+                middleName: nameData.middleName,
+                phoneNumber: registrationForm.phoneField.text
+            };
+            sendRegistrationRequest(userData, function(result) {
+                var elapsed = Date.now() - startTime;
+                var remaining = Math.max(_minLoadingTime - elapsed, 0);
+                registrationResultTimer.interval = remaining;
+                registrationResultTimer.result = result;
+                registrationResultTimer.start();
+            });
+        }
 
     // Таймер для обработки результата регистрации
     Timer {
@@ -306,7 +277,6 @@ ApplicationWindow {
     function attemptLogin() {
         if (!isFormValid() || _isLoading) return;
 
-        _isLoading = true;
         var startTime = Date.now();
         showLoading();
 
@@ -317,9 +287,11 @@ ApplicationWindow {
             var elapsed = Date.now() - startTime;
             var remaining = Math.max(_minLoadingTime - elapsed, 0);
 
+            _isLoading = true;
             _loginResult = result;
             loadingTimer.interval = remaining;
             loadingTimer.start();
+            //authWindow.close();
 
             // Сохраняем токен в свойстве окна
             if (result.success && result.token) {
@@ -438,12 +410,11 @@ ApplicationWindow {
     function hideLoading() {
         loadingAnimation.opacity = 0;
         loadingAnimation.visible = false;
-        // Исправлено: восстанавливаем прозрачность для активной формы
         if (_showingRegistration) {
-            registrationForm.opacity = 0.95;
+            registrationForm.opacity = 0.925;
             registrationForm.registerButton.enabled = true;
         } else {
-            loginForm.opacity = 0.95;
+            loginForm.opacity = 0.925;
             loginForm.loginButton.enabled = true;
         }
     }
@@ -486,10 +457,10 @@ ApplicationWindow {
                 right: parent.right
                 margins: 10
             }
-            isWindowMaximized: mainWindow.isWindowMaximized
+            isWindowMaximized: authWindow.isWindowMaximized
 
-            onToggleMaximize: mainWindow.toggleMaximize()
-            onShowMinimized: mainWindow.showMinimized()
+            onToggleMaximize: authWindow.toggleMaximize()
+            onShowMinimized: authWindow.showMinimized()
             onClose: Qt.quit()
         }
 
@@ -531,7 +502,7 @@ ApplicationWindow {
                 topMargin: 24
             }
             width: parent.width * 0.78
-            visible: !_showingRegistration // Скрываем настройки сервера при регистрации
+            visible: !_showingRegistration
 
             onServerTypeToggled: function(useLocal) {
                 settingsManager.useLocalServer = useLocal;
@@ -539,11 +510,11 @@ ApplicationWindow {
             }
 
             onSaveServerConfig: function(serverAddress) {
-                mainWindow.saveServerConfig(serverAddress);
+                authWindow.saveServerConfig(serverAddress);
             }
 
             onResetSettings: {
-                mainWindow.resetSettings();
+                authWindow.resetSettings();
             }
         }
 
@@ -557,8 +528,8 @@ ApplicationWindow {
             width: parent.width * 0.78
             visible: _showingRegistration
 
-            onAttemptRegistration: mainWindow.attemptRegistration()
-            onShowLoginForm: mainWindow.showLoginForm()
+            onAttemptRegistration: authWindow.attemptRegistration()
+            onShowLoginForm: authWindow.showLoginForm()
         }
 
         LoginForm {
@@ -571,7 +542,7 @@ ApplicationWindow {
             width: parent.width * 0.78
             visible: !_showingRegistration
 
-            onAttemptLogin: mainWindow.attemptLogin()
+            onAttemptLogin: authWindow.attemptLogin()
         }
 
         LoadingAnimation {

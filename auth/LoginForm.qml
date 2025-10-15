@@ -155,11 +155,11 @@ Rectangle {
             radius: 5
             color: loginButtonMouseArea.pressed ? "#2980b9" : (loginButton.enabled ? "#3498db" : "#d0d0d0")
 
-            property bool enabled: loginField.text.length > 0 && passwordField.text.length > 0 && !mainWindow._isLoading
+            property bool enabled: loginField.text.length > 0 && passwordField.text.length > 0 && !authWindow._isLoading
 
             Text {
                 anchors.centerIn: parent
-                text: mainWindow._isLoading ? "⏳ ЗАГРУЗКА..." : "🚀 ВОЙТИ"
+                text: authWindow._isLoading ? "⏳ ЗАГРУЗКА..." : "🚀 ВОЙТИ"
                 font.pixelSize: 12
                 font.bold: true
                 color: "white"
@@ -204,8 +204,8 @@ Rectangle {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                        if (typeof mainWindow !== "undefined" && mainWindow.showRegistrationForm) {
-                            mainWindow.showRegistrationForm();
+                        if (typeof authWindow !== "undefined" && authWindow.showRegistrationForm) {
+                            authWindow.showRegistrationForm();
                         }
                     }
                 }

@@ -355,11 +355,11 @@ Rectangle {
             radius: 5
             color: registerButtonMouseArea.pressed ? "#2980b9" : (registerButton.enabled ? "#3498db" : "#d0d0d0")
 
-            property bool enabled: mainWindow.isRegistrationFormValid() && !mainWindow._isLoading
+            property bool enabled: authWindow.isRegistrationFormValid() && !authWindow._isLoading
 
             Text {
                 anchors.centerIn: parent
-                text: mainWindow._isLoading ? "⏳ ЗАГРУЗКА..." : "🚀 ЗАРЕГИСТРИРОВАТЬСЯ"
+                text: authWindow._isLoading ? "⏳ ЗАГРУЗКА..." : "🚀 ЗАРЕГИСТРИРОВАТЬСЯ"
                 font.pixelSize: 12
                 font.bold: true
                 color: "white"

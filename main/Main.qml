@@ -1,4 +1,3 @@
-// main/Main.qml
 import QtQuick 2.15
 import QtQuick.Window 2.15
 import QtQuick.Controls 2.15
@@ -9,26 +8,16 @@ ApplicationWindow {
     width: 1200
     height: 800
     visible: true
-    title: "EduFlow - Система управления образованием"
+    title: appName
     color: "transparent"
     flags: Qt.Window | Qt.FramelessWindowHint
     minimumWidth: 1000
     minimumHeight: 700
 
-    // Необходимые свойства
-    property string appName: "EduFlow"
-
-    // Временная заглушка для settingsManager
-    property var settingsManager: QtObject {
-        property string authToken: ""
-        property string serverAddress: "http://localhost:5000"
-        property bool useLocalServer: true
-    }
-
     // Свойства для передачи параметров
-    property string authToken: ""
-    property string serverAddress: ""
-    property bool useLocalServer: false
+    //property string authToken: ""
+    //property string serverAddress: ""
+    //property bool useLocalServer: false
 
     property var viewTitles: ({
         "dashboard": "Главная панель",
@@ -80,10 +69,14 @@ ApplicationWindow {
             useLocalServer = settingsManager.useLocalServer;
             initializeApiAndLoadData();
         } else {
-            console.log("ℹ️ Токен не найден, показываем интерфейс без данных");
             showSuccess("Добро пожаловать в " + appName + "! Для загрузки данных войдите в систему.");
         }
     }
+
+    // Сделать чтобы прятало auth здесь
+    // function hideAuthForm() {
+    //     authWindow.hide;
+    // }
 
     function getCurrentViewName() {
         switch(currentView) {
@@ -375,16 +368,17 @@ ApplicationWindow {
     Rectangle {
         id: windowContainer
         anchors.fill: parent
-        radius: 16
+        radius: 21
         color: "#f0f0f0"
         clip: true
 
         Rectangle {
             anchors.fill: parent
             gradient: Gradient {
-                GradientStop { position: 0.0; color: "#667eea" }
-                GradientStop { position: 1.0; color: "#764ba2" }
+                GradientStop { position: 0.0; color: "#6a11cb" }
+                GradientStop { position: 1.0; color: "#2575fc" }
             }
+            radius: 20
         }
 
         PolygonBackground {
@@ -397,7 +391,7 @@ ApplicationWindow {
                 top: parent.top
                 left: parent.left
                 right: parent.right
-                margins: 5
+                margins: 10
             }
             isWindowMaximized: mainWindow.isWindowMaximized
             currentView: getCurrentViewName()
@@ -466,7 +460,7 @@ ApplicationWindow {
                 }
                 color: "#f8f8f8"
                 radius: 12
-                opacity: 0.95
+                opacity: 0.925
 
                 Loader {
                     id: contentLoader

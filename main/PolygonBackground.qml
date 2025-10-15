@@ -1,116 +1,114 @@
-// main/PolygonBackground.qml
 import QtQuick 2.15
+import Qt5Compat.GraphicalEffects
 
-Canvas {
-    id: canvas
-    anchors.fill: parent
-    renderTarget: Canvas.FramebufferObject
-    renderStrategy: Canvas.Cooperative
+Repeater {
+    id: polygonRepeater
+    model: 10
+    z: 1
 
-    property var polygons: []
-    property int maxPolygons: 8
-    property bool initialized: false
+    Item {
+        id: polygonContainer
+        property real startX: Math.random() * (parent.width + 120) - 60
+        property real startY: Math.random() * (parent.height + 120) - 60
+        property real targetX: Math.random() * (parent.width + 120) - 60
+        property real targetY: Math.random() * (parent.height + 120) - 60
+        property real polygonSize: 30 + Math.random() * 45
+        property color polygonColor: [
+            "#FF5252", "#FF4081", "#E040FB", "#7C4DFF", "#536DFE",
+            "#448AFF", "#40C4FF", "#18FFFF", "#64FFDA", "#69F0AE",
+            "#FFA500", "#AFEEEE", "#4169E1", "#FFFFF0", "#696969",
+            "#CD853F", "#483D8B", "#FF8C00", "#006400", "#2E8B57"
+        ][Math.floor(Math.random() * 20)]
 
-    onPaint: {
-        var ctx = getContext("2d")
-        ctx.clearRect(0, 0, width, height)
+        x: startX
+        y: startY
+        opacity: 0
+        width: polygonSize * 2
+        height: polygonSize * 2
+        z: 0
 
-        for (var i = 0; i < polygons.length; i++) {
-            drawPolygon(ctx, polygons[i])
-        }
-    }
+        Canvas {
+            id: polygonCanvas
+            anchors.fill: parent
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.clearRect(0, 0, width, height);
+                drawPolygon(ctx);
+            }
 
-    function initializePolygons() {
-        if (initialized) return
+            function drawPolygon(ctx) {
+                var sides = 6 + Math.floor(Math.random() * 3);
+                var radius = polygonSize;
+                var centerX = width / 2;
+                var centerY = height / 2;
 
-        polygons = []
-        for (var i = 0; i < maxPolygons; i++) {
-            polygons.push(createPolygon())
-        }
-        initialized = true
-        canvas.requestPaint()
-    }
+                ctx.shadowColor = polygonColor;
+                ctx.shadowBlur = 12;
 
-    function createPolygon() {
-        var colors = ["#FF5252", "#FF4081", "#E040FB", "#7C4DFF", "#536DFE",
-                     "#448AFF", "#40C4FF", "#18FFFF", "#64FFDA", "#69F0AE"]
-        return {
-            x: Math.random() * width,
-            y: Math.random() * height,
-            size: 30 + Math.random() * 40,
-            color: colors[Math.floor(Math.random() * colors.length)],
-            rotation: Math.random() * 360,
-            sides: 5 + Math.floor(Math.random() * 4),
-            opacity: 0.3 + Math.random() * 0.3,
-            speedX: (Math.random() - 0.5) * 0.5,
-            speedY: (Math.random() - 0.5) * 0.5,
-            rotationSpeed: (Math.random() - 0.5) * 0.5
-        }
-    }
+                ctx.beginPath();
+                ctx.moveTo(centerX + radius * Math.cos(0), centerY + radius * Math.sin(0));
 
-    function drawPolygon(ctx, poly) {
-        ctx.save()
-        ctx.translate(poly.x, poly.y)
-        ctx.rotate(poly.rotation * Math.PI / 180)
-        ctx.globalAlpha = poly.opacity
+                for (var i = 1; i <= sides; i++) {
+                    ctx.lineTo(centerX + radius * Math.cos(i * 2 * Math.PI / sides),
+                              centerY + radius * Math.sin(i * 2 * Math.PI / sides));
+                }
 
-        ctx.beginPath()
-        for (var i = 0; i <= poly.sides; i++) {
-            var angle = (i * 2 * Math.PI / poly.sides)
-            var x = poly.size * Math.cos(angle)
-            var y = poly.size * Math.sin(angle)
-
-            if (i === 0) {
-                ctx.moveTo(x, y)
-            } else {
-                ctx.lineTo(x, y)
+                ctx.closePath();
+                ctx.fillStyle = polygonColor;
+                ctx.fill();
             }
         }
 
-        ctx.closePath()
-        ctx.fillStyle = poly.color
-        ctx.fill()
-        ctx.restore()
-    }
-
-    function updatePolygons() {
-        for (var i = 0; i < polygons.length; i++) {
-            var poly = polygons[i]
-
-            poly.x += poly.speedX
-            poly.y += poly.speedY
-            poly.rotation += poly.rotationSpeed
-
-            // Wrap around edges
-            if (poly.x < -poly.size) poly.x = width + poly.size
-            if (poly.x > width + poly.size) poly.x = -poly.size
-            if (poly.y < -poly.size) poly.y = height + poly.size
-            if (poly.y > height + poly.size) poly.y = -poly.size
+        Glow {
+            anchors.fill: polygonCanvas
+            radius: 10
+            samples: 12
+            color: polygonContainer.polygonColor
+            source: polygonCanvas
+            opacity: polygonContainer.opacity * 0.6
         }
 
-        canvas.requestPaint()
-    }
-
-    Component.onCompleted: {
-        initializePolygons()
-        animationTimer.start()
-    }
-
-    Timer {
-        id: animationTimer
-        interval: 50 // 20 FPS вместо 60 для оптимизации
-        running: false
-        repeat: true
-        onTriggered: updatePolygons()
-    }
-
-    onWidthChanged: {
-        initialized = false
-        initializePolygons()
-    }
-
-    onHeightChanged: {
-        initialized = false
-        initializePolygons()
+        SequentialAnimation {
+            id: appearAnimation
+            running: true
+            loops: Animation.Infinite
+            PauseAnimation { duration: index * 1200 }
+            ParallelAnimation {
+                NumberAnimation {
+                    target: polygonContainer; property: "opacity"; from: 0; to: 0.6; duration: 3000; easing.type: Easing.InOutQuad }
+                NumberAnimation {
+                    target: polygonContainer; property: "x"; from: startX; to: targetX; duration: 12000; easing.type: Easing.InOutQuad }
+                NumberAnimation {
+                    target: polygonContainer; property: "y"; from: startY; to: targetY; duration: 12000; easing.type: Easing.InOutQuad }
+                RotationAnimation {
+                    target: polygonContainer; from: 0; to: 90 + Math.random() * 90; duration: 10000; easing.type: Easing.InOutQuad }
+            }
+            PauseAnimation { duration: 3000 }
+            ParallelAnimation {
+                NumberAnimation {
+                    target: polygonContainer; property: "opacity"; from: 0.6; to: 0; duration: 4000; easing.type: Easing.InOutQuad }
+                NumberAnimation {
+                    target: polygonContainer; property: "x"; from: targetX; to: targetX + (Math.random() - 0.5) * 150; duration: 4000; easing.type: Easing.InOutQuad }
+                NumberAnimation {
+                    target: polygonContainer; property: "y"; from: targetY; to: targetY + (Math.random() - 0.5) * 150; duration: 4000; easing.type: Easing.InOutQuad }
+            }
+            PauseAnimation { duration: 2000 + Math.random() * 3000 }
+            ScriptAction {
+                script: {
+                    polygonContainer.startX = polygonContainer.x;
+                    polygonContainer.startY = polygonContainer.y;
+                    polygonContainer.targetX = Math.random() * (parent.width + 150) - 75;
+                    polygonContainer.targetY = Math.random() * (parent.height + 150) - 75;
+                    polygonContainer.polygonColor = [
+                            "#FF5252", "#FF4081", "#E040FB", "#7C4DFF", "#536DFE",
+                            "#448AFF", "#40C4FF", "#18FFFF", "#64FFDA", "#69F0AE",
+                            "#FFA500", "#AFEEEE", "#4169E1", "#FFFFF0", "#696969",
+                            "#CD853F", "#483D8B", "#FF8C00", "#006400", "#2E8B57"
+                    ][Math.floor(Math.random() * 20)];
+                    polygonCanvas.requestPaint();
+                }
+            }
+        }
+        Component.onCompleted: polygonCanvas.requestPaint()
     }
 }

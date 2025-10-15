@@ -157,14 +157,14 @@ Rectangle {
         onPressed: function(mouse) {
             if (mouse.button === Qt.LeftButton) {
                 clickPos = Qt.point(mouse.x, mouse.y)
-                    mainWindow.startSystemMove()
+                    authWindow.startSystemMove()
                     }
                 }
                 onPositionChanged: function(mouse) {
-                    if (mouse.buttons === Qt.LeftButton && !mainWindow.startSystemMove) {
+                    if (mouse.buttons === Qt.LeftButton && !authWindow.startSystemMove) {
                         var delta = Qt.point(mouse.x - clickPos.x, mouse.y - clickPos.y)
-                        mainWindow.x += delta.x
-                        mainWindow.y += delta.y
+                        authWindow.x += delta.x
+                        authWindow.y += delta.y
                     }
                 }
             }
@@ -189,8 +189,8 @@ Rectangle {
 
             onPressed: {
                 // Запоминаем начальные размеры
-                resizeMouseArea.previousWidth = mainWindow.width;
-                resizeMouseArea.previousHeight = mainWindow.height;
+                resizeMouseArea.previousWidth = authWindow.width;
+                resizeMouseArea.previousHeight = authWindow.height;
             }
 
             onPositionChanged: {
@@ -199,12 +199,12 @@ Rectangle {
                     var newHeight = resizeMouseArea.previousHeight + mouse.y;
 
                     // Ограничиваем размеры в пределах минимальных и максимальных значений
-                    newWidth = Math.max(mainWindow.minimumWidth, Math.min(mainWindow.maximumWidth, newWidth));
-                    newHeight = Math.max(mainWindow.minimumHeight, Math.min(mainWindow.maximumHeight, newHeight));
+                    newWidth = Math.max(authWindow.minimumWidth, Math.min(authWindow.maximumWidth, newWidth));
+                    newHeight = Math.max(authWindow.minimumHeight, Math.min(authWindow.maximumHeight, newHeight));
 
                     // Устанавливаем новые размеры
-                    mainWindow.width = newWidth;
-                    mainWindow.height = newHeight;
+                    authWindow.width = newWidth;
+                    authWindow.height = newHeight;
 
                     // Отправляем сигнал об изменении размера
                     windowResized(newWidth, newHeight);
