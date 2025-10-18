@@ -13,10 +13,11 @@ ApplicationWindow {
     title: "Вход в систему | " + appName
     color: "transparent"
     flags: Qt.Window | Qt.FramelessWindowHint
-    minimumWidth: 420
-    maximumWidth: 800
     minimumHeight: 500
-    maximumHeight: 900
+    minimumWidth: 420
+    //maximumHeight: 900
+    //maximumWidth: 800
+
 
     property bool isWindowMaximized: false
     property int baseHeight: 500
@@ -59,36 +60,16 @@ ApplicationWindow {
         remotePort: authWindow.remotePort
     }
 
+    // Загрузчик главной формы
     Loader {
         id: mainWindowLoader
         active: false
         asynchronous: true
         source: "../main/Main.qml"
 
-        onLoaded: {
-            if (item) {
-                if (authToken) {
-                    item.authToken = authToken;
-                }
-                item.show();
-                closeTimer.start();
-            }
-        }
-
-        onStatusChanged: {
-            _isLoading = false;
-            if (status === Loader.Error) {
-                showError("Ошибка загрузки интерфейса: " + sourceComponent.errorString());
-                hideLoading();
-            }
-        }
+        onLoaded: if (item) item.show()
     }
 
-    Timer {
-        id: closeTimer
-        interval: 100
-        onTriggered: authWindow.hide()
-    }
 
     Behavior on width {
         NumberAnimation {
@@ -107,12 +88,6 @@ ApplicationWindow {
     Component.onCompleted: {
         serverConfig.updateFromSettings();
         updateWindowHeight();
-    }
-
-    function showAuthWindow() {
-        authWindow.show();
-        authWindow.raise();
-        authWindow.requestActivate();
     }
 
     function saveServerConfig(serverAddress) {
@@ -228,6 +203,7 @@ ApplicationWindow {
                     }
 
                     mainWindowLoader.active = true;
+                    authWindow.close();
                 } else {
                     showError(_loginResult.message);
                 }
@@ -546,7 +522,7 @@ ApplicationWindow {
 
         Timer {
             id: errorAutoHideTimer
-            interval: 5000
+            interval: 7500
             onTriggered: showError("")
         }
 

@@ -567,13 +567,13 @@ Window {
                 running = false;
                 loadingComplete = true;
                 splashWindow.close();
-                mainLoader.active = true;
+                authLoader.active = true;
             }
         }
     }
 
     Loader {
-        id: mainLoader
+        id: authLoader
         active: false
         source: "auth/Auth.qml"
         onLoaded: if (item) item.show()

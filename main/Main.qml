@@ -16,8 +16,8 @@ ApplicationWindow {
 
     // Свойства для передачи параметров
     property string authToken: ""
-    //property string serverAddress: ""
-    //property bool useLocalServer: false
+    property string serverAddress: ""
+    property bool useLocalServer: false
 
     property var viewTitles: ({
         "dashboard": "Главная панель",
@@ -46,6 +46,7 @@ ApplicationWindow {
     property var events: []
 
     Component.onCompleted: {
+        mainWindow.visible = true;
 
         // Инициализируем боковую панель
         if (sideBar) {
@@ -320,6 +321,8 @@ ApplicationWindow {
                 if (window) {
                     console.log("✅ Окно авторизации создано");
                     window.show();
+                    window.raise();
+                    window.requestActivate(); // Активируем новое окно
                 } else {
                     console.error("❌ Не удалось создать окно авторизации");
                     showError("Не удалось открыть окно авторизации");
