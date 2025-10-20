@@ -25,10 +25,10 @@ qt_add_qml_module(EduFlow
         # Формы для авторизации & регистрации
         auth/Auth.qml
         auth/AuthAPI.qml
-        auth/AuthTitleBar.qml
+        #auth/AuthTitleBar.qml
         auth/ServerConfig.qml
         auth/LoginForm.qml
-        auth/BackgroundPolygons.qml
+        #auth/BackgroundPolygons.qml
         auth/Message.qml
         auth/CopyrightFooter.qml
         auth/LoadingAnimation.qml
@@ -37,9 +37,9 @@ qt_add_qml_module(EduFlow
         # Формы главного меню
         main/Main.qml
 
-        main/MainTitleBar.qml
+        #main/MainTitleBar.qml
         main/InteractionsList.qml
-        main/PolygonBackground.qml
+        #main/PolygonBackground.qml
         main/UserSettingsPanel.qml
         main/MainAPI.qml
 
@@ -51,6 +51,15 @@ qt_add_qml_module(EduFlow
         main/GroupsView.qml
         main/EventsView.qml
         main/AdaptiveSideBar.qml
+        main/PortfolioView.qml
+        main/ConfirmDialog.qml
+        main/StudentDialog.qml
+        main/GroupsDialog.qml
+        main/TeachersDialog.qml
+
+        # Частоиспользуемые модули
+        common/PolygonBackground.qml
+        common/TitleBar.qml
 )
 
 qt_add_resources(EduFlow "resources"

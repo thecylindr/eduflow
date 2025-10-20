@@ -1,39 +1,249 @@
-// main/StudentsView.qml
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
+import QtQuick.Controls 2.15
 
 Item {
+    id: studentsView
+
+    property var groups: []
+    property bool isLoading: false
+
+    function refreshStudents() {
+        isLoading = true;
+        mainWindow.mainApi.getStudents(function(response) {
+            isLoading = false;
+            if (response.success) {
+                mainWindow.students = response.data || [];
+                console.log("✅ Студенты загружены:", mainWindow.students.length);
+            } else {
+                showMessage("❌ Ошибка загрузки студентов: " + response.error, "error");
+            }
+        });
+    }
+
+    function refreshGroups() {
+        mainWindow.mainApi.getGroups(function(response) {
+            if (response.success) {
+                studentsView.groups = response.data || [];
+                if (studentDialog.item) {
+                    studentDialog.item.groups = studentsView.groups;
+                }
+                console.log("✅ Группы загружены:", studentsView.groups.length);
+            } else {
+                showMessage("❌ Ошибка загрузки групп: " + response.error, "error");
+            }
+        });
+    }
+
+    function showMessage(text, type) {
+        mainWindow.showMessage(text, type);
+    }
+
+    function addStudent(studentData) {
+        isLoading = true;
+        mainWindow.mainApi.sendRequest("POST", "/students", studentData, function(response) {
+            isLoading = false;
+            if (response.success) {
+                showMessage("✅ Студент успешно добавлен", "success");
+                studentDialog.close();
+                refreshStudents();
+            } else {
+                showMessage("❌ Ошибка добавления студента: " + response.error, "error");
+            }
+        });
+    }
+
+    function updateStudent(studentData) {
+        isLoading = true;
+        var url = "/students/" + studentData.studentCode;
+        mainWindow.mainApi.sendRequest("PUT", url, studentData, function(response) {
+            isLoading = false;
+            if (response.success) {
+                showMessage("✅ Данные студента обновлены", "success");
+                studentDialog.close();
+                refreshStudents();
+            } else {
+                showMessage("❌ Ошибка обновления студента: " + response.error, "error");
+            }
+        });
+    }
+
+    function deleteStudent(studentCode, studentName) {
+        // Простое подтверждение (можно заменить на ConfirmDialog)
+        if (confirm("Вы уверены, что хотите удалить студента:\n" + studentName + "?")) {
+            isLoading = true;
+            mainWindow.mainApi.sendRequest("DELETE", "/students/" + studentCode, null, function(response) {
+                isLoading = false;
+                if (response.success) {
+                    showMessage("✅ Студент успешно удален", "success");
+                    refreshStudents();
+                } else {
+                    showMessage("❌ Ошибка удаления студента: " + response.error, "error");
+                }
+            });
+        }
+    }
+
+    Component.onCompleted: {
+        refreshStudents();
+        refreshGroups();
+    }
+
     ColumnLayout {
         anchors.fill: parent
-        spacing: 10
+        spacing: 15
 
-        Text {
-            text: "👨‍🎓 Управление студентами"
-            font.pixelSize: 20
-            font.bold: true
-            color: "#2c3e50"
-            Layout.alignment: Qt.AlignHCenter
+        // Заголовок с полоской
+        Column {
+            Layout.fillWidth: true
+            spacing: 8
+
+            Text {
+                text: "👨‍🎓 Управление студентами"
+                font.pixelSize: 20
+                font.bold: true
+                color: "#2c3e50"
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+
+            // Серая полоска под заголовком
+            Rectangle {
+                width: parent.width
+                height: 1
+                color: "#e0e0e0"
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
         }
 
+        // Панель управления
         Rectangle {
             Layout.fillWidth: true
-            height: 40
+            height: 50
             radius: 8
             color: "#2ecc71"
 
             Row {
-                anchors.centerIn: parent
-                spacing: 10
+                anchors.fill: parent
+                anchors.margins: 10
+                spacing: 15
 
                 Text {
                     text: "Всего студентов: " + mainWindow.students.length
                     color: "white"
                     font.pixelSize: 14
                     font.bold: true
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Item { width: 20 }
+
+                // Кнопка обновления
+                Rectangle {
+                    width: 100
+                    height: 30
+                    radius: 6
+                    color: refreshMouseArea.containsMouse ? "#27ae60" : "#2ecc71"
+                    border.color: "white"
+                    border.width: 1
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 5
+
+                        Text {
+                            text: "🔄"
+                            font.pixelSize: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Text {
+                            text: "Обновить"
+                            color: "white"
+                            font.pixelSize: 12
+                            font.bold: true
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
+                    MouseArea {
+                        id: refreshMouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: refreshStudents()
+                    }
+                }
+
+                Item { Layout.fillWidth: true }
+
+                // Кнопка добавления
+                Rectangle {
+                    width: 150
+                    height: 30
+                    radius: 6
+                    color: addMouseArea.containsMouse ? "#27ae60" : "#2ecc71"
+                    border.color: "white"
+                    border.width: 1
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Row {
+                        anchors.centerIn: parent
+                        spacing: 5
+
+                        Text {
+                            text: "➕"
+                            font.pixelSize: 12
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Text {
+                            text: "Добавить студента"
+                            color: "white"
+                            font.pixelSize: 12
+                            font.bold: true
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                    }
+
+                    MouseArea {
+                        id: addMouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onClicked: studentDialog.openForAdd()
+                    }
                 }
             }
         }
 
+        // Индикатор загрузки
+        Rectangle {
+            Layout.fillWidth: true
+            height: 30
+            radius: 6
+            color: "#fff3cd"
+            border.color: "#ffeaa7"
+            border.width: 1
+            visible: isLoading
+
+            Row {
+                anchors.centerIn: parent
+                spacing: 10
+
+                Text {
+                    text: "⏳"
+                    font.pixelSize: 14
+                }
+
+                Text {
+                    text: "Загрузка данных..."
+                    color: "#856404"
+                    font.pixelSize: 12
+                    font.bold: true
+                }
+            }
+        }
+
+        // Список студентов
         ListView {
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -43,7 +253,7 @@ Item {
 
             delegate: Rectangle {
                 width: ListView.view.width
-                height: 60
+                height: 70
                 radius: 8
                 color: index % 2 === 0 ? "#f8f9fa" : "#ffffff"
                 border.color: "#e9ecef"
@@ -54,47 +264,117 @@ Item {
                     anchors.margins: 10
                     spacing: 15
 
+                    // Аватар
                     Rectangle {
-                        width: 40
-                        height: 40
-                        radius: 20
+                        width: 50
+                        height: 50
+                        radius: 25
                         color: "#2ecc71"
                         anchors.verticalCenter: parent.verticalCenter
 
                         Text {
                             text: "👨‍🎓"
-                            font.pixelSize: 16
+                            font.pixelSize: 20
                             anchors.centerIn: parent
                         }
                     }
 
+                    // Основная информация
                     Column {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 2
+                        width: parent.width - 200
 
                         Text {
                             text: (modelData.lastName || "") + " " + (modelData.firstName || "") + " " + (modelData.middleName || "")
                             font.pixelSize: 14
                             font.bold: true
                             color: "#2c3e50"
+                            elide: Text.ElideRight
                         }
 
                         Text {
-                            text: "Группа: " + (modelData.groupId || "")
+                            text: "Группа: " + (getGroupName(modelData.groupId) || "Не назначена")
+                            font.pixelSize: 11
+                            color: "#7f8c8d"
+                        }
+
+                        Text {
+                            text: "Паспорт: " + (modelData.passportSeries || "") + " " + (modelData.passportNumber || "")
                             font.pixelSize: 11
                             color: "#7f8c8d"
                         }
                     }
 
-                    Item {
-                        Layout.fillWidth: true
+                    // Контакты
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 2
+
+                        Text {
+                            text: modelData.email || "Нет email"
+                            font.pixelSize: 11
+                            color: "#7f8c8d"
+                        }
+
+                        Text {
+                            text: modelData.phoneNumber || "Нет телефона"
+                            font.pixelSize: 11
+                            color: "#7f8c8d"
+                        }
                     }
 
-                    Text {
-                        text: modelData.email || "Нет email"
-                        font.pixelSize: 11
-                        color: "#7f8c8d"
+                    // Кнопки действий
+                    Row {
                         anchors.verticalCenter: parent.verticalCenter
+                        spacing: 5
+
+                        // Кнопка редактирования
+                        Rectangle {
+                            width: 30
+                            height: 30
+                            radius: 6
+                            color: editMouseArea.containsMouse ? "#3498db" : "#2980b9"
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "✏️"
+                                font.pixelSize: 12
+                            }
+
+                            MouseArea {
+                                id: editMouseArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: {
+                                    studentDialog.openForEdit(modelData);
+                                }
+                            }
+                        }
+
+                        // Кнопка удаления
+                        Rectangle {
+                            width: 30
+                            height: 30
+                            radius: 6
+                            color: deleteMouseArea.containsMouse ? "#e74c3c" : "#c0392b"
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "🗑️"
+                                font.pixelSize: 12
+                            }
+
+                            MouseArea {
+                                id: deleteMouseArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: {
+                                    var studentName = (modelData.lastName || "") + " " + (modelData.firstName || "");
+                                    deleteStudent(modelData.studentCode, studentName);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -104,7 +384,54 @@ Item {
                 text: "Нет данных о студентах"
                 color: "#7f8c8d"
                 font.pixelSize: 14
-                visible: mainWindow.students.length === 0
+                visible: mainWindow.students.length === 0 && !isLoading
+            }
+        }
+    }
+
+    function getGroupName(groupId) {
+        for (var i = 0; i < groups.length; i++) {
+            if (groups[i].groupId === groupId) {
+                return groups[i].name;
+            }
+        }
+        return "";
+    }
+
+    // Диалог студента
+    Loader {
+        id: studentDialog
+        source: "StudentDialog.qml"
+
+        onLoaded: {
+            item.groups = studentsView.groups;
+            item.saved.connect(function(studentData) {
+                if (studentData.studentCode) {
+                    updateStudent(studentData);
+                } else {
+                    addStudent(studentData);
+                }
+            });
+            item.cancelled.connect(function() {
+                item.close();
+            });
+        }
+
+        function openForAdd() {
+            if (studentDialog.item) {
+                studentDialog.item.openForAdd();
+            }
+        }
+
+        function openForEdit(studentData) {
+            if (studentDialog.item) {
+                studentDialog.item.openForEdit(studentData);
+            }
+        }
+
+        function close() {
+            if (studentDialog.item) {
+                studentDialog.item.close();
             }
         }
     }

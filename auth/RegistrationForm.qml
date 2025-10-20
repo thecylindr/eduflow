@@ -17,6 +17,80 @@ Rectangle {
     property bool hasValidFullName: false
     property string fullNameError: ""
 
+    function focusUsername() {
+        usernameField.focus = true
+        usernameField.cursorPosition = usernameField.text.length
+    }
+
+    function focusFullName() {
+        fullNameField.focus = true
+        fullNameField.cursorPosition = fullNameField.text.length
+    }
+
+    function focusEmail() {
+        emailField.focus = true
+        emailField.cursorPosition = emailField.text.length
+    }
+
+    function focusPhone() {
+        phoneField.focus = true
+        phoneField.cursorPosition = phoneField.text.length
+    }
+
+    function focusPassword() {
+        passwordField.focus = true
+        passwordField.cursorPosition = passwordField.text.length
+    }
+
+    function focusConfirmPassword() {
+        confirmPasswordField.focus = true
+        confirmPasswordField.cursorPosition = confirmPasswordField.text.length
+    }
+
+    function submitForm() {
+        if (registerButton.enabled) {
+            attemptRegistration()
+        }
+    }
+
+    function navigateToNextField(currentField) {
+        if (currentField === usernameField) {
+            focusFullName()
+        } else if (currentField === fullNameField) {
+            focusEmail()
+        } else if (currentField === emailField) {
+            focusPhone()
+        } else if (currentField === phoneField) {
+            focusPassword()
+        } else if (currentField === passwordField) {
+            focusConfirmPassword()
+        } else if (currentField === confirmPasswordField) {
+            submitForm()
+        }
+    }
+
+    function navigateToPreviousField(currentField) {
+        if (currentField === fullNameField) {
+            focusUsername()
+        } else if (currentField === emailField) {
+            focusFullName()
+        } else if (currentField === phoneField) {
+            focusEmail()
+        } else if (currentField === passwordField) {
+            focusPhone()
+        } else if (currentField === confirmPasswordField) {
+            focusPassword()
+        }
+    }
+
+    // Обработка Escape для возврата к форме входа
+    Keys.onPressed: (event) => {
+        if (event.key === Qt.Key_Escape) {
+            showLoginForm()
+            event.accepted = true
+        }
+    }
+
     function validateFullName() {
         var text = fullNameField.text.trim()
         var parts = text.split(/\s+/).filter(function(part) { return part.length > 0 })
@@ -74,6 +148,11 @@ Rectangle {
         fullNameError = ""
     }
 
+    // Добавляем функцию clearAllFields для совместимости
+    function clearAllFields() {
+        clearForm()
+    }
+
     ColumnLayout {
         id: contentLayout
         width: parent.width - 20
@@ -116,6 +195,22 @@ Rectangle {
                     font.pixelSize: 12
                     color: "#000000"
                     selectByMouse: true
+
+                    Keys.onPressed: (event) => {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                            registrationForm.navigateToNextField(usernameField)
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_Down) {
+                            registrationForm.focusFullName()
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_Up) {
+                            registrationForm.focusUsername()
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_Escape) {
+                            // Передача события родителю
+                            event.accepted = false
+                        }
+                    }
                 }
 
                 Text {
@@ -161,6 +256,22 @@ Rectangle {
 
                     onTextChanged: validateFullName()
                     onEditingFinished: validateFullName()
+
+                    Keys.onPressed: (event) => {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                            registrationForm.navigateToNextField(fullNameField)
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_Down) {
+                            registrationForm.focusEmail()
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_Up) {
+                            registrationForm.focusUsername()
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_Escape) {
+                            // Передача события родителю
+                            event.accepted = false
+                        }
+                    }
                 }
 
                 Text {
@@ -212,6 +323,22 @@ Rectangle {
                     font.pixelSize: 12
                     color: "#000000"
                     selectByMouse: true
+
+                    Keys.onPressed: (event) => {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                            registrationForm.navigateToNextField(emailField)
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_Down) {
+                            registrationForm.focusPhone()
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_Up) {
+                            registrationForm.focusFullName()
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_Escape) {
+                            // Передача события родителю
+                            event.accepted = false
+                        }
+                    }
                 }
 
                 Text {
@@ -252,6 +379,22 @@ Rectangle {
                     font.pixelSize: 12
                     color: "#000000"
                     selectByMouse: true
+
+                    Keys.onPressed: (event) => {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                            registrationForm.navigateToNextField(phoneField)
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_Down) {
+                            registrationForm.focusPassword()
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_Up) {
+                            registrationForm.focusEmail()
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_Escape) {
+                            // Передача события родителю
+                            event.accepted = false
+                        }
+                    }
                 }
 
                 Text {
@@ -298,6 +441,22 @@ Rectangle {
                         echoMode: showPasswordButton.checked ? TextInput.Normal : TextInput.Password
                         color: "#000000"
                         selectByMouse: true
+
+                        Keys.onPressed: (event) => {
+                            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                                registrationForm.navigateToNextField(passwordField)
+                                event.accepted = true
+                            } else if (event.key === Qt.Key_Down) {
+                                registrationForm.focusConfirmPassword()
+                                event.accepted = true
+                            } else if (event.key === Qt.Key_Up) {
+                                registrationForm.focusPhone()
+                                event.accepted = true
+                            } else if (event.key === Qt.Key_Escape) {
+                                // Передача события родителю
+                                event.accepted = false
+                            }
+                        }
                     }
 
                     Text {
@@ -376,6 +535,22 @@ Rectangle {
                     echoMode: showPasswordButton.checked ? TextInput.Normal : TextInput.Password
                     color: "#000000"
                     selectByMouse: true
+
+                    Keys.onPressed: (event) => {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                            registrationForm.submitForm()
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_Down) {
+                            registrationForm.focusConfirmPassword()
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_Up) {
+                            registrationForm.focusPassword()
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_Escape) {
+                            // Передача события родителю
+                            event.accepted = false
+                        }
+                    }
                 }
 
                 Text {
@@ -441,4 +616,8 @@ Rectangle {
     property alias passwordField: passwordField
     property alias confirmPasswordField: confirmPasswordField
     property alias registerButton: registerButton
+
+    Component.onCompleted: {
+        focusUsername()
+    }
 }

@@ -4,6 +4,7 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 import Qt5Compat.GraphicalEffects
 import QtQml 2.15
+import "../common" as Common
 
 ApplicationWindow {
     id: authWindow
@@ -17,7 +18,6 @@ ApplicationWindow {
     minimumWidth: 420
     //maximumHeight: 900
     //maximumWidth: 800
-
 
     property bool isWindowMaximized: false
     property int baseHeight: 500
@@ -70,7 +70,6 @@ ApplicationWindow {
         onLoaded: if (item) item.show()
     }
 
-
     Behavior on width {
         NumberAnimation {
             duration: 300;
@@ -88,6 +87,7 @@ ApplicationWindow {
     Component.onCompleted: {
         serverConfig.updateFromSettings();
         updateWindowHeight();
+        windowContainer.forceActiveFocus(); // Фокус на корневой элемент для обработки клавиш
     }
 
     function saveServerConfig(serverAddress) {
@@ -113,11 +113,21 @@ ApplicationWindow {
     function showRegistrationForm() {
         _showingRegistration = true;
         updateWindowHeight();
+        // Даем фокус форме регистрации
+        if (registrationForm) {
+            registrationForm.focusUsername();
+        }
+        windowContainer.forceActiveFocus(); // Возвращаем фокус окну
     }
 
     function showLoginForm() {
         _showingRegistration = false;
         updateWindowHeight();
+        // Даем фокус форме входа
+        if (loginForm) {
+            loginForm.focusLogin();
+        }
+        windowContainer.forceActiveFocus(); // Возвращаем фокус окну
     }
 
     function calculateBaseHeight() {
@@ -272,8 +282,9 @@ ApplicationWindow {
     }
 
     function setLoginEmail(email) {
-        if (loginForm && loginForm.setLogin && email) {
-            loginForm.setLogin(email);
+        if (loginForm && loginForm.loginField && email) {
+            loginForm.loginField.text = email;
+            loginForm.loginField.cursorPosition = email.length;
         }
     }
 
@@ -391,6 +402,20 @@ ApplicationWindow {
         color: "#f0f0f0"
         clip: true
         z: -3
+        focus: true // Важно: даем фокус для обработки клавиш
+
+        // Обработка глобальных горячих клавиш
+        Keys.onPressed: (event) => {
+            if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && (event.modifiers & Qt.ControlModifier)) {
+                // Ctrl+Enter для принудительной отправки формы
+                if (_showingRegistration) {
+                    attemptRegistration();
+                } else {
+                    attemptLogin();
+                }
+                event.accepted = true;
+            }
+        }
 
         Rectangle {
             id: background
@@ -403,13 +428,13 @@ ApplicationWindow {
             radius: 20
         }
 
-        BackgroundPolygons {
-            id: backgroundPolygons
+        Common.PolygonBackground {
+            id: polygonRepeater
             anchors.fill: parent
             visible: parent !== null
         }
 
-        AuthTitleBar {
+        Common.TitleBar {
             id: titleBar
             anchors {
                 top: parent.top
@@ -418,13 +443,14 @@ ApplicationWindow {
                 margins: 10
             }
             isWindowMaximized: authWindow.isWindowMaximized
-            windowWidth: authWindow.width
-            windowHeight: authWindow.height
+            currentView: "Вход в систему"
+            window: authWindow
 
             onToggleMaximize: authWindow.toggleMaximize()
             onShowMinimized: authWindow.showMinimized()
             onClose: Qt.quit()
         }
+
 
         Message {
             id: errorMessage

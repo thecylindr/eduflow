@@ -13,6 +13,35 @@ Rectangle {
 
     signal attemptLogin
 
+    function focusLogin() {
+        loginField.focus = true
+        loginField.cursorPosition = loginField.text.length
+    }
+
+    function focusPassword() {
+        passwordField.focus = true
+        passwordField.cursorPosition = passwordField.text.length
+    }
+
+    function submitForm() {
+        if (loginButton.enabled) {
+            attemptLogin()
+        }
+    }
+
+    Keys.onPressed: (event) => {
+        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            submitForm()
+            event.accepted = true
+        } else if (event.key === Qt.Key_Down) {
+            focusPassword()
+            event.accepted = true
+        } else if (event.key === Qt.Key_Up) {
+            focusLogin()
+            event.accepted = true
+        }
+    }
+
     ColumnLayout {
         id: contentLayout
         width: parent.width - 20
@@ -54,6 +83,20 @@ Rectangle {
                     font.pixelSize: 12
                     color: "#000000"
                     selectByMouse: true
+                    focus: true
+
+                    Keys.onPressed: (event) => {
+                        if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                            loginForm.submitForm()
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_Down) {
+                            loginForm.focusPassword()
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_Up) {
+                            loginForm.focusLogin()
+                            event.accepted = true
+                        }
+                    }
                 }
 
                 Text {
@@ -99,6 +142,19 @@ Rectangle {
                         echoMode: showPasswordButton.checked ? TextInput.Normal : TextInput.Password
                         color: "#000000"
                         selectByMouse: true
+
+                        Keys.onPressed: (event) => {
+                            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                                loginForm.submitForm()
+                                event.accepted = true
+                            } else if (event.key === Qt.Key_Down) {
+                                loginForm.focusPassword()
+                                event.accepted = true
+                            } else if (event.key === Qt.Key_Up) {
+                                loginForm.focusLogin()
+                                event.accepted = true
+                            }
+                        }
                     }
 
                     Text {
@@ -216,4 +272,8 @@ Rectangle {
     property alias loginField: loginField
     property alias passwordField: passwordField
     property alias loginButton: loginButton
+
+    Component.onCompleted: {
+        focusLogin()
+    }
 }

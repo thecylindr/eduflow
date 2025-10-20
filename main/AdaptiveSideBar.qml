@@ -9,17 +9,19 @@ Rectangle {
     color: "#f8f8f8"
     radius: 12
     opacity: 0.95
+    z: 1
 
     property int currentWidth: 280
     property int compactWidth: 70
     property int fullWidth: 280
-    property string currentMode: "full"
 
-    // Внутреннее свойство для отслеживания текущего вида
-    property string _currentView: "dashboard"
+    // Автоматическое определение режима по ширине
+    readonly property string currentMode: currentWidth === compactWidth ? "compact" : "full"
+    // Отдельное свойство для немедленного скрытия текста
+    property bool textVisible: currentMode === "full"
 
-    signal navigateTo(string view)
-    signal logout()
+    // Текущий вид управляется Main
+    property string currentView: "dashboard"
 
     property var menuItems: [
         {icon: "🏠", name: "Главная панель", view: "dashboard"},
@@ -30,19 +32,12 @@ Rectangle {
         {icon: "📅", name: "События", view: "events"}
     ]
 
-    // Функция для обновления текущего вида извне
-    function setCurrentView(view) {
-        if (_currentView !== view) {
-            _currentView = view;
-        }
-    }
-
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: 10
         spacing: 8
 
-        // Кнопка переключения режимов
+        // Кнопка переключения режимов с тремя полосками
         Rectangle {
             Layout.fillWidth: true
             height: 40
@@ -55,17 +50,48 @@ Rectangle {
                 anchors.centerIn: parent
                 spacing: 8
 
-                Text {
-                    text: currentMode === "full" ? "◀" : "▶"
-                    font.pixelSize: 16
-                    color: "#3498db"
+                // Иконка из трех полосок
+                Item {
+                    width: 20
+                    height: 14
+
+                    // Три горизонтальные полоски
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 2
+
+                        Rectangle {
+                            width: 16
+                            height: 2
+                            radius: 1
+                            color: toggleMouseArea.containsMouse ? "#2980b9" : "#3498db"
+                        }
+                        Rectangle {
+                            width: 16
+                            height: 2
+                            radius: 1
+                            color: toggleMouseArea.containsMouse ? "#2980b9" : "#3498db"
+                        }
+                        Rectangle {
+                            width: 16
+                            height: 2
+                            radius: 1
+                            color: toggleMouseArea.containsMouse ? "#2980b9" : "#3498db"
+                        }
+                    }
+
+                    // Вращение иконки в зависимости от режима
+                    rotation: textVisible ? 0 : 90
+                    Behavior on rotation {
+                        NumberAnimation { duration: 200 }
+                    }
                 }
 
                 Text {
-                    text: "Свернуть"
+                    text: textVisible ? "Свернуть" : "Развернуть"
                     font.pixelSize: 12
                     color: "#2c3e50"
-                    visible: currentMode === "full"
+                    visible: textVisible
                 }
             }
 
@@ -75,12 +101,12 @@ Rectangle {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
+                    textVisible = !textVisible;
+
                     if (currentMode === "full") {
-                        currentMode = "compact"
-                        currentWidth = compactWidth
+                        currentWidth = compactWidth;
                     } else {
-                        currentMode = "full"
-                        currentWidth = fullWidth
+                        currentWidth = fullWidth;
                     }
                 }
             }
@@ -88,12 +114,13 @@ Rectangle {
 
         // Заголовок
         Text {
-            text: currentMode === "full" ? "🎯 Панель управления" : "🎯"
-            font.pixelSize: currentMode === "full" ? 18 : 24
+            text: textVisible ? "🎯 Панель управления" : "🎯"
+            font.pixelSize: textVisible ? 18 : 20
             font.bold: true
             color: "#2c3e50"
             Layout.alignment: Qt.AlignHCenter
             Layout.bottomMargin: 10
+            visible: true
         }
 
         // Основное меню
@@ -110,9 +137,9 @@ Rectangle {
                     Layout.fillWidth: true
                     height: 50
                     radius: 8
-                    color: adaptiveSideBar._currentView === modelData.view ? "#3498db" :
+                    color: adaptiveSideBar.currentView === modelData.view ? "#3498db" :
                           (navMouseArea.containsMouse ? "#ecf0f1" : "transparent")
-                    border.color: adaptiveSideBar._currentView === modelData.view ? "#2980b9" : "transparent"
+                    border.color: adaptiveSideBar.currentView === modelData.view ? "#2980b9" : "transparent"
                     border.width: 2
 
                     Row {
@@ -124,15 +151,52 @@ Rectangle {
                             text: modelData.icon
                             font.pixelSize: 16
                             anchors.verticalCenter: parent.verticalCenter
+                            color: adaptiveSideBar.currentView === modelData.view ? "white" :
+                                  (navMouseArea.containsMouse ? "#2980b9" : "#2c3e50")
                         }
 
                         Text {
                             text: modelData.name
-                            color: adaptiveSideBar._currentView === modelData.view ? "white" : "#2c3e50"
+                            color: adaptiveSideBar.currentView === modelData.view ? "white" : "#2c3e50"
                             font.pixelSize: 13
                             font.bold: true
                             anchors.verticalCenter: parent.verticalCenter
-                            visible: currentMode === "full"
+                            visible: textVisible
+                        }
+                    }
+
+                    // Подсказка в компактном режиме при наведении
+                    Rectangle {
+                        id: compactTooltip
+                        visible: !textVisible && navMouseArea.containsMouse
+                        x: menuItem.width + 5
+                        y: (menuItem.height - height) / 2
+                        width: compactTooltipText.contentWidth + 20
+                        height: 30
+                        color: "#3498db"
+                        radius: 6
+                        z: 1000
+
+                        // Альтернатива тени - светлая обводка
+                        Rectangle {
+                            anchors.fill: parent
+                            color: "transparent"
+                            border.color: "#ffffff"
+                            border.width: 2
+                            radius: 6
+                        }
+
+                        Text {
+                            id: compactTooltipText
+                            anchors.centerIn: parent
+                            text: modelData.name
+                            color: "white"
+                            font.pixelSize: 12
+                            font.bold: true
+                        }
+
+                        Behavior on opacity {
+                            NumberAnimation { duration: 150 }
                         }
                     }
 
@@ -142,10 +206,9 @@ Rectangle {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            console.log("Navigation requested:", modelData.view);
-                            if (adaptiveSideBar._currentView !== modelData.view) {
-                                adaptiveSideBar._currentView = modelData.view;
-                                adaptiveSideBar.navigateTo(modelData.view);
+                            console.log("🖱️ Нажата кнопка:", modelData.view);
+                            if (mainWindow) {
+                                mainWindow.navigateTo(modelData.view);
                             }
                         }
                     }
@@ -158,12 +221,20 @@ Rectangle {
         // Статистика (только в полном режиме)
         Rectangle {
             Layout.fillWidth: true
-            height: currentMode === "full" ? 100 : 0
+            height: textVisible ? 100 : 0
             radius: 8
             color: "#e8f4f8"
             border.color: "#bde0fe"
             border.width: 1
             visible: height > 0
+            opacity: textVisible ? 1 : 0
+
+            Behavior on height {
+                NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
+            }
+            Behavior on opacity {
+                NumberAnimation { duration: 200 }
+            }
 
             Column {
                 anchors.centerIn: parent
@@ -212,6 +283,7 @@ Rectangle {
                     text: "🚪"
                     font.pixelSize: 14
                     anchors.verticalCenter: parent.verticalCenter
+                    color: "white"
                 }
 
                 Text {
@@ -220,7 +292,42 @@ Rectangle {
                     font.pixelSize: 12
                     font.bold: true
                     anchors.verticalCenter: parent.verticalCenter
-                    visible: currentMode === "full"
+                    visible: textVisible
+                }
+            }
+
+            // Подсказка для кнопки выхода в компактном режиме
+            Rectangle {
+                id: logoutTooltip
+                visible: !textVisible && logoutMouseArea.containsMouse
+                x: parent.width + 5
+                y: (parent.height - height) / 2
+                width: logoutTooltipText.contentWidth + 20
+                height: 30
+                color: "#e74c3c"
+                radius: 6
+                z: 1000
+
+                // Альтернатива тени - светлая обводка
+                Rectangle {
+                    anchors.fill: parent
+                    color: "transparent"
+                    border.color: "#ffffff"
+                    border.width: 2
+                    radius: 6
+                }
+
+                Text {
+                    id: logoutTooltipText
+                    anchors.centerIn: parent
+                    text: "Выйти"
+                    color: "white"
+                    font.pixelSize: 12
+                    font.bold: true
+                }
+
+                Behavior on opacity {
+                    NumberAnimation { duration: 150 }
                 }
             }
 
@@ -230,8 +337,10 @@ Rectangle {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    console.log("Logout requested")
-                    adaptiveSideBar.logout()
+                    console.log("🔒 Запрос выхода");
+                    if (mainWindow) {
+                        mainWindow.logout();
+                    }
                 }
             }
         }

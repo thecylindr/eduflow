@@ -86,7 +86,7 @@ void SettingsManager::setAuthToken(const QString &authToken)
 
 bool SettingsManager::hasValidToken() const
 {
-    // Токен считается валидным если он не пустой и имеет достаточную длину
+    // Токен считается валидным если он не пустой и имеет достаточную длину (сессионные токены обычно 64 символа)
     return !m_authToken.isEmpty() && m_authToken.length() >= 32;
 }
 

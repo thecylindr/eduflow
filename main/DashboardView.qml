@@ -7,12 +7,26 @@ Item {
         anchors.centerIn: parent
         spacing: 20
 
-        Text {
-            text: "🏠 Главная панель"
-            font.pixelSize: 24
-            font.bold: true
-            color: "#2c3e50"
-            anchors.horizontalCenter: parent.horizontalCenter
+        // Заголовок с полоской
+        Column {
+            width: parent.width
+            spacing: 8
+
+            Text {
+                text: "🏠 Главная панель"
+                font.pixelSize: 24
+                font.bold: true
+                color: "#2c3e50"
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
+
+            // Серая полоска под заголовком
+            Rectangle {
+                width: parent.width
+                height: 1
+                color: "#e0e0e0"
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
         }
 
         Text {

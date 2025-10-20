@@ -52,21 +52,21 @@ Rectangle {
 
     Rectangle {
         id: closeMessageButton
-        width: 16
-        height: 16
-        radius: 8
+        width: 20
+        height: 20
+        radius: 10
         color: closeMessageMouseArea.containsMouse ? messageContainer.border.color : "transparent"
         anchors {
             top: parent.top
             right: parent.right
-            margins: 2
+            margins: 8
         }
 
         Text {
             anchors.centerIn: parent
             text: "×"
             color: closeMessageMouseArea.containsMouse ? "white" : messageContainer.border.color
-            font.pixelSize: 12
+            font.pixelSize: 14
             font.bold: true
         }
 
@@ -74,16 +74,20 @@ Rectangle {
             id: closeMessageMouseArea
             anchors.fill: parent
             hoverEnabled: true
-            onClicked: closeMessage()
+            onClicked: {
+                showingMessage = false;
+                messageText = "";
+            }
         }
     }
-
-    signal closeMessage
 
     Timer {
         id: autoCloseTimer
         interval: 5000
-        onTriggered: closeMessage()
+        onTriggered: {
+            showingMessage = false;
+            messageText = "";
+        }
     }
 
     onShowingMessageChanged: {
