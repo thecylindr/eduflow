@@ -1,4 +1,3 @@
-// main/TeachersDialog.qml
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
@@ -15,21 +14,34 @@ Popup {
     property bool isEditMode: false
     property var currentTeacher: null
     property bool isLoading: false
+    property var specializations: []
 
     signal saved(var teacherData)
     signal cancelled
+    signal specializationAdded(string name)
 
     function openForEdit(teacher) {
         currentTeacher = teacher;
         isEditMode = true;
 
-        lastNameField.text = teacher.lastName || "";
-        firstNameField.text = teacher.firstName || "";
-        middleNameField.text = teacher.middleName || "";
+        console.log("📝 Редактирование преподавателя:", JSON.stringify(teacher));
+
+        // Поддержка как camelCase, так и snake_case полей
+        lastNameField.text = teacher.last_name || teacher.lastName || "";
+        firstNameField.text = teacher.first_name || teacher.firstName || "";
+        middleNameField.text = teacher.middle_name || teacher.middleName || "";
         emailField.text = teacher.email || "";
-        phoneField.text = teacher.phoneNumber || "";
+        phoneField.text = teacher.phone_number || teacher.phoneNumber || "";
         experienceField.text = teacher.experience || "0";
-        specializationField.text = teacher.specialization || "";
+
+        // Устанавливаем специализацию
+        if (teacher.specialization) {
+            specializationComboBox.currentText = teacher.specialization;
+            var index = specializationComboBox.find(teacher.specialization);
+            if (index !== -1) {
+                specializationComboBox.currentIndex = index;
+            }
+        }
 
         teacherDialog.open();
     }
@@ -38,13 +50,17 @@ Popup {
         currentTeacher = null;
         isEditMode = false;
 
+        console.log("➕ Добавление нового преподавателя");
+
+        // Сбрасываем поля
         lastNameField.text = "";
         firstNameField.text = "";
         middleNameField.text = "";
         emailField.text = "";
         phoneField.text = "";
-        experienceField.text = "0";
-        specializationField.text = "";
+        experienceField.text = "1";
+        specializationComboBox.currentIndex = -1;
+        specializationComboBox.editText = "";
 
         teacherDialog.open();
     }
@@ -54,22 +70,26 @@ Popup {
 
         if (!lastNameField.text.trim()) {
             errorText.text = "Фамилия обязательна для заполнения";
+            lastNameField.forceActiveFocus();
             return false;
         }
 
         if (!firstNameField.text.trim()) {
             errorText.text = "Имя обязательно для заполнения";
+            firstNameField.forceActiveFocus();
             return false;
         }
 
-        if (!specializationField.text.trim()) {
+        if (!specializationComboBox.currentText.trim()) {
             errorText.text = "Специализация обязательна для заполнения";
+            specializationComboBox.forceActiveFocus();
             return false;
         }
 
         var experience = parseInt(experienceField.text);
-        if (isNaN(experience) || experience < 0) {
-            errorText.text = "Опыт работы должен быть числом ≥ 0";
+        if (isNaN(experience) || experience < 0 || experience > 50) {
+            errorText.text = "Опыт работы должен быть числом от 0 до 50";
+            experienceField.forceActiveFocus();
             return false;
         }
 
@@ -280,12 +300,25 @@ Popup {
                             color: "#2c3e50"
                         }
 
-                        TextField {
-                            id: specializationField
+                        ComboBox {
+                            id: specializationComboBox
                             Layout.fillWidth: true
-                            placeholderText: "Введите специализацию"
-                            font.pixelSize: 14
-                            selectByMouse: true
+                            editable: true
+                            model: teacherDialog.specializations
+                            currentIndex: -1
+
+                            // Разрешаем пользователю вводить новую специализацию
+                            onAccepted: {
+                                if (find(currentText) === -1 && currentText !== "") {
+                                    // Добавляем новую специализацию в список
+                                    teacherDialog.specializationAdded(currentText);
+                                }
+                            }
+
+                            // Валидация ввода
+                            validator: RegExpValidator {
+                                regExp: /^[a-zA-Zа-яА-Я0-9\s\-_]+$/
+                            }
                         }
                     }
 
@@ -391,7 +424,7 @@ Popup {
                                     "email": emailField.text.trim() || "",
                                     "phone_number": phoneField.text.trim() || "",
                                     "experience": parseInt(experienceField.text) || 0,
-                                    "specialization": specializationField.text.trim()
+                                    "specialization": specializationComboBox.currentText.trim()
                                 };
 
                                 if (isEditMode && currentTeacher) {
@@ -432,7 +465,7 @@ Popup {
                 "email": emailField.text.trim() || "",
                 "phone_number": phoneField.text.trim() || "",
                 "experience": parseInt(experienceField.text) || 0,
-                "specialization": specializationField.text.trim()
+                "specialization": specializationComboBox.currentText.trim()
             };
 
             if (isEditMode && currentTeacher) {

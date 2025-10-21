@@ -1,121 +1,154 @@
-// main/TeachersView.qml
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
+import "../enhanced" as Enhanced
 
 Item {
     id: teachersView
 
+    // Свойства должны передаваться извне
+    property var teachers: []
+    property var mainApi
+    property var showMessage: function(text, type) { console.log(text); }
+
     property bool isLoading: false
+    property var specializations: []
 
     function refreshTeachers() {
         isLoading = true;
-        mainWindow.mainApi.getTeachers(function(response) {
-            isLoading = false;
-            if (response.success) {
-                mainWindow.teachers = response.data || [];
-                console.log("✅ Преподаватели загружены:", mainWindow.teachers.length);
-            } else {
-                showMessage("❌ Ошибка загрузки преподавателей: " + response.error, "error");
-            }
-        });
-    }
-
-    function showMessage(text, type) {
-        mainWindow.showMessage(text, type);
-    }
-
-    function addTeacher(teacherData) {
-        if (teacherDialogLoader.item) {
-            teacherDialogLoader.item.isLoading = true;
-        }
-
-        // ИСПРАВЛЕНИЕ: убираем teacherId из данных для добавления
-        var dataToSend = {
-            "last_name": teacherData.last_name,
-            "first_name": teacherData.first_name,
-            "middle_name": teacherData.middle_name,
-            "email": teacherData.email,
-            "phone_number": teacherData.phone_number,
-            "experience": teacherData.experience,
-            "specialization": teacherData.specialization
-        };
-
-        console.log("📤 Отправка данных добавления:", JSON.stringify(dataToSend));
-
-        mainWindow.mainApi.sendRequest("POST", "/teachers", dataToSend, function(response) {
-            if (teacherDialogLoader.item) {
-                teacherDialogLoader.item.isLoading = false;
-            }
-
-            if (response.success) {
-                showMessage("✅ Преподаватель успешно добавлен", "success");
-                teacherDialogLoader.close();
-                refreshTeachers();
-            } else {
-                showMessage("❌ Ошибка добавления преподавателя: " + response.error, "error");
-            }
-        });
-    }
-
-    function updateTeacher(teacherData) {
-        if (teacherDialogLoader.item) {
-            teacherDialogLoader.item.isLoading = true;
-        }
-
-        // ИСПРАВЛЕНИЕ: убираем teacherId из данных для обновления
-        var dataToSend = {
-            "last_name": teacherData.last_name,
-            "first_name": teacherData.first_name,
-            "middle_name": teacherData.middle_name,
-            "email": teacherData.email,
-            "phone_number": teacherData.phone_number,
-            "experience": teacherData.experience,
-            "specialization": teacherData.specialization
-        };
-
-        var url = "/teachers/" + teacherData.teacherId;
-        console.log("📤 Отправка данных обновления:", JSON.stringify(dataToSend));
-
-        mainWindow.mainApi.sendRequest("PUT", url, dataToSend, function(response) {
-            if (teacherDialogLoader.item) {
-                teacherDialogLoader.item.isLoading = false;
-            }
-
-            if (response.success) {
-                showMessage("✅ Данные преподавателя обновлены", "success");
-                teacherDialogLoader.close();
-                refreshTeachers();
-            } else {
-                showMessage("❌ Ошибка обновления преподавателя: " + response.error, "error");
-            }
-        });
-    }
-
-    function deleteTeacher(teacherId, teacherName) {
-        if (confirm("Вы уверены, что хотите удалить преподавателя:\n" + teacherName + "?")) {
-            isLoading = true;
-            mainWindow.mainApi.sendRequest("DELETE", "/teachers/" + teacherId, null, function(response) {
+        if (mainApi && mainApi.getTeachers) {
+            mainApi.getTeachers(function(response) {
                 isLoading = false;
                 if (response.success) {
-                    showMessage("✅ Преподаватель успешно удален", "success");
-                    refreshTeachers();
+                    teachers = response.data || [];
+                    console.log("✅ Преподаватели загружены:", teachers.length);
                 } else {
-                    showMessage("❌ Ошибка удаления преподавателя: " + response.error, "error");
+                    showMessage("❌ Ошибка загрузки преподавателей: " + response.error, "error");
+                }
+            });
+        } else {
+            isLoading = false;
+            console.error("❌ mainApi не доступен");
+        }
+    }
+
+    function loadSpecializations() {
+        if (mainApi && mainApi.sendRequest) {
+            mainApi.sendRequest("GET", "/specializations", null, function(response) {
+                if (response.success) {
+                    specializations = response.data || [];
+                    console.log("✅ Специализации загружены:", specializations.length);
+
+                    if (teacherFormWindow.item) {
+                        teacherFormWindow.item.specializations = specializations;
+                    }
+                } else {
+                    console.log("❌ Ошибка загрузки специализаций:", response.error);
+                    specializations = [];
                 }
             });
         }
     }
 
+    function addTeacher(teacherData) {
+        isLoading = true;
+
+        var apiData = {
+            "last_name": teacherData.last_name,
+            "first_name": teacherData.first_name,
+            "middle_name": teacherData.middle_name || "",
+            "email": teacherData.email || "",
+            "phone_number": teacherData.phone_number || "",
+            "experience": parseInt(teacherData.experience) || 0,
+            "specialization_id": teacherData.specialization_id
+        };
+
+        if (mainApi && mainApi.sendRequest) {
+            mainApi.sendRequest("POST", "/teachers", apiData, function(response) {
+                isLoading = false;
+
+                if (response.success) {
+                    showMessage("✅ Преподаватель успешно добавлен", "success");
+                    teacherFormWindow.close();
+                    refreshTeachers();
+                } else {
+                    showMessage("❌ Ошибка добавления преподавателя: " + response.error, "error");
+                }
+            });
+        }
+    }
+
+    function updateTeacher(teacherData) {
+        isLoading = true;
+
+        var apiData = {
+            "last_name": teacherData.last_name,
+            "first_name": teacherData.first_name,
+            "middle_name": teacherData.middle_name || "",
+            "email": teacherData.email || "",
+            "phone_number": teacherData.phone_number || "",
+            "experience": parseInt(teacherData.experience) || 0,
+            "specialization_id": teacherData.specialization_id
+        };
+
+        var url = "/teachers/" + teacherData.teacher_id;
+        if (mainApi && mainApi.sendRequest) {
+            mainApi.sendRequest("PUT", url, apiData, function(response) {
+                isLoading = false;
+
+                if (response.success) {
+                    showMessage("✅ Данные преподавателя обновлены", "success");
+                    teacherFormWindow.close();
+                    refreshTeachers();
+                } else {
+                    showMessage("❌ Ошибка обновления преподавателя: " + response.error, "error");
+                }
+            });
+        }
+    }
+
+    function deleteTeacher(teacherId, teacherName) {
+        if (confirm("Вы уверены, что хотите удалить преподавателя:\n" + teacherName + "?")) {
+            isLoading = true;
+            if (mainApi && mainApi.sendRequest) {
+                mainApi.sendRequest("DELETE", "/teachers/" + teacherId, null, function(response) {
+                    isLoading = false;
+                    if (response.success) {
+                        showMessage("✅ Преподаватель успешно удален", "success");
+                        refreshTeachers();
+                    } else {
+                        showMessage("❌ Ошибка удаления преподавателя: " + response.error, "error");
+                    }
+                });
+            }
+        }
+    }
+
+    function getSpecializationName(specializationId) {
+        for (var i = 0; i < specializations.length; i++) {
+            if (specializations[i].specialization_id === specializationId) {
+                return specializations[i].name;
+            }
+        }
+        return "Специализация #" + specializationId;
+    }
+
+    function confirm(message) {
+        // В реальном приложении нужно показать диалог подтверждения
+        console.log("Подтверждение:", message);
+        return true;
+    }
+
     Component.onCompleted: {
         refreshTeachers();
+        loadSpecializations();
     }
 
     ColumnLayout {
         anchors.fill: parent
         spacing: 15
 
-        // Заголовок с полоской
+        // Заголовок
         Column {
             Layout.fillWidth: true
             spacing: 8
@@ -149,7 +182,7 @@ Item {
                 spacing: 15
 
                 Text {
-                    text: "Всего преподавателей: " + mainWindow.teachers.length
+                    text: "Всего преподавателей: " + teachers.length
                     color: "white"
                     font.pixelSize: 14
                     font.bold: true
@@ -230,7 +263,7 @@ Item {
                         id: addMouseArea
                         anchors.fill: parent
                         hoverEnabled: true
-                        onClicked: teacherDialogLoader.openForAdd()
+                        onClicked: teacherFormWindow.openForAdd()
                     }
                 }
             }
@@ -264,23 +297,28 @@ Item {
             }
         }
 
-        // Список преподавателей
-        ListView {
+        // Таблица преподавателей
+        Enhanced.EnhancedTableView {
+            id: teachersTable
             Layout.fillWidth: true
             Layout.fillHeight: true
-            model: mainWindow.teachers
-            spacing: 5
-            clip: true
+            sourceModel: teachers
+            itemType: "teacher"
+            searchPlaceholder: "Поиск преподавателей..."
+            sortOptions: ["По ФИО", "По специализации", "По опыту", "По email"]
+            sortRoles: ["last_name", "specialization_id", "experience", "email"]
 
-            delegate: Rectangle {
-                width: ListView.view.width
-                height: 70
-                radius: 10
-                color: index % 2 === 0 ? "#f8f9fa" : "#ffffff"
-                border.color: "#e9ecef"
-                border.width: 1
+            onItemEditRequested: teacherFormWindow.openForEdit(itemData)
+            onItemDeleteRequested: {
+                var teacherName = (itemData.last_name || "") + " " + (itemData.first_name || "");
+                var teacherId = itemData.teacher_id;
+                deleteTeacher(teacherId, teacherName);
+            }
 
+            // Делегат для режима списка
+            listDelegate: Component {
                 Row {
+                    id: listDelegateRow
                     anchors.fill: parent
                     anchors.margins: 10
                     spacing: 15
@@ -305,7 +343,9 @@ Item {
                         width: parent.width - 200
 
                         Text {
-                            text: (modelData.lastName || "") + " " + (modelData.firstName || "") + " " + (modelData.middleName || "")
+                            text: (itemData.last_name || "") + " " +
+                                  (itemData.first_name || "") + " " +
+                                  (itemData.middle_name || "")
                             font.pixelSize: 14
                             font.bold: true
                             color: "#2c3e50"
@@ -313,13 +353,20 @@ Item {
                         }
 
                         Text {
-                            text: "Опыт: " + (modelData.experience || "0") + " лет | " + (modelData.specialization || "")
+                            text: "Опыт: " + (itemData.experience || "0") + " лет"
                             font.pixelSize: 11
                             color: "#7f8c8d"
                         }
 
                         Text {
-                            text: modelData.email || "Нет email"
+                            text: "Специализация: " + getSpecializationName(itemData.specialization_id)
+                            font.pixelSize: 11
+                            color: "#7f8c8d"
+                            font.bold: true
+                        }
+
+                        Text {
+                            text: itemData.email || "Нет email"
                             font.pixelSize: 11
                             color: "#7f8c8d"
                         }
@@ -329,7 +376,6 @@ Item {
                         anchors.verticalCenter: parent.verticalCenter
                         spacing: 5
 
-                        // Кнопка редактирования
                         Rectangle {
                             width: 30
                             height: 30
@@ -346,13 +392,10 @@ Item {
                                 id: editMouseArea
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                onClicked: {
-                                    teacherDialogLoader.openForEdit(modelData);
-                                }
+                                onClicked: listDelegateRow.editRequested(itemData)
                             }
                         }
 
-                        // Кнопка удаления
                         Rectangle {
                             width: 30
                             height: 30
@@ -369,60 +412,171 @@ Item {
                                 id: deleteMouseArea
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                onClicked: {
-                                    var teacherName = (modelData.lastName || "") + " " + (modelData.firstName || "");
-                                    deleteTeacher(modelData.teacherId, teacherName);
-                                }
+                                onClicked: listDelegateRow.deleteRequested(itemData)
                             }
                         }
                     }
+
+                    signal editRequested(var itemData)
+                    signal deleteRequested(var itemData)
                 }
             }
 
-            Text {
-                anchors.centerIn: parent
-                text: "Нет данных о преподавателях"
-                color: "#7f8c8d"
-                font.pixelSize: 14
-                visible: mainWindow.teachers.length === 0 && !isLoading
+            // Делегат для режима плиток
+            gridDelegate: Component {
+                Column {
+                    id: gridDelegateColumn
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    spacing: 4
+
+                    Rectangle {
+                        width: 35
+                        height: 35
+                        radius: 18
+                        color: "#3498db"
+                        anchors.horizontalCenter: parent.horizontalCenter
+
+                        Text {
+                            text: "👨‍🏫"
+                            font.pixelSize: 14
+                            anchors.centerIn: parent
+                        }
+                    }
+
+                    Text {
+                        text: (itemData.last_name || "") + " " + (itemData.first_name || "")
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: "#2c3e50"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        elide: Text.ElideRight
+                        width: parent.width - 10
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+
+                    Text {
+                        text: (itemData.middle_name || "")
+                        font.pixelSize: 9
+                        color: "#7f8c8d"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        elide: Text.ElideRight
+                        width: parent.width - 10
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+
+                    Text {
+                        text: "Опыт: " + (itemData.experience || "0") + " лет"
+                        font.pixelSize: 9
+                        color: "#7f8c8d"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
+
+                    Text {
+                        text: getSpecializationName(itemData.specialization_id)
+                        font.pixelSize: 9
+                        color: "#3498db"
+                        font.bold: true
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        elide: Text.ElideRight
+                        width: parent.width - 10
+                        horizontalAlignment: Text.AlignHCenter
+                        maximumLineCount: 2
+                        wrapMode: Text.WordWrap
+                    }
+
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 4
+
+                        Rectangle {
+                            width: 22
+                            height: 22
+                            radius: 4
+                            color: tileEditMouseArea.containsMouse ? "#2980b9" : "#3498db"
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "✏️"
+                                font.pixelSize: 9
+                            }
+
+                            MouseArea {
+                                id: tileEditMouseArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: gridDelegateColumn.editRequested(itemData)
+                            }
+                        }
+
+                        Rectangle {
+                            width: 22
+                            height: 22
+                            radius: 4
+                            color: tileDeleteMouseArea.containsMouse ? "#c0392b" : "#e74c3c"
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "🗑️"
+                                font.pixelSize: 9
+                            }
+
+                            MouseArea {
+                                id: tileDeleteMouseArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: gridDelegateColumn.deleteRequested(itemData)
+                            }
+                        }
+                    }
+
+                    signal editRequested(var itemData)
+                    signal deleteRequested(var itemData)
+                }
             }
         }
     }
 
-    // Диалог преподавателя
+    // Окно формы преподавателя
     Loader {
-        id: teacherDialogLoader
-        source: "TeachersDialog.qml"
+        id: teacherFormWindow
+        source: "TeacherFormWindow.qml"
 
         onLoaded: {
+            item.specializations = teachersView.specializations;
+            item.mainApi = teachersView.mainApi;
+            item.showMessage = teachersView.showMessage;
+
             item.saved.connect(function(teacherData) {
-                console.log("💾 Получены данные преподавателя:", JSON.stringify(teacherData));
-                if (teacherData.teacherId) {
+                if (teacherData.teacher_id) {
                     updateTeacher(teacherData);
                 } else {
                     addTeacher(teacherData);
                 }
             });
+
             item.cancelled.connect(function() {
                 item.close();
             });
         }
 
         function openForAdd() {
-            if (teacherDialogLoader.item) {
-                teacherDialogLoader.item.openForAdd();
+            if (teacherFormWindow.item) {
+                teacherFormWindow.item.specializations = teachersView.specializations;
+                teacherFormWindow.item.openForAdd();
             }
         }
 
         function openForEdit(teacherData) {
-            if (teacherDialogLoader.item) {
-                teacherDialogLoader.item.openForEdit(teacherData);
+            if (teacherFormWindow.item) {
+                teacherFormWindow.item.specializations = teachersView.specializations;
+                teacherFormWindow.item.openForEdit(teacherData);
             }
         }
 
         function close() {
-            if (teacherDialogLoader.item) {
-                teacherDialogLoader.item.close();
+            if (teacherFormWindow.item) {
+                teacherFormWindow.item.close();
             }
         }
     }

@@ -60,6 +60,11 @@ qt_add_qml_module(EduFlow
         # Частоиспользуемые модули
         common/PolygonBackground.qml
         common/TitleBar.qml
+        QML_FILES main/StudentFormWindow.qml
+        QML_FILES main/TeacherFormWindow.qml
+        QML_FILES main/GroupFormWindow.qml
+
+        enhanced/EnhancedTableView.qml
 )
 
 qt_add_resources(EduFlow "resources"

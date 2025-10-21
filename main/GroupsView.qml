@@ -1,7 +1,7 @@
-// main/GroupsView.qml
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
+import "../enhanced" as Enhanced
 
 Item {
     id: groupsView
@@ -16,6 +16,10 @@ Item {
             if (response.success) {
                 mainWindow.groups = response.data || [];
                 console.log("✅ Группы загружены:", mainWindow.groups.length);
+                // Логируем первую группу для отладки
+                if (mainWindow.groups.length > 0) {
+                    console.log("📋 Пример данных группы:", JSON.stringify(mainWindow.groups[0]));
+                }
             } else {
                 showMessage("❌ Ошибка загрузки групп: " + response.error, "error");
             }
@@ -28,9 +32,8 @@ Item {
                 groupsView.teachers = response.data || [];
                 console.log("✅ Преподаватели загружены для групп:", groupsView.teachers.length);
 
-                // Обновляем teachers в диалоге если он загружен
-                if (groupDialogLoader.item) {
-                    groupDialogLoader.item.teachers = groupsView.teachers;
+                if (groupFormWindow.item) {
+                    groupFormWindow.item.teachers = groupsView.teachers;
                 }
             } else {
                 showMessage("❌ Ошибка загрузки преподавателей: " + response.error, "error");
@@ -43,18 +46,25 @@ Item {
     }
 
     function addGroup(groupData) {
-        if (groupDialogLoader.item) {
-            groupDialogLoader.item.isLoading = true;
+        if (groupFormWindow.item) {
+            groupFormWindow.item.isLoading = true;
         }
 
-        mainWindow.mainApi.sendRequest("POST", "/groups", groupData, function(response) {
-            if (groupDialogLoader.item) {
-                groupDialogLoader.item.isLoading = false;
+        var apiData = {
+            "name": groupData.name,
+            "student_count": parseInt(groupData.student_count) || 0,
+            "teacher_id": groupData.teacher_id,
+            "description": groupData.description || ""
+        };
+
+        mainWindow.mainApi.sendRequest("POST", "/groups", apiData, function(response) {
+            if (groupFormWindow.item) {
+                groupFormWindow.item.isLoading = false;
             }
 
             if (response.success) {
                 showMessage("✅ Группа успешно добавлена", "success");
-                groupDialogLoader.close();
+                groupFormWindow.close();
                 refreshGroups();
             } else {
                 showMessage("❌ Ошибка добавления группы: " + response.error, "error");
@@ -63,19 +73,26 @@ Item {
     }
 
     function updateGroup(groupData) {
-        if (groupDialogLoader.item) {
-            groupDialogLoader.item.isLoading = true;
+        if (groupFormWindow.item) {
+            groupFormWindow.item.isLoading = true;
         }
 
+        var apiData = {
+            "name": groupData.name,
+            "student_count": parseInt(groupData.student_count) || 0,
+            "teacher_id": groupData.teacher_id,
+            "description": groupData.description || ""
+        };
+
         var url = "/groups/" + groupData.groupId;
-        mainWindow.mainApi.sendRequest("PUT", url, groupData, function(response) {
-            if (groupDialogLoader.item) {
-                groupDialogLoader.item.isLoading = false;
+        mainWindow.mainApi.sendRequest("PUT", url, apiData, function(response) {
+            if (groupFormWindow.item) {
+                groupFormWindow.item.isLoading = false;
             }
 
             if (response.success) {
                 showMessage("✅ Данные группы обновлены", "success");
-                groupDialogLoader.close();
+                groupFormWindow.close();
                 refreshGroups();
             } else {
                 showMessage("❌ Ошибка обновления группы: " + response.error, "error");
@@ -100,11 +117,12 @@ Item {
 
     function getTeacherName(teacherId) {
         for (var i = 0; i < teachers.length; i++) {
-            if (teachers[i].teacherId === teacherId) {
-                return teachers[i].lastName + " " + teachers[i].firstName;
+            if (teachers[i].teacher_id === teacherId) {
+                return teachers[i].last_name + " " + teachers[i].first_name +
+                       (teachers[i].middle_name ? " " + teachers[i].middle_name : "");
             }
         }
-        return "";
+        return "Не назначен";
     }
 
     Component.onCompleted: {
@@ -116,7 +134,7 @@ Item {
         anchors.fill: parent
         spacing: 15
 
-        // Заголовок с полоской
+        // Заголовок
         Column {
             Layout.fillWidth: true
             spacing: 8
@@ -231,7 +249,7 @@ Item {
                         id: addMouseArea
                         anchors.fill: parent
                         hoverEnabled: true
-                        onClicked: groupDialogLoader.openForAdd()
+                        onClicked: groupFormWindow.openForAdd()
                     }
                 }
             }
@@ -265,23 +283,27 @@ Item {
             }
         }
 
-        // Список групп
-        ListView {
+        // Таблица групп
+        Enhanced.EnhancedTableView {
+            id: groupsTable
             Layout.fillWidth: true
             Layout.fillHeight: true
-            model: mainWindow.groups
-            spacing: 5
-            clip: true
+            sourceModel: mainWindow.groups
+            searchPlaceholder: "Поиск групп..."
+            sortOptions: ["По названию", "По количеству студентов", "По куратору"]
+            sortRoles: ["name", "student_count", "teacher_id"]
+            itemType: "group"
 
-            delegate: Rectangle {
-                width: ListView.view.width
-                height: 70
-                radius: 8
-                color: index % 2 === 0 ? "#f8f9fa" : "#ffffff"
-                border.color: "#e9ecef"
-                border.width: 1
+            onItemEditRequested: groupFormWindow.openForEdit(itemData)
+            onItemDeleteRequested: {
+                var groupId = itemData.group_id;
+                deleteGroup(groupId, itemData.name);
+            }
 
+            // Делегат для режима списка
+            listDelegate: Component {
                 Row {
+                    id: listDelegateRow
                     anchors.fill: parent
                     anchors.margins: 10
                     spacing: 15
@@ -306,7 +328,7 @@ Item {
                         width: parent.width - 200
 
                         Text {
-                            text: modelData.name || "Без названия"
+                            text: itemData.name || "Без названия"
                             font.pixelSize: 14
                             font.bold: true
                             color: "#2c3e50"
@@ -314,15 +336,16 @@ Item {
                         }
 
                         Text {
-                            text: "Студентов: " + (modelData.studentCount || "0")
+                            text: "Студентов: " + (itemData.student_count || "0")
                             font.pixelSize: 11
                             color: "#7f8c8d"
                         }
 
                         Text {
-                            text: "Куратор: " + (getTeacherName(modelData.teacherId) || "Не назначен")
+                            text: "Классный руководитель: " + getTeacherName(itemData.teacher_id)
                             font.pixelSize: 11
                             color: "#7f8c8d"
+                            font.bold: true
                         }
                     }
 
@@ -346,9 +369,7 @@ Item {
                                 id: editMouseArea
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                onClicked: {
-                                    groupDialogLoader.openForEdit(modelData);
-                                }
+                                onClicked: listDelegateRow.editRequested(itemData)
                             }
                         }
 
@@ -368,34 +389,129 @@ Item {
                                 id: deleteMouseArea
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                onClicked: {
-                                    deleteGroup(modelData.groupId, modelData.name);
-                                }
+                                onClicked: listDelegateRow.deleteRequested(itemData)
                             }
                         }
                     }
+
+                    signal editRequested(var itemData)
+                    signal deleteRequested(var itemData)
                 }
             }
 
-            Text {
-                anchors.centerIn: parent
-                text: "Нет данных о группах"
-                color: "#7f8c8d"
-                font.pixelSize: 14
-                visible: mainWindow.groups.length === 0 && !isLoading
+            // Делегат для режима плиток
+            gridDelegate: Component {
+                Column {
+                    id: gridDelegateColumn
+                    anchors.fill: parent
+                    anchors.margins: 8
+                    spacing: 4
+
+                    Rectangle {
+                        width: 35
+                        height: 35
+                        radius: 18
+                        color: "#e74c3c"
+                        anchors.horizontalCenter: parent.horizontalCenter
+
+                        Text {
+                            text: "👥"
+                            font.pixelSize: 14
+                            anchors.centerIn: parent
+                        }
+                    }
+
+                    Text {
+                        text: itemData.name || "Без названия"
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: "#2c3e50"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        elide: Text.ElideRight
+                        width: parent.width - 10
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+
+                    Text {
+                        text: "Студентов: " + (itemData.student_count || "0")
+                        font.pixelSize: 9
+                        color: "#7f8c8d"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
+
+                    Text {
+                        text: getTeacherName(itemData.teacher_id)
+                        font.pixelSize: 9
+                        color: "#e74c3c"
+                        font.bold: true
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        elide: Text.ElideRight
+                        width: parent.width - 10
+                        horizontalAlignment: Text.AlignHCenter
+                        maximumLineCount: 2
+                        wrapMode: Text.WordWrap
+                    }
+
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 4
+
+                        Rectangle {
+                            width: 22
+                            height: 22
+                            radius: 4
+                            color: tileEditMouseArea.containsMouse ? "#3498db" : "#2980b9"
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "✏️"
+                                font.pixelSize: 9
+                            }
+
+                            MouseArea {
+                                id: tileEditMouseArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: gridDelegateColumn.editRequested(itemData)
+                            }
+                        }
+
+                        Rectangle {
+                            width: 22
+                            height: 22
+                            radius: 4
+                            color: tileDeleteMouseArea.containsMouse ? "#e74c3c" : "#c0392b"
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "🗑️"
+                                font.pixelSize: 9
+                            }
+
+                            MouseArea {
+                                id: tileDeleteMouseArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: gridDelegateColumn.deleteRequested(itemData)
+                            }
+                        }
+                    }
+
+                    signal editRequested(var itemData)
+                    signal deleteRequested(var itemData)
+                }
             }
         }
     }
 
-    // Диалог группы - исправленный Loader
+    // Окно формы группы
     Loader {
-        id: groupDialogLoader
-        source: "GroupsDialog.qml"
+        id: groupFormWindow
+        source: "GroupFormWindow.qml"
 
         onLoaded: {
             item.teachers = groupsView.teachers;
             item.saved.connect(function(groupData) {
-                console.log("💾 Получены данные группы:", JSON.stringify(groupData));
                 if (groupData.groupId) {
                     updateGroup(groupData);
                 } else {
@@ -408,25 +524,27 @@ Item {
         }
 
         function openForAdd() {
-            if (groupDialogLoader.item) {
-                // Обновляем список преподавателей перед открытием
-                groupDialogLoader.item.teachers = groupsView.teachers;
-                groupDialogLoader.item.openForAdd();
+            if (groupFormWindow.item) {
+                groupFormWindow.item.teachers = groupsView.teachers;
+                groupFormWindow.item.openForAdd();
             }
         }
 
         function openForEdit(groupData) {
-            if (groupDialogLoader.item) {
-                // Обновляем список преподавателей перед открытием
-                groupDialogLoader.item.teachers = groupsView.teachers;
-                groupDialogLoader.item.openForEdit(groupData);
+            if (groupFormWindow.item) {
+                groupFormWindow.item.teachers = groupsView.teachers;
+                groupFormWindow.item.openForEdit(groupData);
             }
         }
 
         function close() {
-            if (groupDialogLoader.item) {
-                groupDialogLoader.item.close();
+            if (groupFormWindow.item) {
+                groupFormWindow.item.close();
             }
         }
+    }
+
+    function confirm(message) {
+        return true;
     }
 }

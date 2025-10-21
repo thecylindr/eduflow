@@ -1,6 +1,7 @@
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
+import "../enhanced" as Enhanced
 
 Item {
     id: studentsView
@@ -25,8 +26,8 @@ Item {
         mainWindow.mainApi.getGroups(function(response) {
             if (response.success) {
                 studentsView.groups = response.data || [];
-                if (studentDialog.item) {
-                    studentDialog.item.groups = studentsView.groups;
+                if (studentFormWindow.item) {
+                    studentFormWindow.item.groups = studentsView.groups;
                 }
                 console.log("✅ Группы загружены:", studentsView.groups.length);
             } else {
@@ -45,7 +46,7 @@ Item {
             isLoading = false;
             if (response.success) {
                 showMessage("✅ Студент успешно добавлен", "success");
-                studentDialog.close();
+                studentFormWindow.close();
                 refreshStudents();
             } else {
                 showMessage("❌ Ошибка добавления студента: " + response.error, "error");
@@ -60,7 +61,7 @@ Item {
             isLoading = false;
             if (response.success) {
                 showMessage("✅ Данные студента обновлены", "success");
-                studentDialog.close();
+                studentFormWindow.close();
                 refreshStudents();
             } else {
                 showMessage("❌ Ошибка обновления студента: " + response.error, "error");
@@ -69,7 +70,6 @@ Item {
     }
 
     function deleteStudent(studentCode, studentName) {
-        // Простое подтверждение (можно заменить на ConfirmDialog)
         if (confirm("Вы уверены, что хотите удалить студента:\n" + studentName + "?")) {
             isLoading = true;
             mainWindow.mainApi.sendRequest("DELETE", "/students/" + studentCode, null, function(response) {
@@ -106,7 +106,6 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
             }
 
-            // Серая полоска под заголовком
             Rectangle {
                 width: parent.width
                 height: 1
@@ -209,7 +208,7 @@ Item {
                         id: addMouseArea
                         anchors.fill: parent
                         hoverEnabled: true
-                        onClicked: studentDialog.openForAdd()
+                        onClicked: studentFormWindow.openForAdd()
                     }
                 }
             }
@@ -243,22 +242,16 @@ Item {
             }
         }
 
-        // Список студентов
-        ListView {
+        // Расширенная таблица студентов
+        Enhanced.EnhancedTableView {
+            id: studentsTable
             Layout.fillWidth: true
             Layout.fillHeight: true
-            model: mainWindow.students
-            spacing: 5
-            clip: true
+            sourceModel: mainWindow.students
+            searchPlaceholder: "Поиск студентов..."
 
-            delegate: Rectangle {
-                width: ListView.view.width
-                height: 70
-                radius: 8
-                color: index % 2 === 0 ? "#f8f9fa" : "#ffffff"
-                border.color: "#e9ecef"
-                border.width: 1
-
+            // Делегат для режима списка
+            property Component listDelegate: Component {
                 Row {
                     anchors.fill: parent
                     anchors.margins: 10
@@ -346,9 +339,7 @@ Item {
                                 id: editMouseArea
                                 anchors.fill: parent
                                 hoverEnabled: true
-                                onClicked: {
-                                    studentDialog.openForEdit(modelData);
-                                }
+                                onClicked: studentFormWindow.openForEdit(modelData)
                             }
                         }
 
@@ -379,12 +370,103 @@ Item {
                 }
             }
 
-            Text {
-                anchors.centerIn: parent
-                text: "Нет данных о студентах"
-                color: "#7f8c8d"
-                font.pixelSize: 14
-                visible: mainWindow.students.length === 0 && !isLoading
+            // Делегат для режима плиток
+            property Component gridDelegate: Component {
+                Column {
+                    anchors.fill: parent
+                    anchors.margins: 10
+                    spacing: 5
+
+                    Rectangle {
+                        width: 40
+                        height: 40
+                        radius: 20
+                        color: "#2ecc71"
+                        anchors.horizontalCenter: parent.horizontalCenter
+
+                        Text {
+                            text: "👨‍🎓"
+                            font.pixelSize: 16
+                            anchors.centerIn: parent
+                        }
+                    }
+
+                    Text {
+                        text: (modelData.lastName || "") + " " + (modelData.firstName || "")
+                        font.pixelSize: 12
+                        font.bold: true
+                        color: "#2c3e50"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        elide: Text.ElideRight
+                        width: parent.width
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+
+                    Text {
+                        text: (modelData.middleName || "")
+                        font.pixelSize: 10
+                        color: "#7f8c8d"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        elide: Text.ElideRight
+                        width: parent.width
+                        horizontalAlignment: Text.AlignHCenter
+                    }
+
+                    Text {
+                        text: "Группа: " + (getGroupName(modelData.groupId) || "Не назначена")
+                        font.pixelSize: 9
+                        color: "#7f8c8d"
+                        anchors.horizontalCenter: parent.horizontalCenter
+                    }
+
+                    Row {
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 5
+
+                        Rectangle {
+                            width: 25
+                            height: 25
+                            radius: 5
+                            color: tileEditMouseArea.containsMouse ? "#3498db" : "#2980b9"
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "✏️"
+                                font.pixelSize: 10
+                            }
+
+                            MouseArea {
+                                id: tileEditMouseArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: studentFormWindow.openForEdit(modelData)
+                            }
+                        }
+
+                        Rectangle {
+                            width: 25
+                            height: 25
+                            radius: 5
+                            color: tileDeleteMouseArea.containsMouse ? "#e74c3c" : "#c0392b"
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: "🗑️"
+                                font.pixelSize: 10
+                            }
+
+                            MouseArea {
+                                id: tileDeleteMouseArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                onClicked: {
+                                    var studentName = (modelData.lastName || "") + " " + (modelData.firstName || "");
+                                    deleteStudent(modelData.studentCode, studentName);
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -398,10 +480,10 @@ Item {
         return "";
     }
 
-    // Диалог студента
+    // Окно формы студента
     Loader {
-        id: studentDialog
-        source: "StudentDialog.qml"
+        id: studentFormWindow
+        source: "StudentFormWindow.qml"
 
         onLoaded: {
             item.groups = studentsView.groups;
@@ -418,20 +500,20 @@ Item {
         }
 
         function openForAdd() {
-            if (studentDialog.item) {
-                studentDialog.item.openForAdd();
+            if (studentFormWindow.item) {
+                studentFormWindow.item.openForAdd();
             }
         }
 
         function openForEdit(studentData) {
-            if (studentDialog.item) {
-                studentDialog.item.openForEdit(studentData);
+            if (studentFormWindow.item) {
+                studentFormWindow.item.openForEdit(studentData);
             }
         }
 
         function close() {
-            if (studentDialog.item) {
-                studentDialog.item.close();
+            if (studentFormWindow.item) {
+                studentFormWindow.item.close();
             }
         }
     }
