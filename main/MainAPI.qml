@@ -13,8 +13,6 @@ QtObject {
     property int remotePort: 5000
 
     function initialize(token, url) {
-        console.log("🔐 Инициализация MainAPI");
-
         if (token && token.length > 0) {
             authToken = token;
             settingsManager.authToken = token;

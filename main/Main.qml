@@ -74,12 +74,14 @@ ApplicationWindow {
 
     // Функция инициализации API из Auth окна
     function initializeProfile(token, baseUrl) {
+        console.log("🔐 Инициализация профиля с токеном длиной:", token ? token.length : 0);
 
         var actualToken = token;
         var actualBaseUrl = baseUrl;
 
         if (!actualToken || actualToken.length === 0) {
             actualToken = settingsManager.authToken || "";
+            console.log("🔐 Токен взят из настроек, длина:", actualToken.length);
         }
 
         if (!actualBaseUrl || actualBaseUrl.length === 0) {
@@ -87,21 +89,20 @@ ApplicationWindow {
                 settingsManager.serverAddress :
                 mainApi.remoteApiBaseUrl + ":" + mainApi.remotePort;
         }
+
+        console.log("🔐 Финальные параметры инициализации:");
+        console.log("   Токен длина:", actualToken.length);
+        console.log("   Base URL:", actualBaseUrl);
+
         // Инициализируем API объект
         mainApi.initialize(actualToken, actualBaseUrl);
         apiInitialized = true;
 
-        // ЖДЕМ проверки токена перед загрузкой данных
-        mainApi.validateToken(function(response) {
-
-            if (response.success) {
-                loadTeachers();
-                loadStudents();
-                loadGroups();
-            } else {
-                showMessage("⚠️ Требуется авторизация", "warning");
-            }
-        });
+        // СРАЗУ загружаем данные, БЕЗ ПРОВЕРКИ ТОКЕНА
+        console.log("✅ Пропускаем проверку токена, сразу загружаем данные");
+        loadTeachers();
+        loadStudents();
+        loadGroups();
     }
 
     // Функции загрузки данных с улучшенной обработкой ошибок
@@ -206,7 +207,7 @@ ApplicationWindow {
         }
 
         // Обновленный импорт из common
-        PolygonBackground {
+        Common.PolygonBackground {
             id: polygonRepeater
             anchors.fill: parent
             visible: parent !== null

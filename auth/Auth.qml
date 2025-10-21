@@ -16,8 +16,6 @@ ApplicationWindow {
     flags: Qt.Window | Qt.FramelessWindowHint
     minimumHeight: 500
     minimumWidth: 420
-    //maximumHeight: 900
-    //maximumWidth: 800
 
     property bool isWindowMaximized: false
     property int baseHeight: 500
@@ -53,7 +51,7 @@ ApplicationWindow {
 
     signal loginSuccessful(string token, var userData)
 
-    // Добавляем AuthAPI
+    // Обновленный AuthAPI
     AuthAPI {
         id: authAPI
         remoteApiBaseUrl: authWindow.remoteApiBaseUrl
@@ -87,7 +85,35 @@ ApplicationWindow {
     Component.onCompleted: {
         serverConfig.updateFromSettings();
         updateWindowHeight();
-        windowContainer.forceActiveFocus(); // Фокус на корневой элемент для обработки клавиш
+        windowContainer.forceActiveFocus();
+
+        // Сначала проверяем доступность сервера
+        console.log("🧪 Проверка доступности сервера...");
+        var testXhr = new XMLHttpRequest();
+        testXhr.open("GET", settingsManager.serverAddress + "/api/status", true);
+        testXhr.onreadystatechange = function() {
+            if (testXhr.readyState === XMLHttpRequest.DONE) {
+                console.log("🧪 Статус сервера:", testXhr.status, testXhr.responseText);
+
+                // После проверки сервера инициализируем AuthAPI
+                var baseUrl = settingsManager.useLocalServer ?
+                    settingsManager.serverAddress :
+                    (remoteApiBaseUrl + ":" + remotePort);
+
+                authAPI.initialize("", baseUrl);
+
+                // Затем проверяем токен
+                var savedToken = settingsManager.authToken || "";
+                if (savedToken && savedToken.length > 0) {
+                    console.log("🔐 Найден сохраненный токен, проверяем...");
+                    console.log("   Токен (первые 10):", savedToken.substring(0, 10) + "...");
+                    checkSavedToken(savedToken);
+                } else {
+                    console.log("🔐 Сохраненный токен не найден, показываем форму входа");
+                }
+            }
+        };
+        testXhr.send();
     }
 
     function saveServerConfig(serverAddress) {
@@ -108,6 +134,47 @@ ApplicationWindow {
         } catch (error) {
             showError("Ошибка сброса настроек");
         }
+    }
+
+    function checkSavedToken(token) {
+        console.log("🔐 Проверка сохраненного токена...");
+        console.log("   Длина токена:", token.length);
+
+        _isLoading = true;
+        showLoading();
+
+        authAPI.validateToken(function(result) {
+            _isLoading = false;
+            hideLoading();
+
+            console.log("🔐 Полный результат проверки токена:", JSON.stringify(result, null, 2));
+
+            if (result.success && result.valid) {
+                console.log("✅ Токен валиден, автоматический вход");
+                authToken = token;
+                settingsManager.authToken = token;
+
+                // ОБНОВЛЯЕМ ТОКЕН В AuthAPI ДЛЯ ДАЛЬНЕЙШИХ ЗАПРОСОВ
+                authAPI.authToken = token;
+
+                // ЗАПУСКАЕМ ГЛАВНОЕ ОКНО И СРАЗУ ЗАКРЫВАЕМ АВТОРИЗАЦИЮ
+                mainWindowLoader.active = true;
+                authWindow.close();
+            } else {
+                console.log("⚠️ Токен невалиден, показываем форму авторизации");
+                console.log("   Причина:", result.message || result.error);
+
+                // НЕ ОЧИЩАЕМ ТОКЕН из настроек, но показываем сообщение
+                if (result.success === false || result.valid === false) {
+                    showError("Ваша сессия истекла. Пожалуйста, войдите снова.");
+                } else {
+                    showError("Проблема с подключением: " + (result.message || result.error));
+                }
+
+                // Показываем форму входа
+                showLoginForm();
+            }
+        });
     }
 
     function showRegistrationForm() {
@@ -276,7 +343,7 @@ ApplicationWindow {
                 // Очищаем все поля формы регистрации
                 registrationForm.clearAllFields();
             } else {
-                showError(result.message);
+                showError(result.message || result.error);
             }
         }
     }
@@ -319,6 +386,12 @@ ApplicationWindow {
                 if (result.success && result.token) {
                     authToken = result.token;
                     settingsManager.authToken = result.token;
+                    console.log("🔐 Токен сохранен:", result.token.substring(0, 20) + "...");
+
+                    // Убеждаемся, что главное окно получит актуальный токен
+                    if (mainWindowLoader.item) {
+                        mainWindowLoader.item.initializeProfile(result.token, authAPI.baseUrl);
+                    }
                 }
             });
         } catch (error) {
@@ -327,6 +400,7 @@ ApplicationWindow {
             showError("Ошибка при входе: " + error);
         }
     }
+
 
     function showError(message) {
         try {
@@ -402,7 +476,7 @@ ApplicationWindow {
         color: "#f0f0f0"
         clip: true
         z: -3
-        focus: true // Важно: даем фокус для обработки клавиш
+        focus: true
 
         // Обработка глобальных горячих клавиш
         Keys.onPressed: (event) => {
@@ -450,7 +524,6 @@ ApplicationWindow {
             onShowMinimized: authWindow.showMinimized()
             onClose: Qt.quit()
         }
-
 
         Message {
             id: errorMessage

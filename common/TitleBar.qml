@@ -147,7 +147,7 @@ Rectangle {
                 hoverEnabled: true
                 onClicked: {
                     if (window && typeof window.close === "function") {
-                        window.close();
+                        Qt.quit();
                     } else {
                         titleBar.close();
                     }
@@ -156,7 +156,7 @@ Rectangle {
         }
     }
 
-    // Универсальная область для перетаскивания окна
+    // Универсальная область для перетаскивания окна (Кроссплатформенная)
     MouseArea {
         id: dragArea
         anchors {
@@ -166,20 +166,35 @@ Rectangle {
             bottom: parent.bottom
             leftMargin: 5
         }
+
         property point clickPos: Qt.point(0, 0)
+        property bool dragging: false
 
         onPressed: function(mouse) {
             if (mouse.button === Qt.LeftButton) {
                 clickPos = Qt.point(mouse.x, mouse.y)
+                dragging = true
+
+                // Для Windows используем системный метод если доступен
+                if (window && typeof window.startSystemMove === "function") {
+                    window.startSystemMove()
+                    dragging = false
+                }
             }
         }
 
         onPositionChanged: function(mouse) {
-            if (mouse.buttons === Qt.LeftButton && window) {
+            if (dragging && mouse.buttons === Qt.LeftButton && window) {
                 var delta = Qt.point(mouse.x - clickPos.x, mouse.y - clickPos.y)
+
+                // Прямое перемещение окна - работает на всех платформах
                 window.x += delta.x
                 window.y += delta.y
             }
+        }
+
+        onReleased: {
+            dragging = false
         }
     }
 }
