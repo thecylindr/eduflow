@@ -145,7 +145,7 @@ QtObject {
                             status: xhr.status
                         });
                     } catch (e) {
-                        console.log("❌ Ошибка парсинга JSON:", e);
+                        console.log("❌ Ошибка парсинга JSON:", error);
                         console.log("   Сырой ответ:", xhr.responseText);
                         if (callback) callback({
                             success: false,

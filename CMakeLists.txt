@@ -23,48 +23,57 @@ qt_add_qml_module(EduFlow
         SplashScreen.qml
 
         # Формы для авторизации & регистрации
-        auth/Auth.qml
-        auth/AuthAPI.qml
-        #auth/AuthTitleBar.qml
-        auth/ServerConfig.qml
-        auth/LoginForm.qml
-        #auth/BackgroundPolygons.qml
-        auth/Message.qml
-        auth/CopyrightFooter.qml
-        auth/LoadingAnimation.qml
-        auth/RegistrationForm.qml
+                auth/Auth.qml
+                auth/AuthAPI.qml
+                auth/ServerConfig.qml
+                auth/LoginForm.qml
+                auth/Message.qml
+                auth/CopyrightFooter.qml
+                auth/LoadingAnimation.qml
+                auth/RegistrationForm.qml
 
-        # Формы главного меню
-        main/Main.qml
+                # Формы главного меню
+                main/main/Main.qml
+                main/main/InteractionsList.qml
+                main/main/MainAPI.qml
+                main/main/AdaptiveSideBar.qml
+                main/main/MainMessage.qml
 
-        #main/MainTitleBar.qml
-        main/InteractionsList.qml
-        #main/PolygonBackground.qml
-        main/UserSettingsPanel.qml
-        main/MainAPI.qml
+                # Представления (Views)
+                main/view/DashboardView.qml
+                main/view/TeachersView.qml
+                main/view/StudentsView.qml
+                main/view/GroupsView.qml
+                main/view/EventsView.qml
+                main/view/PortfolioView.qml
 
-        main/TeachersView.qml
-        main/DashboardView.qml
-        main/StudentsView.qml
+                # Диалоги и формы
+                main/dialog/ConfirmDialog.qml
+                main/dialog/UserSettingsPanel.qml
+                main/dialog/StudentDialog.qml
+                main/dialog/GroupsDialog.qml
+                main/dialog/TeachersDialog.qml
+                main/dialog/StudentFormWindow.qml
+                main/dialog/TeacherFormWindow.qml
+                main/dialog/GroupFormWindow.qml
 
-        main/MainMessage.qml
-        main/GroupsView.qml
-        main/EventsView.qml
-        main/AdaptiveSideBar.qml
-        main/PortfolioView.qml
-        main/ConfirmDialog.qml
-        main/StudentDialog.qml
-        main/GroupsDialog.qml
-        main/TeachersDialog.qml
+                # Общие компоненты
+                common/PolygonBackground.qml
+                common/TitleBar.qml
 
-        # Частоиспользуемые модули
-        common/PolygonBackground.qml
-        common/TitleBar.qml
-        QML_FILES main/StudentFormWindow.qml
-        QML_FILES main/TeacherFormWindow.qml
-        QML_FILES main/GroupFormWindow.qml
+                # Улучшенные компоненты - ТОЛЬКО ОДИН EnhancedTableView
+                enhanced/EnhancedTableView.qml
 
-        enhanced/EnhancedTableView.qml
+
+
+
+
+                enhanced/ActionButtons.qml
+                QML_FILES enhanced/EnhancedSearchBox.qml
+                QML_FILES enhanced/EnhancedSortComboBox.qml
+                QML_FILES enhanced/EnhancedViewToggle.qml
+                QML_FILES enhanced/EnhancedListItem.qml
+                QML_FILES enhanced/EnhancedGridItem.qml
 )
 
 qt_add_resources(EduFlow "resources"

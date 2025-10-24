@@ -63,7 +63,7 @@ ApplicationWindow {
         id: mainWindowLoader
         active: false
         asynchronous: true
-        source: "../main/Main.qml"
+        source: "../main/main/Main.qml"
 
         onLoaded: if (item) item.show()
     }

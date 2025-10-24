@@ -4,7 +4,7 @@ Rectangle {
     id: titleBar
     height: 35
     color: "#ffffff"
-    opacity: 1
+    opacity: 0.925
     radius: 12
     z: 10
 

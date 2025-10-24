@@ -1,4 +1,4 @@
-// main/DashboardView.qml
+// main/view/DashboardView.qml
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 
@@ -62,7 +62,7 @@ Item {
                     }
 
                     Text {
-                        text: mainWindow.teachers.length + " чел."
+                        text: mainWindow.teachers ? mainWindow.teachers.length + " чел." : "0 чел."
                         font.pixelSize: 16
                         font.bold: true
                         color: "#3498db"
@@ -92,7 +92,7 @@ Item {
                     }
 
                     Text {
-                        text: mainWindow.students.length + " чел."
+                        text: mainWindow.students ? mainWindow.students.length + " чел." : "0 чел."
                         font.pixelSize: 16
                         font.bold: true
                         color: "#2ecc71"
@@ -122,7 +122,7 @@ Item {
                     }
 
                     Text {
-                        text: mainWindow.groups.length + " шт."
+                        text: mainWindow.groups ? mainWindow.groups.length + " шт." : "0 шт."
                         font.pixelSize: 16
                         font.bold: true
                         color: "#e74c3c"

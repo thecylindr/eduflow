@@ -3,7 +3,7 @@ import QtQuick 2.15
 import QtQuick.Window 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
-import "../common" as Common
+import "../../common" as Common
 
 ApplicationWindow {
     id: mainWindow
@@ -280,15 +280,15 @@ ApplicationWindow {
                     anchors.fill: parent
                     anchors.margins: 10
                     source: {
-                        var components = {
-                            "dashboard": "DashboardView.qml",
-                            "teachers": "TeachersView.qml",
-                            "students": "StudentsView.qml",
-                            "groups": "GroupsView.qml",
-                            "portfolio": "PortfolioView.qml",
-                            "events": "EventsView.qml"
-                        }
-                        return components[currentView] || "DashboardView.qml"
+                            var components = {
+                                "dashboard": "../view/DashboardView.qml",
+                                "teachers": "../view/TeachersView.qml",
+                                "students": "../view/StudentsView.qml",
+                                "groups": "../view/GroupsView.qml",
+                                "portfolio": "../view/PortfolioView.qml",
+                                "events": "../view/EventsView.qml"
+                            }
+                            return components[currentView] || "../view/DashboardView.qml"
                     }
                 }
             }
