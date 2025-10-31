@@ -137,10 +137,31 @@ Rectangle {
                     Layout.fillWidth: true
                     height: 50
                     radius: 8
-                    color: adaptiveSideBar.currentView === modelData.view ? "#3498db" :
-                          (navMouseArea.containsMouse ? "#ecf0f1" : "transparent")
-                    border.color: adaptiveSideBar.currentView === modelData.view ? "#2980b9" : "transparent"
-                    border.width: 2
+
+                    // Градиент для активного элемента
+                    gradient: adaptiveSideBar.currentView === modelData.view ? activeGradient : null
+                    color: adaptiveSideBar.currentView === modelData.view ? "transparent" :
+                          (navMouseArea.containsMouse ? "transparent" : "transparent")
+
+                    // Градиентная обводка при наведении
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: parent.radius
+                        color: "transparent"
+                        border.color: "transparent"
+                        border.width: 0
+
+                        gradient: navMouseArea.containsMouse && adaptiveSideBar.currentView !== modelData.view ? hoverGradient : null
+
+                        // Внутренняя заливка для непрозрачности
+                        Rectangle {
+                            anchors.fill: parent
+                            anchors.margins: 2
+                            radius: parent.radius - 1
+                            color: adaptiveSideBar.currentView === modelData.view ? "transparent" :
+                                  (navMouseArea.containsMouse ? "#f8f8f8" : "transparent")
+                        }
+                    }
 
                     Row {
                         anchors.fill: parent
@@ -152,7 +173,7 @@ Rectangle {
                             font.pixelSize: 16
                             anchors.verticalCenter: parent.verticalCenter
                             color: adaptiveSideBar.currentView === modelData.view ? "white" :
-                                  (navMouseArea.containsMouse ? "#2980b9" : "#2c3e50")
+                                  (navMouseArea.containsMouse ? "#2575fc" : "#2c3e50")
                         }
 
                         Text {
@@ -163,6 +184,19 @@ Rectangle {
                             anchors.verticalCenter: parent.verticalCenter
                             visible: textVisible
                         }
+                    }
+
+                    // Дополнительный индикатор активного элемента (полоска слева)
+                    Rectangle {
+                        anchors {
+                            left: parent.left
+                            verticalCenter: parent.verticalCenter
+                        }
+                        width: 4
+                        height: parent.height - 16
+                        radius: 2
+                        color: adaptiveSideBar.currentView === modelData.view ? "white" : "#2575fc"
+                        visible: adaptiveSideBar.currentView === modelData.view || navMouseArea.containsMouse
                     }
 
                     // Подсказка в компактном режиме при наведении
@@ -268,26 +302,27 @@ Rectangle {
             }
         }
 
-        // Кнопка выхода
+        // Кнопка настроек учетной записи (ОДНА внизу)
         Rectangle {
             Layout.fillWidth: true
             height: 40
             radius: 8
-            color: logoutMouseArea.containsMouse ? "#c0392b" : "#e74c3c"
+            color: adaptiveSideBar.currentView === "settings" ? "#2575fc" :
+                  (settingsMouseArea.containsMouse ? "#34495e" : "#2c3e50")
 
             Row {
                 anchors.centerIn: parent
                 spacing: 8
 
                 Text {
-                    text: "🚪"
+                    text: "⚙️"
                     font.pixelSize: 14
                     anchors.verticalCenter: parent.verticalCenter
                     color: "white"
                 }
 
                 Text {
-                    text: "Выйти"
+                    text: "Настройки"
                     color: "white"
                     font.pixelSize: 12
                     font.bold: true
@@ -296,15 +331,15 @@ Rectangle {
                 }
             }
 
-            // Подсказка для кнопки выхода в компактном режиме
+            // Подсказка для кнопки настроек в компактном режиме
             Rectangle {
-                id: logoutTooltip
-                visible: !textVisible && logoutMouseArea.containsMouse
+                id: settingsTooltip
+                visible: !textVisible && settingsMouseArea.containsMouse
                 x: parent.width + 5
                 y: (parent.height - height) / 2
-                width: logoutTooltipText.contentWidth + 20
+                width: settingsTooltipText.contentWidth + 20
                 height: 30
-                color: "#e74c3c"
+                color: "#2c3e50"
                 radius: 6
                 z: 1000
 
@@ -318,9 +353,9 @@ Rectangle {
                 }
 
                 Text {
-                    id: logoutTooltipText
+                    id: settingsTooltipText
                     anchors.centerIn: parent
-                    text: "Выйти"
+                    text: "Настройки"
                     color: "white"
                     font.pixelSize: 12
                     font.bold: true
@@ -332,18 +367,31 @@ Rectangle {
             }
 
             MouseArea {
-                id: logoutMouseArea
+                id: settingsMouseArea
                 anchors.fill: parent
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    console.log("🔒 Запрос выхода");
+                    console.log("⚙️ Открыть настройки учетной записи");
                     if (mainWindow) {
-                        mainWindow.logout();
+                        mainWindow.navigateTo("settings");
                     }
                 }
             }
         }
+    }
+
+    // Градиенты для разных состояний
+    Gradient {
+        id: activeGradient
+        GradientStop { position: 0.0; color: "#6a11cb" }
+        GradientStop { position: 1.0; color: "#2575fc" }
+    }
+
+    Gradient {
+        id: hoverGradient
+        GradientStop { position: 0.0; color: "#6a11cb" }
+        GradientStop { position: 1.0; color: "#2575fc" }
     }
 
     Behavior on currentWidth {

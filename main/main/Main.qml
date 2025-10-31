@@ -52,6 +52,7 @@ ApplicationWindow {
             case "groups": return "Группы";
             case "portfolio": return "Портфолио";
             case "events": return "События";
+            case "settings": return "Настройки";
             default: return "Главная панель";
         }
     }
@@ -166,24 +167,6 @@ ApplicationWindow {
         }
     }
 
-    // Инициализация мок данных
-    function initializeMockData() {
-        console.log("🔄 Инициализация мок данных...");
-        mainWindow.teachers = [
-            {teacherId: 1, firstName: "Иван", lastName: "Петров", middleName: "Сергеевич", email: "ivan@edu.ru", experience: 5, specialization: "Математика"},
-            {teacherId: 2, firstName: "Мария", lastName: "Иванова", middleName: "Александровна", email: "maria@edu.ru", experience: 8, specialization: "Физика"}
-        ];
-        mainWindow.students = [
-            {studentCode: "S001", firstName: "Алексей", lastName: "Сидоров", middleName: "Дмитриевич", email: "alex@edu.ru", phoneNumber: "+79991234567", groupId: 1, passportSeries: "1234", passportNumber: "567890"},
-            {studentCode: "S002", firstName: "Елена", lastName: "Козлова", middleName: "Викторовна", email: "elena@edu.ru", phoneNumber: "+79997654321", groupId: 1, passportSeries: "4321", passportNumber: "098765"}
-        ];
-        mainWindow.groups = [
-            {groupId: 1, name: "Группа 1", studentCount: 2, teacherId: 1},
-            {groupId: 2, name: "Группа 2", studentCount: 0, teacherId: 2}
-        ];
-        console.log("✅ Мок данные инициализированы");
-    }
-
     // API объект
     MainAPI {
         id: mainApiObject
@@ -286,7 +269,8 @@ ApplicationWindow {
                                 "students": "../view/StudentsView.qml",
                                 "groups": "../view/GroupsView.qml",
                                 "portfolio": "../view/PortfolioView.qml",
-                                "events": "../view/EventsView.qml"
+                                "events": "../view/EventsView.qml",
+                                "settings": "../view/SettingsView.qml"
                             }
                             return components[currentView] || "../view/DashboardView.qml"
                     }

@@ -7,16 +7,41 @@ import "../../enhanced" as Enhanced
 Item {
     id: studentsView
 
+    property var students: []
     property var groups: []
     property bool isLoading: false
 
     function refreshStudents() {
+        console.log("🔄 Загрузка студентов...");
         isLoading = true;
         mainWindow.mainApi.getStudents(function(response) {
             isLoading = false;
             if (response.success) {
-                mainWindow.students = response.data || [];
-                console.log("✅ Студенты загружены:", mainWindow.students.length);
+                console.log("✅ Данные студентов получены:", JSON.stringify(response.data));
+
+                var studentsData = response.data || [];
+                var processedStudents = [];
+
+                for (var i = 0; i < studentsData.length; i++) {
+                    var student = studentsData[i];
+                    var processedStudent = {
+                        studentCode: student.studentCode || student.student_code,
+                        // Исправлено: используем единообразные названия полей
+                        first_name: student.firstName || student.first_name || "",
+                        last_name: student.lastName || student.last_name || "",
+                        middle_name: student.middleName || student.middle_name || "",
+                        email: student.email || "",
+                        phone_number: student.phoneNumber || student.phone_number || "",
+                        group_id: student.groupId || student.group_id || 0,
+                        passportSeries: student.passportSeries || student.passport_series || "",
+                        passportNumber: student.passportNumber || student.passport_number || "",
+                        group_name: getGroupName(student.groupId || student.group_id)  // Добавлено название группы
+                    };
+                    processedStudents.push(processedStudent);
+                }
+
+                students = processedStudents;
+                console.log("✅ Студенты обработаны:", students.length);
             } else {
                 showMessage("❌ Ошибка загрузки студентов: " + response.error, "error");
             }
@@ -24,13 +49,12 @@ Item {
     }
 
     function refreshGroups() {
+        console.log("👥 Загрузка групп для студентов...");
         mainWindow.mainApi.getGroups(function(response) {
             if (response.success) {
-                studentsView.groups = response.data || [];
-                if (studentFormWindow.item) {
-                    studentFormWindow.item.groups = studentsView.groups;
-                }
-                console.log("✅ Группы загружены:", studentsView.groups.length);
+                groups = response.data || [];
+                console.log("✅ Группы загружены для студентов:", groups.length);
+                refreshStudents();
             } else {
                 showMessage("❌ Ошибка загрузки групп: " + response.error, "error");
             }
@@ -41,31 +65,64 @@ Item {
         mainWindow.showMessage(text, type);
     }
 
+    function getGroupName(groupId) {
+        if (!groupId || groupId === 0) {
+            return "Не указана";
+        }
+
+        for (var i = 0; i < groups.length; i++) {
+            var group = groups[i];
+            var currentGroupId = group.groupId || group.group_id;
+
+            if (currentGroupId == groupId) {
+                return group.name || "Без названия";
+            }
+        }
+        return "Не найдена";
+    }
+
+    // Функции для работы со студентами через MainAPI
     function addStudent(studentData) {
         isLoading = true;
-        mainWindow.mainApi.sendRequest("POST", "/students", studentData, function(response) {
+        mainWindow.mainApi.addStudent(studentData, function(response) {
             isLoading = false;
             if (response.success) {
-                showMessage("✅ Студент успешно добавлен", "success");
-                studentFormWindow.close();
+                showMessage("✅ " + response.message, "success");
+                studentFormWindow.closeForm();
                 refreshStudents();
             } else {
                 showMessage("❌ Ошибка добавления студента: " + response.error, "error");
+                if (studentFormWindow.item) {
+                    studentFormWindow.item.isSaving = false;
+                }
             }
         });
     }
 
     function updateStudent(studentData) {
         isLoading = true;
-        var url = "/students/" + studentData.studentCode;
-        mainWindow.mainApi.sendRequest("PUT", url, studentData, function(response) {
+        var studentCode = studentData.student_code || studentData.studentCode;
+
+        if (!studentCode) {
+            showMessage("❌ Ошибка: ID студента не найден", "error");
+            isLoading = false;
+            if (studentFormWindow.item) {
+                studentFormWindow.item.isSaving = false;
+            }
+            return;
+        }
+
+        mainWindow.mainApi.updateStudent(studentCode, studentData, function(response) {
             isLoading = false;
             if (response.success) {
-                showMessage("✅ Данные студента обновлены", "success");
-                studentFormWindow.close();
+                showMessage("✅ " + response.message, "success");
+                studentFormWindow.closeForm();
                 refreshStudents();
             } else {
                 showMessage("❌ Ошибка обновления студента: " + response.error, "error");
+                if (studentFormWindow.item) {
+                    studentFormWindow.item.isSaving = false;
+                }
             }
         });
     }
@@ -73,10 +130,10 @@ Item {
     function deleteStudent(studentCode, studentName) {
         if (confirm("Вы уверены, что хотите удалить студента:\n" + studentName + "?")) {
             isLoading = true;
-            mainWindow.mainApi.sendRequest("DELETE", "/students/" + studentCode, null, function(response) {
+            mainWindow.mainApi.deleteStudent(studentCode, function(response) {
                 isLoading = false;
                 if (response.success) {
-                    showMessage("✅ Студент успешно удален", "success");
+                    showMessage("✅ " + response.message, "success");
                     refreshStudents();
                 } else {
                     showMessage("❌ Ошибка удаления студента: " + response.error, "error");
@@ -85,18 +142,18 @@ Item {
         }
     }
 
-    function getGroupName(groupId) {
-        for (var i = 0; i < groups.length; i++) {
-            if (groups[i].group_id === groupId) {
-                return groups[i].name;
-            }
-        }
-        return "";
+    function confirm(message) {
+        console.log("❓ Подтверждение:", message);
+        return true;
     }
 
     Component.onCompleted: {
-        refreshStudents();
+        console.log("🎯 StudentsView создан");
         refreshGroups();
+    }
+
+    onStudentsChanged: {
+        console.log("🔄 StudentsView: students изменен, длина:", students.length);
     }
 
     ColumnLayout {
@@ -137,7 +194,7 @@ Item {
                 spacing: 15
 
                 Text {
-                    text: "Всего студентов: " + mainWindow.students.length
+                    text: "Всего студентов: " + students.length
                     color: "white"
                     font.pixelSize: 14
                     font.bold: true
@@ -251,78 +308,67 @@ Item {
             id: studentsTable
             Layout.fillWidth: true
             Layout.fillHeight: true
-            sourceModel: mainWindow.students
+            sourceModel: studentsView.students
             itemType: "student"
             searchPlaceholder: "Поиск студентов..."
             sortOptions: ["По ФИО", "По группе", "По email", "По телефону"]
-            sortRoles: ["last_name", "group_id", "email", "phone_number"]
+            sortRoles: ["full_name", "group_name", "email", "phone_number"]
 
-            onItemEditRequested: studentFormWindow.openForEdit(itemData)
-            onItemDeleteRequested: {
+            onItemEditRequested: function(itemData) {
+                console.log("✏️ StudentsView: редактирование запрошено для", itemData);
+                studentFormWindow.openForEdit(itemData);
+            }
+
+            onItemDeleteRequested: function(itemData) {
                 var studentName = (itemData.last_name || "") + " " + (itemData.first_name || "");
-                var studentCode = itemData.student_code;
+                var studentCode = itemData.studentCode;
+                console.log("🗑️ StudentsView: удаление запрошено для", studentName, "ID:", studentCode);
                 deleteStudent(studentCode, studentName);
-            }
-
-            listDelegate: Component {
-                Enhanced.ListDelegate {
-                    itemType: "student"
-
-                    function getSubtitleText(data) {
-                        var group = studentsView.getGroupName(data.group_id);
-                        var passport = (data.passport_series || "") + " " + (data.passport_number || "");
-                        var contact = data.email ? data.email : (data.phone_number || "Нет контактов");
-                        return "Группа: " + group + " · " + contact;
-                    }
-                }
-            }
-
-            gridDelegate: Component {
-                Enhanced.GridDelegate {
-                    itemType: "student"
-
-                    function getSubtitleText(data) {
-                        var group = studentsView.getGroupName(data.group_id);
-                        return "Группа: " + group;
-                    }
-                }
             }
         }
     }
 
+    // Загрузчик формы студента
     Loader {
         id: studentFormWindow
-        source: "StudentFormWindow.qml"
+        source: "../forms/StudentFormWindow.qml"
 
         onLoaded: {
-            item.groups = studentsView.groups;
+            console.log("✅ StudentFormWindow загружен");
+
             item.saved.connect(function(studentData) {
-                if (studentData.studentCode) {
+                console.log("💾 Сохранение студента:", JSON.stringify(studentData));
+
+                if (studentData.student_code && studentData.student_code !== "") {
                     updateStudent(studentData);
                 } else {
                     addStudent(studentData);
                 }
             });
+
             item.cancelled.connect(function() {
-                item.close();
+                console.log("❌ Отмена редактирования студента");
+                closeForm();
             });
         }
 
         function openForAdd() {
             if (studentFormWindow.item) {
+                studentFormWindow.item.groups = studentsView.groups;
                 studentFormWindow.item.openForAdd();
             }
         }
 
         function openForEdit(studentData) {
             if (studentFormWindow.item) {
+                studentFormWindow.item.groups = studentsView.groups;
                 studentFormWindow.item.openForEdit(studentData);
             }
         }
 
-        function close() {
+        function closeForm() {
             if (studentFormWindow.item) {
-                studentFormWindow.item.close();
+                studentFormWindow.item.closeWindow();
             }
         }
     }

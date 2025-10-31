@@ -3,7 +3,7 @@ import Qt5Compat.GraphicalEffects
 
 Repeater {
     id: polygonRepeater
-    model: 10
+    model: 15
     z: 1
 
     Item {

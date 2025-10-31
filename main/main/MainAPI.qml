@@ -48,6 +48,155 @@ QtObject {
         }
     }
 
+    // Новые методы для работы с профилем и паролем
+    function updateProfile(profileData, callback) {
+        console.log("🔄 Обновление профиля. Данные:", JSON.stringify(profileData));
+
+        sendRequest("PUT", "/profile", profileData, function(response) {
+            console.log("📨 Ответ обновления профиля:", response);
+
+            if (callback) {
+                if (response.success) {
+                    callback({
+                        success: true,
+                        message: "Профиль успешно обновлен",
+                        data: response.data,
+                        status: response.status
+                    });
+                } else {
+                    callback({
+                        success: false,
+                        error: response.error || "Ошибка обновления профиля",
+                        status: response.status
+                    });
+                }
+            }
+        });
+    }
+
+    function changePassword(currentPassword, newPassword, callback) {
+        console.log("🔄 Смена пароля");
+
+        var passwordData = {
+            currentPassword: currentPassword,
+            newPassword: newPassword
+        };
+
+        sendRequest("POST", "/change-password", passwordData, function(response) {
+            console.log("📨 Ответ смены пароля:", response);
+
+            if (callback) {
+                if (response.success) {
+                    callback({
+                        success: true,
+                        message: "Пароль успешно изменен",
+                        data: response.data,
+                        status: response.status
+                    });
+                } else {
+                    callback({
+                        success: false,
+                        error: response.error || "Ошибка смены пароля",
+                        status: response.status
+                    });
+                }
+            }
+        });
+    }
+
+    function getTeachers(callback) {
+        sendRequest("GET", "/teachers", null, function(response) {
+            if (response.success) {
+                var responseData = response.data;
+                var teachersArray = [];
+
+                if (responseData && responseData.data && Array.isArray(responseData.data)) {
+                    teachersArray = responseData.data;
+                } else if (responseData && Array.isArray(responseData)) {
+                    teachersArray = responseData;
+                }
+
+                console.log("📊 Получено преподавателей:", teachersArray.length);
+
+                callback({
+                    success: true,
+                    data: teachersArray,
+                    status: response.status
+                });
+            } else {
+                console.log("❌ Ошибка загрузки преподавателей, возвращаем пустой массив");
+                callback({
+                    success: false,
+                    error: response.error,
+                    data: [],
+                    status: response.status
+                });
+            }
+        });
+    }
+
+    function getStudents(callback) {
+        sendRequest("GET", "/students", null, function(response) {
+            if (response.success) {
+                var responseData = response.data;
+                var studentsArray = [];
+
+                if (responseData && responseData.data && Array.isArray(responseData.data)) {
+                    studentsArray = responseData.data;
+                } else if (responseData && Array.isArray(responseData)) {
+                    studentsArray = responseData;
+                }
+
+                console.log("📊 Получено студентов:", studentsArray.length);
+
+                callback({
+                    success: true,
+                    data: studentsArray,
+                    status: response.status
+                });
+            } else {
+                console.log("❌ Ошибка загрузки студентов, возвращаем пустой массив");
+                callback({
+                    success: false,
+                    error: response.error,
+                    data: [],
+                    status: response.status
+                });
+            }
+        });
+    }
+
+    function getGroups(callback) {
+        sendRequest("GET", "/groups", null, function(response) {
+            if (response.success) {
+                var responseData = response.data;
+                var groupsArray = [];
+
+                if (responseData && responseData.data && Array.isArray(responseData.data)) {
+                    groupsArray = responseData.data;
+                } else if (responseData && Array.isArray(responseData)) {
+                    groupsArray = responseData;
+                }
+
+                console.log("📊 Получено групп:", groupsArray.length);
+
+                callback({
+                    success: true,
+                    data: groupsArray,
+                    status: response.status
+                });
+            } else {
+                console.log("❌ Ошибка загрузки групп, возвращаем пустой массив");
+                callback({
+                    success: false,
+                    error: response.error,
+                    data: [],
+                    status: response.status
+                });
+            }
+        });
+    }
+
     function clearAuth() {
         console.log("🧹 Очистка аутентификации...");
         authToken = "";
@@ -58,32 +207,59 @@ QtObject {
         console.log("✅ Аутентификация очищена");
     }
 
-    function getTeachers(callback) {
-        sendRequest("GET", "/teachers", null, callback);
-    }
-
-    function getStudents(callback) {
-        sendRequest("GET", "/students", null, callback);
-    }
-
-    function getGroups(callback) {
-        sendRequest("GET", "/groups", null, callback);
-    }
-
     function getPortfolios(callback) {
-        sendRequest("GET", "/portfolio", null, callback);
+        sendRequest("GET", "/portfolio", null, function(response) {
+            if (response.success) {
+                callback({
+                    success: true,
+                    data: response.data || [],
+                    status: response.status
+                });
+            } else {
+                callback({
+                    success: false,
+                    error: response.error,
+                    data: [],
+                    status: response.status
+                });
+            }
+        });
     }
 
     function getEvents(callback) {
-        sendRequest("GET", "/events", null, callback);
+        sendRequest("GET", "/events", null, function(response) {
+            if (response.success) {
+                callback({
+                    success: true,
+                    data: response.data || [],
+                    status: response.status
+                });
+            } else {
+                callback({
+                    success: false,
+                    error: response.error,
+                    data: [],
+                    status: response.status
+                });
+            }
+        });
     }
 
     function getProfile(callback) {
-        sendRequest("GET", "/profile", null, callback);
+        sendRequest("GET", "/profile", null, function(response) {
+            if (response.success) {
+                callback({
+                    success: true,
+                    data: response.data || {},
+                    status: response.status
+                });
+            } else {
+                callback(response);
+            }
+        });
     }
 
     function validateToken(callback) {
-        // Отправляем токен в теле запроса, а не в заголовке
         var requestData = {
             token: authToken
         };
@@ -91,6 +267,216 @@ QtObject {
         sendRequest("POST", "/verify-token", requestData, function(response) {
             console.log("🔐 Ответ проверки токена:", response);
             if (callback) callback(response);
+        });
+    }
+
+    function addTeacher(teacherData, callback) {
+        console.log("➕ Добавление преподавателя Данные:", JSON.stringify(teacherData));
+
+        var endpoint = "/teachers";
+        sendRequest("POST", endpoint, teacherData, function(response) {
+            console.log("📨 Ответ добавления преподавателя:", response);
+
+            if (callback) {
+                if (response.success) {
+                    var responseData = response.data;
+                    callback({
+                        success: true,
+                        message: responseData.message || "Преподаватель успешно добавлен",
+                        data: responseData,
+                        status: response.status
+                    });
+                } else {
+                    callback(response);
+                }
+            }
+        });
+    }
+
+    function addStudent(studentData, callback) {
+        console.log("➕ Добавление студента Данные:", JSON.stringify(studentData));
+
+        var endpoint = "/students";
+        sendRequest("POST", endpoint, studentData, function(response) {
+            console.log("📨 Ответ добавления студента:", response);
+
+            if (callback) {
+                if (response.success) {
+                    var responseData = response.data;
+                    callback({
+                        success: true,
+                        message: responseData.message || "Студент успешно добавлен",
+                        data: responseData,
+                        status: response.status
+                    });
+                } else {
+                    callback(response);
+                }
+            }
+        });
+    }
+
+    function updateStudent(studentCode, studentData, callback) {
+        console.log("🔄 Обновление студента ID:", studentCode, "Данные:", JSON.stringify(studentData));
+
+        var endpoint = "/students/" + studentCode;
+        sendRequest("PUT", endpoint, studentData, function(response) {
+            console.log("📨 Ответ обновления студента:", response);
+
+            if (callback) {
+                if (response.success) {
+                    var responseData = response.data;
+                    callback({
+                        success: true,
+                        message: responseData.message || "Операция выполнена успешно",
+                        data: responseData,
+                        status: response.status
+                    });
+                } else {
+                    callback({
+                        success: false,
+                        error: response.error || "Неизвестная ошибка",
+                        status: response.status
+                    });
+                }
+            }
+        });
+    }
+
+    function deleteStudent(studentCode, callback) {
+        console.log("🗑️ Удаление студента ID:", studentCode);
+
+        var endpoint = "/students/" + studentCode;
+        sendRequest("DELETE", endpoint, null, function(response) {
+            console.log("📨 Ответ удаления студента:", response);
+
+            if (callback) {
+                if (response.success) {
+                    callback({
+                        success: true,
+                        message: "Студент успешно удален",
+                        status: response.status
+                    });
+                } else {
+                    callback({
+                        success: false,
+                        error: response.error || "Неизвестная ошибка",
+                        status: response.status
+                    });
+                }
+            }
+        });
+    }
+
+    function addGroup(groupData, callback) {
+        console.log("➕ Добавление группы Данные:", JSON.stringify(groupData));
+
+        var endpoint = "/groups";
+        sendRequest("POST", endpoint, groupData, function(response) {
+            console.log("📨 Ответ добавления группы:", response);
+
+            if (callback) {
+                if (response.success) {
+                    var responseData = response.data;
+                    callback({
+                        success: true,
+                        message: responseData.message || "Группа успешно добавлена",
+                        data: responseData,
+                        status: response.status
+                    });
+                } else {
+                    callback(response);
+                }
+            }
+        });
+    }
+
+    function updateGroup(groupId, groupData, callback) {
+        console.log("🔄 Обновление группы ID:", groupId, "Данные:", JSON.stringify(groupData));
+
+        var endpoint = "/groups/" + groupId;
+        sendRequest("PUT", endpoint, groupData, function(response) {
+            console.log("📨 Ответ обновления группы:", response);
+
+            if (callback) {
+                if (response.success) {
+                    var responseData = response.data;
+                    callback({
+                        success: true,
+                        message: responseData.message || "Операция выполнена успешно",
+                        data: responseData,
+                        status: response.status
+                    });
+                } else {
+                    callback({
+                        success: false,
+                        error: response.error || "Неизвестная ошибка",
+                        status: response.status
+                    });
+                }
+            }
+        });
+    }
+
+    function deleteGroup(groupId, callback) {
+        console.log("🗑️ Удаление группы ID:", groupId);
+
+        var endpoint = "/groups/" + groupId;
+        sendRequest("DELETE", endpoint, null, function(response) {
+            console.log("📨 Ответ удаления группы:", response);
+
+            if (callback) {
+                if (response.success) {
+                    callback({
+                        success: true,
+                        message: "Группа успешно удалена",
+                        status: response.status
+                    });
+                } else {
+                    callback({
+                        success: false,
+                        error: response.error || "Неизвестная ошибка",
+                        status: response.status
+                    });
+                }
+            }
+        });
+    }
+
+    function updateTeacher(teacherId, teacherData, callback) {
+        console.log("🔄 Обновление преподавателя ID:", teacherId, "Данные:", JSON.stringify(teacherData));
+
+        var numericTeacherId = parseInt(teacherId);
+        if (isNaN(numericTeacherId)) {
+            console.log("❌ Неверный teacherId:", teacherId);
+            if (callback) callback({
+                success: false,
+                error: "Неверный ID преподавателя"
+            });
+            return;
+        }
+
+        var endpoint = "/teachers/" + numericTeacherId;
+        sendRequest("PUT", endpoint, teacherData, function(response) {
+            console.log("📨 Ответ обновления преподавателя:", response);
+
+            if (callback) {
+                if (response.success) {
+                    var responseData = response.data;
+                    callback({
+                        success: true,
+                        message: responseData.message || "Операция выполнена успешно",
+                        data: responseData,
+                        status: response.status
+                    });
+                } else {
+                    callback({
+                        success: false,
+                        error: response.error || "Неизвестная ошибка",
+                        status: response.status
+                    });
+                }
+            }
         });
     }
 
@@ -115,7 +501,6 @@ QtObject {
         var xhr = new XMLHttpRequest();
         xhr.timeout = 10000;
 
-        // Нормализация URL
         var normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
         var normalizedEndpoint = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
         var url = normalizedBaseUrl + normalizedEndpoint;
@@ -126,19 +511,18 @@ QtObject {
         console.log("   Normalized URL:", url);
         console.log("   Токен длина:", authToken.length);
         console.log("   Токен (первые 32 символа):", authToken.substring(0, 32));
-        console.log("   Токен (последние 32 символа):", authToken.substring(authToken.length - 32));
 
         xhr.onreadystatechange = function() {
             console.log("📨 Изменение состояния XHR:", xhr.readyState, "для", endpoint);
 
             if (xhr.readyState === XMLHttpRequest.DONE) {
                 console.log("✅ Запрос завершен:", endpoint, "Статус:", xhr.status);
-                console.log("   Полный ответ:", xhr.responseText);
 
                 if (xhr.status === 200 || xhr.status === 201) {
                     try {
                         var response = JSON.parse(xhr.responseText);
                         console.log("✅ Успешный ответ от", endpoint);
+
                         if (callback) callback({
                             success: true,
                             data: response,
@@ -146,7 +530,6 @@ QtObject {
                         });
                     } catch (e) {
                         console.log("❌ Ошибка парсинга JSON:", error);
-                        console.log("   Сырой ответ:", xhr.responseText);
                         if (callback) callback({
                             success: false,
                             error: "Ошибка формата ответа",
@@ -155,7 +538,6 @@ QtObject {
                     }
                 } else if (xhr.status === 401) {
                     console.log("❌ Ошибка аутентификации 401 для", endpoint);
-                    console.log("   Заголовки ответа:", xhr.getAllResponseHeaders());
                     if (callback) callback({
                         success: false,
                         error: "Ошибка доступа (401)",
@@ -172,7 +554,6 @@ QtObject {
                         });
                     } catch (e) {
                         console.log("❌ Ошибка парсинга ошибки для", endpoint + ":", e);
-                        console.log("   Сырой ответ ошибки:", xhr.responseText);
                         if (callback) callback({
                             success: false,
                             error: "Сетевая ошибка",

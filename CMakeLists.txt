@@ -46,34 +46,33 @@ qt_add_qml_module(EduFlow
                 main/view/GroupsView.qml
                 main/view/EventsView.qml
                 main/view/PortfolioView.qml
-
-                # Диалоги и формы
-                main/dialog/ConfirmDialog.qml
-                main/dialog/UserSettingsPanel.qml
-                main/dialog/StudentDialog.qml
-                main/dialog/GroupsDialog.qml
-                main/dialog/TeachersDialog.qml
-                main/dialog/StudentFormWindow.qml
-                main/dialog/TeacherFormWindow.qml
-                main/dialog/GroupFormWindow.qml
+                main/view/SettingsView.qml
 
                 # Общие компоненты
                 common/PolygonBackground.qml
+                common/DialogTitleBar.qml
                 common/TitleBar.qml
 
-                # Улучшенные компоненты - ТОЛЬКО ОДИН EnhancedTableView
+                # Формы вывода информации и для добавления в таблицу данных
+                main/forms/TeacherFormWindow.qml
+                main/forms/GroupFormWindow.qml
+                main/forms/StudentFormWindow.qml
+
+                # Компонет отображения данных с таблиц
                 enhanced/EnhancedTableView.qml
+                enhanced/EnhancedSearchBox.qml
+                enhanced/EnhancedSortComboBox.qml
+                enhanced/EnhancedViewToggle.qml
+                enhanced/EnhancedListItem.qml
+                enhanced/EnhancedGridItem.qml
+                enhanced/EnhancedGroupBox.qml
+                enhanced/EnhancedTextField.qml
 
-
-
-
-
-                enhanced/ActionButtons.qml
-                QML_FILES enhanced/EnhancedSearchBox.qml
-                QML_FILES enhanced/EnhancedSortComboBox.qml
-                QML_FILES enhanced/EnhancedViewToggle.qml
-                QML_FILES enhanced/EnhancedListItem.qml
-                QML_FILES enhanced/EnhancedGridItem.qml
+                main/view/settings/UserProfilePanel.qml
+                main/view/settings/SessionsPanel.qml
+                main/view/settings/ProfileEditPanel.qml
+                main/view/settings/ServerInfoPanel.qml
+                main/view/settings/PasswordChangePanel.qml
 )
 
 qt_add_resources(EduFlow "resources"

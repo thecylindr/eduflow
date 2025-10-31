@@ -68,7 +68,7 @@ Item {
             var teacher = teachers[i];
             var currentTeacherId = teacher.teacherId || teacher.teacher_id;
 
-            if (currentTeacherId == teacherId) {
+            if (currentTeacherId === teacherId) {
                 var lastName = teacher.lastName || teacher.last_name || "";
                 var firstName = teacher.firstName || teacher.first_name || "";
                 var middleName = teacher.middleName || teacher.middle_name || "";
@@ -77,6 +77,61 @@ Item {
         }
 
         return "Не назначен";
+    }
+
+    // CRUD функции для групп
+    function addGroup(groupData) {
+        isLoading = true;
+        console.log("➕ Добавление группы:", JSON.stringify(groupData));
+
+        mainWindow.mainApi.sendRequest("POST", "/groups", groupData, function(response) {
+            isLoading = false;
+            if (response.success) {
+                showMessage("✅ Группа успешно добавлена", "success");
+                groupFormWindow.close();
+                refreshGroups();
+            } else {
+                showMessage("❌ Ошибка добавления группы: " + response.error, "error");
+            }
+        });
+    }
+
+    function updateGroup(groupData) {
+        isLoading = true;
+        var groupId = groupData.group_id;
+        console.log("🔄 Обновление группы ID:", groupId, "Данные:", JSON.stringify(groupData));
+
+        mainWindow.mainApi.sendRequest("PUT", "/groups/" + groupId, groupData, function(response) {
+            isLoading = false;
+            if (response.success) {
+                showMessage("✅ Группа успешно обновлена", "success");
+                groupFormWindow.close();
+                refreshGroups();
+            } else {
+                showMessage("❌ Ошибка обновления группы: " + response.error, "error");
+            }
+        });
+    }
+
+    function deleteGroup(groupId, groupName) {
+        if (confirm("Вы уверены, что хотите удалить группу:\n" + groupName + "?")) {
+            isLoading = true;
+            mainWindow.mainApi.sendRequest("DELETE", "/groups/" + groupId, null, function(response) {
+                isLoading = false;
+                if (response.success) {
+                    showMessage("✅ Группа успешно удалена", "success");
+                    refreshGroups();
+                } else {
+                    showMessage("❌ Ошибка удаления группы: " + response.error, "error");
+                }
+            });
+        }
+    }
+
+    function confirm(message) {
+        // Временная реализация - в реальном приложении нужно использовать диалог
+        console.log("Подтверждение:", message);
+        return true;
     }
 
     Component.onCompleted: {
@@ -204,7 +259,8 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: {
-                            console.log("Добавить группу");
+                            console.log("➕ Добавить группу - клик");
+                            groupFormWindow.openForAdd();
                         }
                     }
                 }
@@ -249,19 +305,78 @@ Item {
             sortRoles: ["name", "studentCount", "teacherName"]
 
             onItemEditRequested: function(itemData) {
-                console.log("Редактировать группу:", itemData);
+                console.log("✏️ GroupsView: редактирование запрошено для", itemData);
+                groupFormWindow.openForEdit(itemData);
             }
 
             onItemDeleteRequested: function(itemData) {
                 var groupId = itemData.groupId;
-                if (confirm("Вы уверены, что хотите удалить группу:\n" + (itemData.name || "Без названия") + "?")) {
-                    console.log("Удалить группу:", groupId);
-                }
+                var groupName = itemData.name || "Без названия";
+                console.log("🗑️ GroupsView: удаление запрошено для", groupName, "ID:", groupId);
+                deleteGroup(groupId, groupName);
             }
         }
     }
 
-    function confirm(message) {
-        return true;
+    // Загрузчик формы группы
+    Loader {
+        id: groupFormWindow
+        source: "../forms/GroupFormWindow.qml"
+
+        onLoaded: {
+            console.log("✅ GroupFormWindow загружен");
+
+            item.saved.connect(function(groupData) {
+                console.log("💾 Сохранение группы:", JSON.stringify(groupData));
+
+                if (groupData.group_id && groupData.group_id !== 0) {
+                    updateGroup(groupData);
+                } else {
+                    addGroup(groupData);
+                }
+            });
+
+            item.cancelled.connect(function() {
+                console.log("❌ Отмена редактирования группы");
+                if (item) {
+                    item.closeWindow();
+                }
+            });
+        }
+
+        function openForAdd() {
+            if (groupFormWindow.item) {
+                groupFormWindow.item.teachers = groupsView.teachers;
+                groupFormWindow.item.openForAdd();
+            } else {
+                console.log("❌ GroupFormWindow не загружен, активируем Loader...");
+                groupFormWindow.active = true;
+                // Ждем загрузки и пробуем снова
+                groupFormWindow.onLoaded = function() {
+                    groupFormWindow.item.teachers = groupsView.teachers;
+                    groupFormWindow.item.openForAdd();
+                };
+            }
+        }
+
+        function openForEdit(groupData) {
+            if (groupFormWindow.item) {
+                groupFormWindow.item.teachers = groupsView.teachers;
+                groupFormWindow.item.openForEdit(groupData);
+            } else {
+                console.log("❌ GroupFormWindow не загружен, активируем Loader...");
+                groupFormWindow.active = true;
+                groupFormWindow.onLoaded = function() {
+                    groupFormWindow.item.teachers = groupsView.teachers;
+                    groupFormWindow.item.openForEdit(groupData);
+                };
+            }
+        }
+
+        function close() {
+            if (groupFormWindow.item) {
+                groupFormWindow.item.closeWindow();
+            }
+        }
     }
 }

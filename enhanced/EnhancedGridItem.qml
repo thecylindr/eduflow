@@ -10,17 +10,13 @@ Rectangle {
     border.color: itemMouseArea.containsMouse ? "#3498db" : "#e0e0e0"
     border.width: 2
 
+    scale: itemMouseArea.containsMouse ? 1.01 : 1.0
+
     property var itemData: null
     property string itemType: ""
 
     signal editRequested(var data)
     signal deleteRequested(var data)
-
-    scale: itemMouseArea.containsMouse ? 1.02 : 1.0
-
-    Behavior on scale {
-        NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
-    }
 
     Behavior on color {
         ColorAnimation { duration: 200 }
@@ -31,8 +27,8 @@ Rectangle {
     }
 
     Column {
-        anchors.fill: parent
-        anchors.margins: 12
+        anchors.centerIn: parent
+        width: parent.width - 20
         spacing: 8
 
         // Аватар/иконка
@@ -73,9 +69,9 @@ Rectangle {
                         var middleName = itemData.middleName || "";
                         return lastName + "\n" + firstName + " " + middleName;
                     } else if (itemType === "student") {
-                        var last_name = itemData.last_name || "";
-                        var first_name = itemData.first_name || "";
-                        var middle_name = itemData.middle_name || "";
+                        var last_name = itemData.last_name || itemData.lastName || "";
+                        var first_name = itemData.first_name || itemData.firstName || "";
+                        var middle_name = itemData.middle_name || itemData.middleName || "";
                         return last_name + "\n" + first_name + " " + middle_name;
                     } else if (itemType === "group") {
                         return itemData.name || "Без названия";
@@ -97,7 +93,7 @@ Rectangle {
                     if (itemType === "teacher") {
                         return "Опыт: " + (itemData.experience || 0) + " лет";
                     } else if (itemType === "student") {
-                        return "Группа: " + (itemData.group_id || "Не указана");
+                        return "Группа: " + (itemData.groupName || itemData.group_name || "Не указана");
                     } else if (itemType === "group") {
                         return "Студентов: " + (itemData.studentCount || 0);
                     }
@@ -110,55 +106,72 @@ Rectangle {
                 elide: Text.ElideRight
             }
         }
+    }
 
-        // Кнопки действий
-        Row {
-            spacing: 8
-            anchors.horizontalCenter: parent.horizontalCenter
+    // Кнопки действий - ВСЕГДА на переднем плане
+    Row {
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.margins: 6
+        spacing: 4
+        z: 1000 // Очень высокий z-index
 
-            Rectangle {
-                id: editButton
-                width: 25
-                height: 25
-                radius: 5
-                color: editMouseArea.containsMouse ? "#3498db" : "transparent"
-                border.color: editMouseArea.containsMouse ? "#2980b9" : "#3498db"
-                border.width: 2
+        Rectangle {
+            id: editButton
+            width: 25
+            height: 25
+            radius: 5
+            color: editMouseArea.containsMouse ? "#3498db" : "transparent"
+            border.color: editMouseArea.containsMouse ? "#2980b9" : "#3498db"
+            border.width: 1
+            z: 1001
 
-                Text {
-                    anchors.centerIn: parent
-                    text: "✏️"
-                    font.pixelSize: 10
-                }
-
-                MouseArea {
-                    id: editMouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onClicked: gridItem.editRequested(gridItem.itemData)
-                }
+            Text {
+                anchors.centerIn: parent
+                text: "✏️"
+                font.pixelSize: 10
+                z: 1002
             }
 
-            Rectangle {
-                id: deleteButton
-                width: 25
-                height: 25
-                radius: 5
-                color: deleteMouseArea.containsMouse ? "#e74c3c" : "transparent"
-                border.color: deleteMouseArea.containsMouse ? "#c0392b" : "#e74c3c"
-                border.width: 2
-
-                Text {
-                    anchors.centerIn: parent
-                    text: "🗑️"
-                    font.pixelSize: 10
+            MouseArea {
+                id: editMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                z: 1003
+                onClicked: {
+                    console.log("✏️ GridItem: редактирование запрошено для", gridItem.itemData);
+                    gridItem.editRequested(gridItem.itemData);
                 }
+            }
+        }
 
-                MouseArea {
-                    id: deleteMouseArea
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    onClicked: gridItem.deleteRequested(gridItem.itemData)
+        Rectangle {
+            id: deleteButton
+            width: 25
+            height: 25
+            radius: 5
+            color: deleteMouseArea.containsMouse ? "#e74c3c" : "transparent"
+            border.color: deleteMouseArea.containsMouse ? "#c0392b" : "#e74c3c"
+            border.width: 1
+            z: 1001
+
+            Text {
+                anchors.centerIn: parent
+                text: "🗑️"
+                font.pixelSize: 10
+                z: 1002
+            }
+
+            MouseArea {
+                id: deleteMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                z: 1003
+                onClicked: {
+                    console.log("🗑️ GridItem: удаление запрошено для", gridItem.itemData);
+                    gridItem.deleteRequested(gridItem.itemData);
                 }
             }
         }
@@ -169,5 +182,13 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Qt.PointingHandCursor
+        propagateComposedEvents: true
+
+        onClicked: {
+            // Пропускаем клик только если не нажата кнопка
+            if (!editMouseArea.containsMouse && !deleteMouseArea.containsMouse) {
+                mouse.accepted = false;
+            }
+        }
     }
 }

@@ -16,66 +16,76 @@ Rectangle {
 
     signal searchRequested(string text)
 
-    TextField {
-        id: searchField
-        anchors {
-            left: parent.left
-            right: clearButton.left
-            verticalCenter: parent.verticalCenter
-            margins: 15
-        }
-        placeholderText: searchBox.placeholder
-        background: Rectangle {
+    Row {
+        anchors.fill: parent
+        spacing: 0
+
+        // Лупа с отступом
+        Rectangle {
+            width: 40
+            height: parent.height
             color: "transparent"
-            border.width: 0
-        }
-        onTextChanged: {
-            searchBox.searchText = text
-            searchTimer.restart()
-        }
-    }
 
-    Text {
-        id: searchIcon
-        anchors {
-            left: parent.left
-            verticalCenter: parent.verticalCenter
-            leftMargin: 12
+            Text {
+                id: searchIcon
+                anchors.centerIn: parent
+                text: "🔍"
+                font.pixelSize: 16
+                color: "#666"
+            }
         }
-        text: "🔍"
-        font.pixelSize: 14
-        color: "#666"
-    }
 
-    Rectangle {
-        id: clearButton
-        width: 20
-        height: 20
-        radius: 10
-        anchors {
-            right: parent.right
-            verticalCenter: parent.verticalCenter
-            rightMargin: 10
-        }
-        color: clearMouseArea.containsMouse ? "#e0e0e0" : "transparent"
-        visible: searchField.text.length > 0
-
-        Text {
-            anchors.centerIn: parent
-            text: "×"
+        // Поле ввода с центрированным текстом
+        TextField {
+            id: searchField
+            width: parent.width - 40 - (clearButton.visible ? 35 : 0)
+            height: parent.height
+            placeholderText: searchBox.placeholder
             font.pixelSize: 14
-            font.bold: true
-            color: "#666"
+            placeholderTextColor: "#999"
+
+            // Центрирование текста по вертикали
+            topPadding: 0
+            bottomPadding: 0
+            verticalAlignment: TextInput.AlignVCenter
+
+            background: Rectangle {
+                color: "transparent"
+                border.width: 0
+            }
+            onTextChanged: {
+                searchBox.searchText = text
+                searchTimer.restart()
+            }
         }
 
-        MouseArea {
-            id: clearMouseArea
-            anchors.fill: parent
-            hoverEnabled: true
-            onClicked: {
-                searchField.text = ""
-                searchBox.searchText = ""
-                searchBox.searchRequested("")
+        // Кнопка очистки
+        Rectangle {
+            id: clearButton
+            width: 30
+            height: 30
+            radius: 15
+            anchors.verticalCenter: parent.verticalCenter
+            color: clearMouseArea.containsMouse ? "#e0e0e0" : "transparent"
+            visible: searchField.text.length > 0
+
+            Text {
+                anchors.centerIn: parent
+                text: "×"
+                font.pixelSize: 18
+                font.bold: true
+                color: "#666"
+            }
+
+            MouseArea {
+                id: clearMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: {
+                    searchField.text = ""
+                    searchBox.searchText = ""
+                    searchBox.searchRequested("")
+                }
             }
         }
     }
