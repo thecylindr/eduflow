@@ -19,7 +19,7 @@ Item {
             text: "© 2025 Система безопасности"
             font.pixelSize: 10
             color: "white"
-            opacity: 0.95
+            opacity: 0.925
         }
     }
 }

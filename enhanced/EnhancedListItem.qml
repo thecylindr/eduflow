@@ -12,7 +12,7 @@ Rectangle {
     scale: itemMouseArea.containsMouse ? 1.01 : 1.0
 
     // Упрощенная установка ширины - без конфликтующих якорей
-    width: parent ? parent.width - 20 : 100
+    width: parent ? parent.width - 30 : 90
     anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
 
     property var itemData: null

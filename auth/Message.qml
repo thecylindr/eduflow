@@ -28,6 +28,7 @@ Rectangle {
     Behavior on height {
         NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
     }
+
     Behavior on opacity {
         NumberAnimation { duration: 300 }
     }
@@ -59,7 +60,7 @@ Rectangle {
         anchors {
             top: parent.top
             right: parent.right
-            margins: 2
+            margins: 1
         }
 
         Text {

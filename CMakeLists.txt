@@ -68,11 +68,19 @@ qt_add_qml_module(EduFlow
                 enhanced/EnhancedGroupBox.qml
                 enhanced/EnhancedTextField.qml
 
-                main/view/settings/UserProfilePanel.qml
-                main/view/settings/SessionsPanel.qml
-                main/view/settings/ProfileEditPanel.qml
-                main/view/settings/ServerInfoPanel.qml
-                main/view/settings/PasswordChangePanel.qml
+
+
+
+
+
+                QML_FILES main/view/settings/ServerPage.qml
+                QML_FILES main/view/settings/SessionsPage.qml
+                QML_FILES main/view/settings/SecurityPage.qml
+                QML_FILES main/view/settings/ProfilePage.qml
+                QML_FILES main/view/settings/RequirementItem.qml
+                QML_FILES main/view/settings/PasswordField.qml
+                QML_FILES main/view/settings/SettingsMainPage.qml
+                QML_FILES main/view/settings/AboutPage.qml
 )
 
 qt_add_resources(EduFlow "resources"

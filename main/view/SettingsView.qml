@@ -1,89 +1,134 @@
-// SettingsView.qml
 import QtQuick 2.15
 import QtQuick.Controls 2.15
-import "./settings" as SettingsComponents
+import QtQuick.Layouts 1.15
+import "settings/"
 
-Item {
+Rectangle {
     id: settingsView
+    color: "#f8f9fa"
 
     property var userProfile: ({})
     property var sessions: []
     property bool isLoading: false
 
-    // Свойства для проверки сервера
+    // Server properties
     property string pingStatus: "not_checked"
     property string pingTime: "Не проверен"
-    property string serverAddress: mainWindow.mainApi.baseUrl || "Не указан"
+    property string serverAddress: mainWindow.mainApi.baseUrl || ""
+
+    // User profile properties
+    property string userLogin: userProfile.login || "Не указан"
+    property string userFirstName: userProfile.firstName || "Не указано"
+    property string userLastName: userProfile.lastName || "Не указано"
+    property string userMiddleName: userProfile.middleName || "Не указано"
+    property string userEmail: userProfile.email || "Не указан"
+    property string userPhoneNumber: userProfile.phoneNumber || "Не указан"
+
+    // Edit properties
+    property string editFirstName: userFirstName
+    property string editLastName: userLastName
+    property string editMiddleName: userMiddleName
+    property string editEmail: userEmail
+    property string editPhoneNumber: userPhoneNumber
+
+    // Password properties
+    property string currentPassword: ""
+    property string newPassword: ""
+    property string confirmPassword: ""
+
+    // About properties - получаем из главного окна
+    property string appVersion: Qt.application.version
+    property string organizationName: Qt.application.organization
+    property string appName: Qt.application.name
+    property string gitflicUrl: "https://gitflic.ru/project/cylindr/eduflow"
+    property string serverGitflicUrl: "https://gitflic.ru/project/cylindr/eduflowserver"
+
+    // Navigation state
+    property string currentPage: "main"
 
     function loadProfile() {
-        isLoading = true;
-        mainWindow.mainApi.getProfile(function(response) {
-            isLoading = false;
-            if (response.success) {
-                userProfile = response.data || {};
-            } else {
-                mainWindow.showMessage("❌ Ошибка загрузки профиля: " + response.error, "error");
-            }
-        });
-    }
+        console.log("🔄 Загрузка профиля...")
+        isLoading = true
 
-    function loadSessions() {
-        mainWindow.mainApi.sendRequest("GET", "/sessions", null, function(response) {
-            if (response.success) {
-                sessions = response.data || [];
+        mainWindow.mainApi.getProfile(function(response) {
+            isLoading = false
+            console.log("📨 Ответ профиля:", JSON.stringify(response))
+
+            if (response.success && response.data) {
+                console.log("✅ Данные профиля загружены")
+
+                userProfile = response.data
+
+                editFirstName = userProfile.firstName || ""
+                editLastName = userProfile.lastName || ""
+                editMiddleName = userProfile.middleName || ""
+                editEmail = userProfile.email || ""
+                editPhoneNumber = userProfile.phoneNumber || ""
+
+                sessions = userProfile.sessions || []
+
+            } else {
+                console.log("❌ Ошибка загрузки профиля:", response.error)
+                mainWindow.showMessage("❌ Ошибка загрузки профиля: " + (response.error || "Неизвестная ошибка"), "error")
             }
-        });
+        })
     }
 
     function updateProfile() {
         var profileData = {
-            firstName: firstNameField.text,
-            lastName: lastNameField.text,
-            middleName: middleNameField.text,
-            email: emailField.text,
-            phoneNumber: phoneField.text
-        };
+            firstName: editFirstName,
+            lastName: editLastName,
+            middleName: editMiddleName,
+            email: editEmail,
+            phoneNumber: editPhoneNumber
+        }
 
-        isLoading = true;
+        console.log("📤 Отправка данных профиля:", JSON.stringify(profileData))
+
+        isLoading = true
         mainWindow.mainApi.updateProfile(profileData, function(response) {
-            isLoading = false;
+            isLoading = false
             if (response.success) {
-                mainWindow.showMessage("✅ Профиль успешно обновлен", "success");
-                loadProfile();
+                mainWindow.showMessage("✅ Профиль успешно обновлен", "success")
+                loadProfile()
             } else {
-                mainWindow.showMessage("❌ Ошибка обновления профиля: " + response.error, "error");
+                mainWindow.showMessage("❌ Ошибка обновления профиля: " + (response.error || "Неизвестная ошибка"), "error")
             }
-        });
+        })
     }
 
     function changePassword() {
-        if (newPasswordField.text !== confirmPasswordField.text) {
-            mainWindow.showMessage("❌ Пароли не совпадают", "error");
-            return;
+        if (newPassword !== confirmPassword) {
+            mainWindow.showMessage("❌ Пароли не совпадают", "error")
+            return
         }
 
-        if (newPasswordField.text.length < 6) {
-            mainWindow.showMessage("❌ Пароль должен быть не менее 6 символов", "error");
-            return;
+        if (newPassword.length < 6) {
+            mainWindow.showMessage("❌ Пароль должен быть не менее 6 символов", "error")
+            return
         }
 
-        isLoading = true;
+        if (!currentPassword) {
+            mainWindow.showMessage("❌ Введите текущий пароль", "error")
+            return
+        }
+
+        isLoading = true
         mainWindow.mainApi.changePassword(
-            currentPasswordField.text,
-            newPasswordField.text,
+            currentPassword,
+            newPassword,
             function(response) {
-                isLoading = false;
+                isLoading = false
                 if (response.success) {
-                    mainWindow.showMessage("✅ Пароль успешно изменен", "success");
-                    currentPasswordField.text = "";
-                    newPasswordField.text = "";
-                    confirmPasswordField.text = "";
-                    loadSessions();
+                    mainWindow.showMessage("✅ Пароль успешно изменен", "success")
+                    currentPassword = ""
+                    newPassword = ""
+                    confirmPassword = ""
                 } else {
-                    mainWindow.showMessage("❌ Ошибка смены пароля: " + response.error, "error");
+                    mainWindow.showMessage("❌ Ошибка смены пароля: " + (response.error || "Неизвестная ошибка"), "error")
                 }
             }
-        );
+        )
     }
 
     function pingServer() {
@@ -111,188 +156,242 @@ Item {
         }
     }
 
-    function revokeSession(sessionId) {
-        mainWindow.mainApi.sendRequest("DELETE", "/sessions/" + sessionId, null, function(response) {
+    function revokeSession(token) {
+        mainWindow.mainApi.revokeSession(token, function(response) {
             if (response.success) {
-                mainWindow.showMessage("✅ Сессия отозвана", "success");
-                loadSessions();
+                mainWindow.showMessage("✅ Сессия отозвана", "success")
+                loadProfile()
             } else {
-                mainWindow.showMessage("❌ Ошибка отзыва сессии: " + response.error, "error");
+                mainWindow.showMessage("❌ Ошибка отзыва сессии: " + (response.error || "Неизвестная ошибка"), "error")
             }
-        });
+        })
     }
 
     function logout() {
-        mainWindow.mainApi.clearAuth();
-        mainWindow.showMessage("✅ Выход выполнен", "success");
-        mainWindow.visible = false;
+        mainWindow.mainApi.clearAuth()
+        mainWindow.visible = false
     }
 
     Component.onCompleted: {
-        loadProfile();
-        loadSessions();
+        loadProfile()
     }
 
-    // Основной контейнер
-    Rectangle {
-        anchors.fill: parent
-        anchors.margins: 10
-        color: "transparent"
+    // Заголовок как в TeachersView
+    ColumnLayout {
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        spacing: 8
 
-        // Заголовок
-        Text {
-            id: title
-            anchors.top: parent.top
-            anchors.horizontalCenter: parent.horizontalCenter
-            text: "⚙️ Настройки"
-            font.pixelSize: 18
-            font.bold: true
-            color: "#2c3e50"
+        // Кнопка назад и заголовок
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.leftMargin: 10
+            Layout.rightMargin: 10
+            Layout.topMargin: 10
+            spacing: 15
+
+            // Кнопка назад - видна только не на главной странице
+            Rectangle {
+                id: backButton
+                width: 40
+                height: 40
+                radius: 8
+                color: backMouseArea.containsMouse ? "#f1f3f4" : "transparent"
+                visible: currentPage !== "main"
+
+                Text {
+                    anchors.centerIn: parent
+                    text: "←"
+                    font.pixelSize: 18
+                    color: "#5f6368"
+                    font.bold: true
+                }
+
+                MouseArea {
+                    id: backMouseArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: currentPage = "main"
+                }
+            }
+
+            Column {
+                Layout.fillWidth: true
+                spacing: 4
+
+                Text {
+                    text: getPageTitle()
+                    font.pixelSize: 20
+                    font.bold: true
+                    color: "#2c3e50"
+                }
+
+                Text {
+                    text: getPageSubtitle()
+                    font.pixelSize: 12
+                    color: "#6c757d"
+                    visible: currentPage !== "main"
+                }
+            }
         }
 
         Rectangle {
-            id: titleLine
-            anchors.top: title.bottom
-            anchors.topMargin: 8
-            width: parent.width
+            Layout.fillWidth: true
             height: 1
-            color: "#e0e0e0"
+            radius: 16
+            opacity: 0.4
+            color: "transparent"
+        }
+    }
+
+    Item {
+        anchors.top: parent.top
+        anchors.topMargin: 80
+        anchors.bottom: parent.bottom
+        anchors.left: parent.left
+        anchors.right: parent.right
+
+        SettingsMainPage {
+            visible: currentPage === "main"
+            anchors.fill: parent
+            onSettingSelected: function(setting) {
+                currentPage = setting
+            }
+            onLogoutRequested: logout()
         }
 
-        // Панель информации о сервере (уменьшенная высота)
-        SettingsComponents.ServerInfoPanel {
-            id: serverInfoPanel
-            anchors.top: titleLine.bottom
-            anchors.topMargin: 15
+        ProfilePage {
+            id: profilePage
+            visible: currentPage === "profile"
+            anchors.fill: parent
+
+            // Используем прямые привязки вместо alias
+            userLogin: settingsView.userLogin
+            userFirstName: settingsView.userFirstName
+            userLastName: settingsView.userLastName
+            userMiddleName: settingsView.userMiddleName
+            userEmail: settingsView.userEmail
+            userPhoneNumber: settingsView.userPhoneNumber
+
+            editFirstName: settingsView.editFirstName
+            editLastName: settingsView.editLastName
+            editMiddleName: settingsView.editMiddleName
+            editEmail: settingsView.editEmail
+            editPhoneNumber: settingsView.editPhoneNumber
+
+            onFieldChanged: function(field, value) {
+                console.log("Field changed:", field, value)
+                if (field === "firstName") settingsView.editFirstName = value
+                else if (field === "lastName") settingsView.editLastName = value
+                else if (field === "middleName") settingsView.editMiddleName = value
+                else if (field === "email") settingsView.editEmail = value
+                else if (field === "phoneNumber") settingsView.editPhoneNumber = value
+            }
+
+            onSaveRequested: settingsView.updateProfile()
+        }
+
+        SecurityPage {
+            id: securityPage
+            visible: currentPage === "security"
+            anchors.fill: parent
+            currentPassword: settingsView.currentPassword
+            newPassword: settingsView.newPassword
+            confirmPassword: settingsView.confirmPassword
+
+            onCurrentPasswordChanged: settingsView.currentPassword = securityPage.currentPassword
+            onNewPasswordChanged: settingsView.newPassword = securityPage.newPassword
+            onConfirmPasswordChanged: settingsView.confirmPassword = securityPage.confirmPassword
+            onChangePasswordRequested: settingsView.changePassword()
+        }
+
+        SessionsPage {
+            visible: currentPage === "sessions"
+            anchors.fill: parent
+            sessions: settingsView.sessions
+            onRevokeSession: function(token) {
+                settingsView.revokeSession(token)
+            }
+        }
+
+        ServerPage {
+            visible: currentPage === "server"
+            anchors.fill: parent
             serverAddress: settingsView.serverAddress
             pingStatus: settingsView.pingStatus
             pingTime: settingsView.pingTime
-            onPingRequested: pingServer()
+            onPingRequested: settingsView.pingServer()
         }
 
-        // Основной контент - две колонки
-        Item {
-            id: contentArea
-            anchors.top: serverInfoPanel.bottom
-            anchors.topMargin: 15
-            anchors.bottom: parent.bottom
-            anchors.bottomMargin: 50 // Место для кнопки выхода
-            width: parent.width
-
-            // Левая колонка - профиль и сессии
-            Column {
-                id: leftColumn
-                width: parent.width / 2 - 10
-                height: parent.height
-                spacing: 10
-
-                // Панель профиля пользователя
-                SettingsComponents.UserProfilePanel {
-                    width: parent.width
-                    height: 150
-                    userProfile: settingsView.userProfile
-                }
-
-                // Панель активных сессий
-                SettingsComponents.SessionsPanel {
-                    width: parent.width
-                    height: parent.height - 170
-                    sessions: settingsView.sessions
-                    onRevokeSession: settingsView.revokeSession(sessionId)
-                }
-            }
-
-            // Правая колонка - формы редактирования
-            Column {
-                id: rightColumn
-                anchors.left: leftColumn.right
-                anchors.leftMargin: 20
-                width: parent.width / 2 - 10
-                height: parent.height
-                spacing: 10
-
-                // Панель редактирования профиля
-                SettingsComponents.ProfileEditPanel {
-                    width: parent.width
-                    height: 260
-                    userProfile: settingsView.userProfile
-                    onProfileSaved: settingsView.updateProfile()
-                }
-
-                // Панель смены пароля
-                SettingsComponents.PasswordChangePanel {
-                    width: parent.width
-                    height: 190 // Немного уменьшена высота
-                    onPasswordChangeRequested: settingsView.changePassword()
-                }
-            }
+        AboutPage {
+            visible: currentPage === "about"
+            anchors.fill: parent
+            appVersion: settingsView.appVersion
+            appName: settingsView.appName
+            organizationName: settingsView.organizationName
+            gitflicUrl: settingsView.gitflicUrl
+            serverGitflicUrl: settingsView.serverGitflicUrl
         }
+    }
 
-        // Кнопка выхода - справа после всех панелей
+    Rectangle {
+        anchors.fill: parent
+        color: "#ccffffff"
+        visible: isLoading
+        z: 3
+        radius: 16  // Добавлено скругление
+
         Rectangle {
-            id: logoutButton
-            anchors.bottom: parent.bottom
-            anchors.right: parent.right
-            anchors.bottomMargin: 10
-            anchors.rightMargin: 10
-            width: 140
-            height: 40
-            radius: 8
-            color: logoutMouseArea.containsMouse ? "#e74c3c" : "#c0392b"
-
-            Row {
-                anchors.centerIn: parent
-                spacing: 8
-
-                Text {
-                    text: "🚪"
-                    font.pixelSize: 14
-                    color: "white"
-                }
-
-                Text {
-                    text: "Выйти из системы"
-                    color: "white"
-                    font.pixelSize: 12
-                    font.bold: true
-                }
-            }
-
-            MouseArea {
-                id: logoutMouseArea
-                anchors.fill: parent
-                hoverEnabled: true
-                onClicked: logout()
-            }
-        }
-
-        // Индикатор загрузки
-        Rectangle {
+            width: 120
+            height: 120
+            radius: 16
+            color: "#ffffff"
             anchors.centerIn: parent
-            width: 150
-            height: 40
-            radius: 8
-            color: "#fff3cd"
-            border.color: "#ffeaa7"
-            border.width: 2
-            visible: isLoading
 
-            Row {
+            Column {
                 anchors.centerIn: parent
-                spacing: 10
+                spacing: 12
 
-                Text {
-                    text: "⏳"
-                    font.pixelSize: 14
+                BusyIndicator {
+                    id: busyIndicator
+                    width: 40
+                    height: 40
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    running: isLoading
                 }
 
                 Text {
                     text: "Загрузка..."
-                    color: "#856404"
-                    font.pixelSize: 12
-                    font.bold: true
+                    font.pixelSize: 14
+                    color: "#5f6368"
+                    anchors.horizontalCenter: parent.horizontalCenter
                 }
             }
+        }
+    }
+
+    function getPageTitle() {
+        switch(currentPage) {
+            case "main": return "⚙️ Настройки системы"
+            case "profile": return "👤 Профиль пользователя"
+            case "security": return "🔐 Безопасность и пароли"
+            case "sessions": return "📱 Активные сессии"
+            case "server": return "🌐 Настройки сервера"
+            case "about": return "ℹ️ О программе"
+            default: return "⚙️ Настройки"
+        }
+    }
+
+    function getPageSubtitle() {
+        switch(currentPage) {
+            case "profile": return "Управление персональными данными"
+            case "security": return "Смена пароля и настройки безопасности"
+            case "sessions": return "Управление активными устройствами"
+            case "server": return "Статус соединения и диагностика"
+            case "about": return "Информация о версии и проекте"
+            default: return "Панель управления системой"
         }
     }
 }

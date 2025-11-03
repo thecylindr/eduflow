@@ -112,7 +112,7 @@ Rectangle {
             }
         }
 
-        // Заголовок
+        // Заголовок окон
         Text {
             text: textVisible ? "🎯 Панель управления" : "🎯"
             font.pixelSize: textVisible ? 18 : 20
@@ -240,7 +240,6 @@ Rectangle {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
-                            console.log("🖱️ Нажата кнопка:", modelData.view);
                             if (mainWindow) {
                                 mainWindow.navigateTo(modelData.view);
                             }
@@ -372,7 +371,6 @@ Rectangle {
                 hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    console.log("⚙️ Открыть настройки учетной записи");
                     if (mainWindow) {
                         mainWindow.navigateTo("settings");
                     }

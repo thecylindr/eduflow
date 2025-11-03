@@ -12,97 +12,114 @@ QtObject {
     property string remoteApiBaseUrl: "http://deltablast.fun"
     property int remotePort: 5000
 
-    function initialize(token, url) {
-        if (token && token.length > 0) {
-            authToken = token;
-            settingsManager.authToken = token;
-            console.log("✅ Токен установлен, длина:", authToken.length);
-        } else {
-            authToken = settingsManager.authToken || "";
-            console.log("🔄 Токен взят из настроек, длина:", authToken.length);
-        }
-
-        if (url && url.length > 0) {
-            baseUrl = url;
-        } else {
-            baseUrl = settingsManager.useLocalServer ?
-                settingsManager.serverAddress :
-                (remoteApiBaseUrl + ":" + remotePort);
-        }
-
-        console.log("✅ API инициализирован. Токен:", authToken ? "есть" : "нет");
-        console.log("   Base URL:", baseUrl);
-        console.log("   Токен длина:", authToken.length);
-
-        if (isAuthenticated) {
-            validateToken(function(response) {
-                tokenValid = response.success;
-                tokenStatus = response.success ? "валиден" : "невалиден";
-                console.log("🔐 Статус токена:", tokenStatus);
-
-                if (!response.success) {
-                    console.log("❌ Токен невалиден, очищаем...");
-                    clearAuth();
-                }
-            });
-        }
+    // Добавьте в MainAPI.qml новые методы
+    function getSessions(callback) {
+        sendRequest("GET", "/sessions", null, function(response) {
+            if (callback) callback(response);
+        });
     }
+
+    function revokeSession(token, callback) {
+        var data = {
+            token: token
+        };
+
+        sendRequest("DELETE", "/sessions", data, function(response) {
+            if (callback) callback(response);
+        });
+    }
+
+    function initialize(token, url) {
+            if (token && token.length > 0) {
+                authToken = token;
+                settingsManager.authToken = token;
+                console.log("✅ Токен установлен, длина:", authToken.length);
+            } else {
+                authToken = settingsManager.authToken || "";
+                console.log("🔄 Токен взят из настроек, длина:", authToken.length);
+            }
+
+            if (url && url.length > 0) {
+                baseUrl = url;
+            } else {
+                baseUrl = settingsManager.useLocalServer ?
+                    settingsManager.serverAddress :
+                    (remoteApiBaseUrl + ":" + remotePort);
+            }
+
+            console.log("✅ API инициализирован. Токен:", authToken ? "есть" : "нет");
+            console.log("   Base URL:", baseUrl);
+            console.log("   Токен длина:", authToken.length);
+
+            if (isAuthenticated) {
+                validateToken(function(response) {
+                    tokenValid = response.success;
+                    tokenStatus = response.success ? "валиден" : "невалиден";
+                    console.log("🔐 Статус токена:", tokenStatus);
+
+                    if (!response.success) {
+                        console.log("❌ Токен невалиден, очищаем...");
+                        clearAuth();
+                    }
+                });
+            }
+        }
 
     // Новые методы для работы с профилем и паролем
     function updateProfile(profileData, callback) {
-        console.log("🔄 Обновление профиля. Данные:", JSON.stringify(profileData));
+            console.log("🔄 Обновление профиля. Данные:", JSON.stringify(profileData));
 
-        sendRequest("PUT", "/profile", profileData, function(response) {
-            console.log("📨 Ответ обновления профиля:", response);
+            sendRequest("PUT", "/profile", profileData, function(response) {
+                console.log("📨 Ответ обновления профиля:", response);
 
-            if (callback) {
-                if (response.success) {
-                    callback({
-                        success: true,
-                        message: "Профиль успешно обновлен",
-                        data: response.data,
-                        status: response.status
-                    });
-                } else {
-                    callback({
-                        success: false,
-                        error: response.error || "Ошибка обновления профиля",
-                        status: response.status
-                    });
+                if (callback) {
+                    if (response.success) {
+                        callback({
+                            success: true,
+                            message: "Профиль успешно обновлен",
+                            data: response.data,
+                            status: response.status
+                        });
+                    } else {
+                        callback({
+                            success: false,
+                            error: response.error || "Ошибка обновления профиля",
+                            status: response.status
+                        });
+                    }
                 }
-            }
-        });
-    }
+            });
+        }
 
     function changePassword(currentPassword, newPassword, callback) {
-        console.log("🔄 Смена пароля");
+            console.log("🔄 Смена пароля");
 
-        var passwordData = {
-            currentPassword: currentPassword,
-            newPassword: newPassword
-        };
+            var passwordData = {
+                currentPassword: currentPassword,
+                newPassword: newPassword
+            };
 
-        sendRequest("POST", "/change-password", passwordData, function(response) {
-            console.log("📨 Ответ смены пароля:", response);
+            sendRequest("POST", "/change-password", passwordData, function(response) {
+                console.log("📨 Ответ смены пароля:", response);
 
-            if (callback) {
-                if (response.success) {
-                    callback({
-                        success: true,
-                        message: "Пароль успешно изменен",
-                        data: response.data,
-                        status: response.status
-                    });
-                } else {
-                    callback({
-                        success: false,
-                        error: response.error || "Ошибка смены пароля",
-                        status: response.status
-                    });
+                if (callback) {
+                    if (response.success) {
+                        callback({
+                            success: true,
+                            message: "Пароль успешно изменен",
+                            data: response.data,
+                            status: response.status
+                        });
+                    } else {
+                        callback({
+                            success: false,
+                            error: response.error || "Ошибка смены пароля",
+                            status: response.status
+                        });
+                    }
                 }
-            }
-        });
-    }
+            });
+        }
 
     function getTeachers(callback) {
         sendRequest("GET", "/teachers", null, function(response) {
@@ -246,18 +263,58 @@ QtObject {
     }
 
     function getProfile(callback) {
-        sendRequest("GET", "/profile", null, function(response) {
-            if (response.success) {
-                callback({
-                    success: true,
-                    data: response.data || {},
-                    status: response.status
-                });
-            } else {
-                callback(response);
-            }
-        });
-    }
+            sendRequest("GET", "/profile", null, function(response) {
+                console.log("🔍 Полный ответ профиля:", JSON.stringify(response))
+
+                if (response.success) {
+                    var profileData = response.data || {}
+
+                    // Детальная диагностика данных
+                    console.log("📊 Анализ данных профиля:")
+                    console.log("   - Логин:", profileData.login || "Отсутствует")
+                    console.log("   - Имя:", profileData.firstName || "Отсутствует")
+                    console.log("   - Фамилия:", profileData.lastName || "Отсутствует")
+                    console.log("   - Email:", profileData.email || "Отсутствует")
+                    console.log("   - Телефон:", profileData.phoneNumber || "Отсутствует")
+                    console.log("   - Сессии:", profileData.sessions ? profileData.sessions.length : 0)
+
+                    if (callback) {
+                        callback({
+                            success: true,
+                            data: profileData,
+                            status: response.status
+                        });
+                    }
+                } else {
+                    console.log("❌ Ошибка загрузки профиля:", response.error)
+                    if (callback) {
+                        callback({
+                            success: false,
+                            error: response.error || "Ошибка загрузки профиля",
+                            status: response.status
+                        });
+                    }
+                }
+            });
+        }
+
+        // Добавьте этот метод для отладки структуры ответа
+        function debugProfileStructure(callback) {
+            sendRequest("GET", "/profile", null, function(response) {
+                console.log("🔧 ДЕБАГ СТРУКТУРЫ ПРОФИЛЯ:")
+                console.log("   Полный ответ:", JSON.stringify(response, null, 2))
+                console.log("   Уровень data:", JSON.stringify(response.data, null, 2))
+
+                if (response.data) {
+                    console.log("   Ключи в data:", Object.keys(response.data))
+                    if (response.data.user) {
+                        console.log("   Ключи в user:", Object.keys(response.data.user))
+                    }
+                }
+
+                if (callback) callback(response)
+            })
+        }
 
     function validateToken(callback) {
         var requestData = {
@@ -481,15 +538,7 @@ QtObject {
     }
 
     function sendRequest(method, endpoint, data, callback) {
-        console.log("🔐 ========== НАЧАЛО ОТПРАВКИ ЗАПРОСА ==========");
-        console.log("🔐 ДЕТАЛИ АУТЕНТИФИКАЦИИ:");
-        console.log("   isAuthenticated:", isAuthenticated);
-        console.log("   authToken:", authToken ? authToken.substring(0, 32) + "..." : "пустой");
-        console.log("   authToken длина:", authToken ? authToken.length : 0);
-        console.log("   baseUrl:", baseUrl);
-
         if (!isAuthenticated) {
-            console.log("❌ API не аутентифицирован для запроса:", endpoint);
             if (callback) callback({
                 success: false,
                 error: "API не аутентифицирован",
@@ -504,13 +553,6 @@ QtObject {
         var normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
         var normalizedEndpoint = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
         var url = normalizedBaseUrl + normalizedEndpoint;
-
-        console.log("🌐 Параметры запроса:");
-        console.log("   Method:", method);
-        console.log("   Endpoint:", endpoint);
-        console.log("   Normalized URL:", url);
-        console.log("   Токен длина:", authToken.length);
-        console.log("   Токен (первые 32 символа):", authToken.substring(0, 32));
 
         xhr.onreadystatechange = function() {
             console.log("📨 Изменение состояния XHR:", xhr.readyState, "для", endpoint);
@@ -529,7 +571,6 @@ QtObject {
                             status: xhr.status
                         });
                     } catch (e) {
-                        console.log("❌ Ошибка парсинга JSON:", error);
                         if (callback) callback({
                             success: false,
                             error: "Ошибка формата ответа",
@@ -537,7 +578,6 @@ QtObject {
                         });
                     }
                 } else if (xhr.status === 401) {
-                    console.log("❌ Ошибка аутентификации 401 для", endpoint);
                     if (callback) callback({
                         success: false,
                         error: "Ошибка доступа (401)",
@@ -546,14 +586,12 @@ QtObject {
                 } else {
                     try {
                         var errorResponse = JSON.parse(xhr.responseText);
-                        console.log("❌ Ошибка сервера для", endpoint + ":", errorResponse.error);
                         if (callback) callback({
                             success: false,
                             error: errorResponse.error || "Ошибка сервера",
                             status: xhr.status
                         });
                     } catch (e) {
-                        console.log("❌ Ошибка парсинга ошибки для", endpoint + ":", e);
                         if (callback) callback({
                             success: false,
                             error: "Сетевая ошибка",
@@ -565,7 +603,6 @@ QtObject {
         };
 
         xhr.ontimeout = function() {
-            console.log("⏰ Таймаут запроса:", endpoint);
             if (callback) callback({
                 success: false,
                 error: "Таймаут",
@@ -574,7 +611,6 @@ QtObject {
         };
 
         xhr.onerror = function() {
-            console.log("❌ Ошибка сети:", endpoint);
             if (callback) callback({
                 success: false,
                 error: "Ошибка сети",

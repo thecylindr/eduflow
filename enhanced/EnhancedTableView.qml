@@ -181,7 +181,7 @@ Item {
 
                             delegate: EnhancedListItem {
                                 // Упрощенная установка ширины без конфликтующих якорей
-                                width: listViewColumn.width
+                                width: listViewColumn.width - 20
                                 itemData: modelData
                                 itemType: enhancedTable.itemType
                                 onEditRequested: function(data) {

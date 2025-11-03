@@ -74,7 +74,7 @@ Item {
             var group = groups[i];
             var currentGroupId = group.groupId || group.group_id;
 
-            if (currentGroupId == groupId) {
+            if (currentGroupId === groupId) {
                 return group.name || "Без названия";
             }
         }
