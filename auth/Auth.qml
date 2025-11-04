@@ -329,7 +329,7 @@ ApplicationWindow {
             hideLoading();
             _isLoading = false;
             if (result.success) {
-                showSuccess(result.message);
+                // УБРАНО: showSuccess(result.message);
 
                 // Сохраняем email перед очисткой формы
                 var registeredEmail = registrationForm.emailField.text;
@@ -392,6 +392,9 @@ ApplicationWindow {
                     if (mainWindowLoader.item) {
                         mainWindowLoader.item.initializeProfile(result.token, authAPI.baseUrl);
                     }
+                } else {
+                    // ДОБАВЛЕНО: Показываем ошибку сразу при неудачном входе
+                    showError(result.message || result.error);
                 }
             });
         } catch (error) {

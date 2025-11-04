@@ -38,8 +38,8 @@ Rectangle {
 
                 delegate: Rectangle {
                     Layout.fillWidth: true
-                    height: 90
-                    radius: 6
+                    height: 120  // Увеличили высоту для дополнительной информации
+                    radius: 8
                     color: modelData.isCurrent ? "#e8f5e8" : "#ffffff"
                     border.color: modelData.isCurrent ? "#4caf50" : "#e9ecef"
                     border.width: 1
@@ -51,7 +51,7 @@ Rectangle {
 
                         ColumnLayout {
                             Layout.fillWidth: true
-                            spacing: 3
+                            spacing: 4
 
                             Text {
                                 text: "📍 " + (modelData.email || "Неизвестно")
@@ -63,13 +63,27 @@ Rectangle {
                             }
 
                             Text {
+                                text: "🌐 IP: " + (modelData.ipAddress || "Неизвестно")
+                                font.pixelSize: 10
+                                color: "#6c757d"
+                            }
+
+                            Text {
+                                text: "📱 Устройство: " + (modelData.deviceName || "Неизвестно")
+                                font.pixelSize: 10
+                                color: "#6c757d"
+                                elide: Text.ElideRight
+                                Layout.fillWidth: true
+                            }
+
+                            Text {
                                 text: "⏰ Создана: " + formatDate(modelData.createdAt)
                                 font.pixelSize: 10
                                 color: "#6c757d"
                             }
 
                             Text {
-                                text: "🕒 Активность: " + (modelData.inactiveMinutes || 0) + " мин. назад"
+                                text: "🕒 Активность: " + formatDate(modelData.lastActivity)
                                 font.pixelSize: 10
                                 color: "#6c757d"
                             }
@@ -84,9 +98,9 @@ Rectangle {
 
                         Rectangle {
                             visible: !modelData.isCurrent
-                            Layout.preferredWidth: 70
-                            Layout.preferredHeight: 26
-                            radius: 5
+                            Layout.preferredWidth: 80
+                            Layout.preferredHeight: 30
+                            radius: 6
                             color: revokeMouseArea.containsMouse ? "#c0392b" : "#e74c3c"
 
                             Text {
@@ -122,7 +136,11 @@ Rectangle {
 
     function formatDate(timestamp) {
         if (!timestamp) return "Неизвестно"
-        var date = new Date(timestamp * 1000)
-        return date.toLocaleDateString() + " " + date.toLocaleTimeString()
+        // Преобразуем строку timestamp в Date объект
+        var date = new Date(timestamp);
+        if (isNaN(date.getTime())) {
+            return "Неизвестно";
+        }
+        return date.toLocaleDateString(Qt.locale(), "dd.MM.yyyy") + " " + date.toLocaleTimeString(Qt.locale(), "hh:mm:ss");
     }
 }

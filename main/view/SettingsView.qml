@@ -16,13 +16,13 @@ Rectangle {
     property string pingTime: "Не проверен"
     property string serverAddress: mainWindow.mainApi.baseUrl || ""
 
-    // User profile properties
-    property string userLogin: userProfile.login || "Не указан"
-    property string userFirstName: userProfile.firstName || "Не указано"
-    property string userLastName: userProfile.lastName || "Не указано"
-    property string userMiddleName: userProfile.middleName || "Не указано"
-    property string userEmail: userProfile.email || "Не указан"
-    property string userPhoneNumber: userProfile.phoneNumber || "Не указан"
+    // User profile properties - ИСПРАВЛЕННЫЕ ИМЕНА
+    property string userLogin: userProfile.login || ""
+    property string userFirstName: userProfile.firstName || ""
+    property string userLastName: userProfile.lastName || ""
+    property string userMiddleName: userProfile.middleName || ""
+    property string userEmail: userProfile.email || ""
+    property string userPhoneNumber: userProfile.phoneNumber || ""
 
     // Edit properties
     property string editFirstName: userFirstName
@@ -36,7 +36,7 @@ Rectangle {
     property string newPassword: ""
     property string confirmPassword: ""
 
-    // About properties - получаем из главного окна
+    // About properties
     property string appVersion: Qt.application.version
     property string organizationName: Qt.application.organization
     property string appName: Qt.application.name
@@ -59,13 +59,28 @@ Rectangle {
 
                 userProfile = response.data
 
-                editFirstName = userProfile.firstName || ""
-                editLastName = userProfile.lastName || ""
-                editMiddleName = userProfile.middleName || ""
-                editEmail = userProfile.email || ""
-                editPhoneNumber = userProfile.phoneNumber || ""
+                // ИСПРАВЛЕННЫЕ ПРИСВАИВАНИЯ - правильные имена полей
+                userLogin = userProfile.login || ""
+                userFirstName = userProfile.firstName || ""
+                userLastName = userProfile.lastName || ""
+                userMiddleName = userProfile.middleName || ""
+                userEmail = userProfile.email || ""
+                userPhoneNumber = userProfile.phoneNumber || ""
+
+                editFirstName = userFirstName
+                editLastName = userLastName
+                editMiddleName = userMiddleName
+                editEmail = userEmail
+                editPhoneNumber = userPhoneNumber
 
                 sessions = userProfile.sessions || []
+
+                console.log("📊 Загруженные данные:")
+                console.log("   Логин:", userLogin)
+                console.log("   ФИО:", userLastName, userFirstName, userMiddleName)
+                console.log("   Email:", userEmail)
+                console.log("   Телефон:", userPhoneNumber)
+                console.log("   Сессий:", sessions.length)
 
             } else {
                 console.log("❌ Ошибка загрузки профиля:", response.error)
@@ -341,7 +356,7 @@ Rectangle {
         color: "#ccffffff"
         visible: isLoading
         z: 3
-        radius: 16  // Добавлено скругление
+        radius: 16
 
         Rectangle {
             width: 120
