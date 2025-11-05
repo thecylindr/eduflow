@@ -81,7 +81,7 @@ Rectangle {
                     }
 
                     // Вращение иконки в зависимости от режима
-                    rotation: textVisible ? 0 : 90
+                    rotation: textVisible ? 0 : -90
                     Behavior on rotation {
                         NumberAnimation { duration: 200 }
                     }
@@ -178,7 +178,7 @@ Rectangle {
 
                         Text {
                             text: modelData.name
-                            color: adaptiveSideBar.currentView === modelData.view ? "white" : "#2c3e50"
+                            color: adaptiveSideBar.currentView === modelData.view ? "#808080" : "#2c3e50"
                             font.pixelSize: 13
                             font.bold: true
                             anchors.verticalCenter: parent.verticalCenter
@@ -195,7 +195,7 @@ Rectangle {
                         width: 4
                         height: parent.height - 16
                         radius: 2
-                        color: adaptiveSideBar.currentView === modelData.view ? "white" : "#2575fc"
+                        color: adaptiveSideBar.currentView === modelData.view ? "#808080" : "#2575fc"
                         visible: adaptiveSideBar.currentView === modelData.view || navMouseArea.containsMouse
                     }
 
