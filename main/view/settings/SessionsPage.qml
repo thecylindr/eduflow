@@ -20,7 +20,7 @@ Rectangle {
 
             Text {
                 text: "Активные сессии"
-                font.pixelSize: 16
+                font.pixelSize: 18
                 font.bold: true
                 color: "#2c3e50"
                 Layout.alignment: Qt.AlignHCenter
@@ -38,85 +38,263 @@ Rectangle {
 
                 delegate: Rectangle {
                     Layout.fillWidth: true
-                    height: 120  // Увеличили высоту для дополнительной информации
-                    radius: 8
+                    height: 140
+                    radius: 12
                     color: modelData.isCurrent ? "#e8f5e8" : "#ffffff"
-                    border.color: modelData.isCurrent ? "#4caf50" : "#e9ecef"
+                    border.color: modelData.isCurrent ? "#4caf50" : "#e0e0e0"
                     border.width: 1
 
-                    RowLayout {
+                    ColumnLayout {
                         anchors.fill: parent
-                        anchors.margins: 12
-                        spacing: 12
+                        anchors.margins: 16
+                        spacing: 8
 
-                        ColumnLayout {
+                        // Заголовок с статусом сессии
+                        RowLayout {
                             Layout.fillWidth: true
-                            spacing: 4
+                            spacing: 8
 
-                            Text {
-                                text: "📍 " + (modelData.email || "Неизвестно")
-                                font.pixelSize: 12
-                                color: "#2c3e50"
-                                font.bold: true
-                                elide: Text.ElideRight
-                                Layout.fillWidth: true
-                            }
-
-                            Text {
-                                text: "🌐 IP: " + (modelData.ipAddress || "Неизвестно")
-                                font.pixelSize: 10
-                                color: "#6c757d"
-                            }
-
-                            Text {
-                                text: "📱 Устройство: " + (modelData.deviceName || "Неизвестно")
-                                font.pixelSize: 10
-                                color: "#6c757d"
-                                elide: Text.ElideRight
-                                Layout.fillWidth: true
-                            }
-
-                            Text {
-                                text: "⏰ Создана: " + formatDate(modelData.createdAt)
-                                font.pixelSize: 10
-                                color: "#6c757d"
-                            }
-
-                            Text {
-                                text: "🕒 Активность: " + formatDate(modelData.lastActivity)
-                                font.pixelSize: 10
-                                color: "#6c757d"
+                            Rectangle {
+                                width: 8
+                                height: 8
+                                radius: 4
+                                color: modelData.isCurrent ? "#4caf50" : "#ff9800"
                             }
 
                             Text {
                                 text: modelData.isCurrent ? "✅ Текущая сессия" : "📱 Другое устройство"
-                                font.pixelSize: 10
+                                font.pixelSize: 14
                                 color: modelData.isCurrent ? "#4caf50" : "#ff9800"
                                 font.bold: true
+                                Layout.fillWidth: true
+                            }
+
+                            Rectangle {
+                                visible: !modelData.isCurrent
+                                Layout.preferredWidth: 100
+                                Layout.preferredHeight: 32
+                                radius: 6
+                                color: revokeMouseArea.containsMouse ? "#c0392b" : "#e74c3c"
+
+                                Row {
+                                    anchors.centerIn: parent
+                                    spacing: 4
+
+                                    Text {
+                                        text: "🗑️"
+                                        font.pixelSize: 12
+                                        color: "white"
+                                    }
+
+                                    Text {
+                                        text: "Отозвать"
+                                        color: "white"
+                                        font.pixelSize: 11
+                                        font.bold: true
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: revokeMouseArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: revokeSession(modelData.token)
+                                }
                             }
                         }
 
-                        Rectangle {
-                            visible: !modelData.isCurrent
-                            Layout.preferredWidth: 80
-                            Layout.preferredHeight: 30
-                            radius: 6
-                            color: revokeMouseArea.containsMouse ? "#c0392b" : "#e74c3c"
+                        // Информация о сессии в две колонки
+                        GridLayout {
+                            Layout.fillWidth: true
+                            columns: 2
+                            columnSpacing: 20
+                            rowSpacing: 6
 
-                            Text {
-                                anchors.centerIn: parent
-                                text: "🗑️ Отозвать"
-                                color: "white"
-                                font.pixelSize: 10
-                                font.bold: true
+                            // Левая колонка
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 2
+
+                                // ОС
+                                RowLayout {
+                                    spacing: 6
+                                    Layout.fillWidth: true
+
+                                    Text {
+                                        text: "💻"
+                                        font.pixelSize: 12
+                                        color: "#6c757d"
+                                        Layout.preferredWidth: 20
+                                    }
+
+                                    Text {
+                                        text: "ОС:"
+                                        font.pixelSize: 11
+                                        color: "#6c757d"
+                                        font.bold: true
+                                        Layout.preferredWidth: 70
+                                    }
+
+                                    Text {
+                                        text: getOSFromUserAgent(modelData.userAgent) || "Неизвестно"
+                                        font.pixelSize: 11
+                                        color: "#2c3e50"
+                                        Layout.fillWidth: true
+                                        elide: Text.ElideRight
+                                    }
+                                }
+
+                                // IP
+                                RowLayout {
+                                    spacing: 6
+                                    Layout.fillWidth: true
+
+                                    Text {
+                                        text: "🌐"
+                                        font.pixelSize: 12
+                                        color: "#6c757d"
+                                        Layout.preferredWidth: 20
+                                    }
+
+                                    Text {
+                                        text: "IP:"
+                                        font.pixelSize: 11
+                                        color: "#6c757d"
+                                        font.bold: true
+                                        Layout.preferredWidth: 70
+                                    }
+
+                                    Text {
+                                        text: modelData.ipAddress || "Неизвестно"
+                                        font.pixelSize: 11
+                                        color: "#2c3e50"
+                                        Layout.fillWidth: true
+                                        elide: Text.ElideRight
+                                    }
+                                }
+
+                                // Возраст
+                                RowLayout {
+                                    spacing: 6
+                                    Layout.fillWidth: true
+
+                                    Text {
+                                        text: "🕒"
+                                        font.pixelSize: 12
+                                        color: "#6c757d"
+                                        Layout.preferredWidth: 20
+                                    }
+
+                                    Text {
+                                        text: "Возраст:"
+                                        font.pixelSize: 11
+                                        color: "#6c757d"
+                                        font.bold: true
+                                        Layout.preferredWidth: 70
+                                    }
+
+                                    Text {
+                                        text: (modelData.ageHours || "0") + " часов"
+                                        font.pixelSize: 11
+                                        color: "#2c3e50"
+                                        Layout.fillWidth: true
+                                        elide: Text.ElideRight
+                                    }
+                                }
                             }
 
-                            MouseArea {
-                                id: revokeMouseArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: revokeSession(modelData.token)
+                            // Правая колонка
+                            ColumnLayout {
+                                Layout.fillWidth: true
+                                spacing: 2
+
+                                // Создана
+                                RowLayout {
+                                    spacing: 6
+                                    Layout.fillWidth: true
+
+                                    Text {
+                                        text: "⏰"
+                                        font.pixelSize: 12
+                                        color: "#6c757d"
+                                        Layout.preferredWidth: 20
+                                    }
+
+                                    Text {
+                                        text: "Создана:"
+                                        font.pixelSize: 11
+                                        color: "#6c757d"
+                                        font.bold: true
+                                        Layout.preferredWidth: 70
+                                    }
+
+                                    Text {
+                                        text: formatDate(modelData.createdAt)
+                                        font.pixelSize: 11
+                                        color: "#2c3e50"
+                                        Layout.fillWidth: true
+                                        elide: Text.ElideRight
+                                    }
+                                }
+
+                                // Активность
+                                RowLayout {
+                                    spacing: 6
+                                    Layout.fillWidth: true
+
+                                    Text {
+                                        text: "📊"
+                                        font.pixelSize: 12
+                                        color: "#6c757d"
+                                        Layout.preferredWidth: 20
+                                    }
+
+                                    Text {
+                                        text: "Активность:"
+                                        font.pixelSize: 11
+                                        color: "#6c757d"
+                                        font.bold: true
+                                        Layout.preferredWidth: 70
+                                    }
+
+                                    Text {
+                                        text: formatDate(modelData.lastActivity)
+                                        font.pixelSize: 11
+                                        color: "#2c3e50"
+                                        Layout.fillWidth: true
+                                        elide: Text.ElideRight
+                                    }
+                                }
+
+                                // Неактивна
+                                RowLayout {
+                                    spacing: 6
+                                    Layout.fillWidth: true
+
+                                    Text {
+                                        text: "⏱️"
+                                        font.pixelSize: 12
+                                        color: "#6c757d"
+                                        Layout.preferredWidth: 20
+                                    }
+
+                                    Text {
+                                        text: "Неактивна:"
+                                        font.pixelSize: 11
+                                        color: "#6c757d"
+                                        font.bold: true
+                                        Layout.preferredWidth: 70
+                                    }
+
+                                    Text {
+                                        text: (modelData.inactiveMinutes || "0") + " мин."
+                                        font.pixelSize: 11
+                                        color: "#2c3e50"
+                                        Layout.fillWidth: true
+                                        elide: Text.ElideRight
+                                    }
+                                }
                             }
                         }
                     }
@@ -124,23 +302,41 @@ Rectangle {
             }
 
             Text {
-                text: "💡 Совет: Регулярно проверяйте активные сессии и отзывайте подозрительные"
+                text: sessions.length === 0 ?
+                    "❌ Активные сессии не найдены" :
+                    "💡 Совет: Регулярно проверяйте активные сессии и отзывайте подозрительные"
                 font.pixelSize: 11
                 color: "#6c757d"
                 font.italic: true
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 10
+                Layout.fillWidth: true
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.WordWrap
             }
         }
     }
 
     function formatDate(timestamp) {
         if (!timestamp) return "Неизвестно"
-        // Преобразуем строку timestamp в Date объект
-        var date = new Date(timestamp);
+        var date = new Date(timestamp * 1000);
         if (isNaN(date.getTime())) {
             return "Неизвестно";
         }
-        return date.toLocaleDateString(Qt.locale(), "dd.MM.yyyy") + " " + date.toLocaleTimeString(Qt.locale(), "hh:mm:ss");
+        return date.toLocaleDateString(Qt.locale(), "dd.MM.yyyy") + " " +
+               date.toLocaleTimeString(Qt.locale(), "hh:mm:ss");
+    }
+
+    function getOSFromUserAgent(userAgent) {
+        if (!userAgent) return "Неизвестно";
+
+        var ua = userAgent.toLowerCase();
+        if (ua.includes("windows")) return "Windows";
+        if (ua.includes("mac os")) return "macOS";
+        if (ua.includes("linux")) return "Linux";
+        if (ua.includes("android")) return "Android";
+        if (ua.includes("ios") || ua.includes("iphone")) return "iOS";
+
+        return "Другая ОС";
     }
 }

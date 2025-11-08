@@ -79,7 +79,6 @@ QtObject {
 
                 if (!response.success) {
                     console.log("❌ Токен невалиден, очищаем...");
-                    clearAuth();
                 }
             });
         }

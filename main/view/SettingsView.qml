@@ -57,15 +57,17 @@ Rectangle {
             if (response.success && response.data) {
                 console.log("✅ Данные профиля загружены")
 
-                userProfile = response.data
+                // ИСПРАВЛЕНИЕ: извлекаем данные из вложенного data
+                var profileData = response.data.data || response.data
+                userProfile = profileData
 
                 // ИСПРАВЛЕННЫЕ ПРИСВАИВАНИЯ - правильные имена полей
-                userLogin = userProfile.login || ""
-                userFirstName = userProfile.firstName || ""
-                userLastName = userProfile.lastName || ""
-                userMiddleName = userProfile.middleName || ""
-                userEmail = userProfile.email || ""
-                userPhoneNumber = userProfile.phoneNumber || ""
+                userLogin = profileData.login || ""
+                userFirstName = profileData.firstName || ""
+                userLastName = profileData.lastName || ""
+                userMiddleName = profileData.middleName || ""
+                userEmail = profileData.email || ""
+                userPhoneNumber = profileData.phoneNumber || ""
 
                 editFirstName = userFirstName
                 editLastName = userLastName
@@ -73,7 +75,8 @@ Rectangle {
                 editEmail = userEmail
                 editPhoneNumber = userPhoneNumber
 
-                sessions = userProfile.sessions || []
+                // ИСПРАВЛЕНИЕ: извлекаем сессии из правильного места
+                sessions = profileData.sessions || []
 
                 console.log("📊 Загруженные данные:")
                 console.log("   Логин:", userLogin)
