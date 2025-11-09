@@ -81,6 +81,8 @@ qt_add_qml_module(EduFlow
                 QML_FILES main/view/settings/PasswordField.qml
                 QML_FILES main/view/settings/SettingsMainPage.qml
                 QML_FILES main/view/settings/AboutPage.qml
+                QML_FILES main/forms/PortfolioFormWindow.qml
+                QML_FILES main/forms/EventFormWindow.qml
 )
 
 qt_add_resources(EduFlow "resources"

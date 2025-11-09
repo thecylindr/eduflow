@@ -6,7 +6,6 @@ Rectangle {
     id: aboutPage
     color: "transparent"
 
-    // Свойства получаются из SettingsView, который получает их из main.cpp
     property string appVersion
     property string appName
     property string organizationName
@@ -15,12 +14,12 @@ Rectangle {
 
     ScrollView {
         anchors.fill: parent
-        anchors.margins: 20
+        anchors.margins: 10
         clip: true
 
         ColumnLayout {
             width: parent.width
-            spacing: 20
+            spacing: 2
 
             Rectangle {
                 Layout.fillWidth: true
@@ -33,7 +32,7 @@ Rectangle {
                 ColumnLayout {
                     anchors.fill: parent
                     anchors.margins: 24
-                    spacing: 20
+                    spacing: 10
 
                     Text {
                         text: "ℹ️ О программе"
@@ -47,7 +46,6 @@ Rectangle {
                         Layout.fillWidth: true
                         spacing: 16
 
-                        // App info section
                         Rectangle {
                             Layout.fillWidth: true
                             height: 80
@@ -95,7 +93,6 @@ Rectangle {
                             }
                         }
 
-                        // Details section
                         ColumnLayout {
                             Layout.fillWidth: true
                             spacing: 12
@@ -236,7 +233,6 @@ Rectangle {
                             }
                         }
 
-                        // Links section
                         Rectangle {
                             Layout.fillWidth: true
                             height: 100
@@ -347,7 +343,7 @@ Rectangle {
 
             Rectangle {
                 Layout.fillWidth: true
-                height: 120
+                Layout.preferredHeight: descriptionText.height + 60
                 radius: 16
                 color: "#e8f4f8"
                 border.color: "#b3e5fc"
@@ -366,6 +362,7 @@ Rectangle {
                     }
 
                     Text {
+                        id: descriptionText
                         text: "Система управления образовательным процессом для учебных заведений. " +
                               "Предоставляет инструменты для управления студентами, преподавателями, " +
                               "группами и учебными материалами."
@@ -373,6 +370,7 @@ Rectangle {
                         color: "#0288d1"
                         lineHeight: 1.4
                         wrapMode: Text.WordWrap
+                        Layout.fillWidth: true
                     }
                 }
             }

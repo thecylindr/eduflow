@@ -12,12 +12,12 @@ Item {
     property bool isLoading: false
 
     function refreshGroups() {
+        console.log("🔄 Загрузка групп...");
         isLoading = true;
         mainWindow.mainApi.getGroups(function(response) {
             isLoading = false;
-            if (response.success) {
-                console.log("📦 Сырые данные групп с сервера:", JSON.stringify(response.data));
-
+            if (response && response.success) {
+                console.log("✅ Данные групп получены:", JSON.stringify(response.data));
                 var groupsData = response.data || [];
                 var processedGroups = [];
 
@@ -25,18 +25,19 @@ Item {
                     var group = groupsData[i];
                     var processedGroup = {
                         groupId: group.groupId || group.group_id,
-                        name: group.name || group.group_name || "Без названия",
-                        studentCount: group.studentCount || group.student_count || 0,
+                        name: group.name || "",
                         teacherId: group.teacherId || group.teacher_id,
-                        teacherName: getTeacherName(group.teacherId || group.teacher_id)
+                        teacherName: getTeacherName(group.teacherId || group.teacher_id),
+                        studentCount: group.studentCount || group.student_count || 0
                     };
                     processedGroups.push(processedGroup);
                 }
 
-                groups = processedGroups;
-                console.log("✅ Группы загружены и обработаны:", groups.length);
+                groupsView.groups = processedGroups;
+                console.log("✅ Группы обработаны:", groupsView.groups.length);
             } else {
-                showMessage("❌ Ошибка загрузки групп: " + response.error, "error");
+                var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
+                showMessage("❌ Ошибка загрузки групп: " + errorMsg, "error");
             }
         });
     }
@@ -44,28 +45,31 @@ Item {
     function refreshTeachers() {
         console.log("👨‍🏫 Загрузка преподавателей для групп...");
         mainWindow.mainApi.getTeachers(function(response) {
-            if (response.success) {
-                teachers = response.data || [];
-                console.log("✅ Преподаватели загружены для групп:", teachers.length);
+            if (response && response.success) {
+                groupsView.teachers = response.data || [];
+                console.log("✅ Преподаватели загружены для групп:", groupsView.teachers.length);
                 refreshGroups();
             } else {
-                showMessage("❌ Ошибка загрузки преподавателей: " + response.error, "error");
+                var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
+                showMessage("❌ Ошибка загрузки преподавателей: " + errorMsg, "error");
             }
         });
     }
 
     function showMessage(text, type) {
-        mainWindow.showMessage(text, type);
+        if (mainWindow && mainWindow.showMessage) {
+            mainWindow.showMessage(text, type);
+        }
     }
 
     function getTeacherName(teacherId) {
-        if (!teacherId) {
-            console.log("❌ teacherId не указан");
-            return "Не назначен";
+        if (!teacherId || teacherId === 0) {
+            return "Не указан";
         }
 
-        for (var i = 0; i < teachers.length; i++) {
-            var teacher = teachers[i];
+        var teachersList = teachers || [];
+        for (var i = 0; i < teachersList.length; i++) {
+            var teacher = teachersList[i];
             var currentTeacherId = teacher.teacherId || teacher.teacher_id;
 
             if (currentTeacherId === teacherId) {
@@ -75,61 +79,92 @@ Item {
                 return [lastName, firstName, middleName].filter(Boolean).join(" ") || "Неизвестный преподаватель";
             }
         }
-
-        return "Не назначен";
+        return "Неизвестный преподаватель";
     }
 
     // CRUD функции для групп
     function addGroup(groupData) {
+        if (!groupData) {
+            showMessage("❌ Данные группы не указаны", "error");
+            return;
+        }
+
         isLoading = true;
         console.log("➕ Добавление группы:", JSON.stringify(groupData));
 
-        mainWindow.mainApi.sendRequest("POST", "/groups", groupData, function(response) {
+        mainWindow.mainApi.addGroup(groupData, function(response) {
             isLoading = false;
-            if (response.success) {
-                showMessage("✅ Группа успешно добавлена", "success");
-                groupFormWindow.close();
+            if (response && response.success) {
+                showMessage("✅ " + ((response.message || response.data && response.data.message) || "Группа успешно добавлена"), "success");
+                if (groupFormWindow.item) {
+                    groupFormWindow.close();
+                }
                 refreshGroups();
             } else {
-                showMessage("❌ Ошибка добавления группы: " + response.error, "error");
+                var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
+                showMessage("❌ Ошибка добавления группы: " + errorMsg, "error");
+                if (groupFormWindow.item) {
+                    groupFormWindow.item.isSaving = false;
+                }
             }
         });
     }
 
     function updateGroup(groupData) {
+        if (!groupData) {
+            showMessage("❌ Данные группы не указаны", "error");
+            return;
+        }
+
+        var groupId = groupData.group_id || groupData.groupId;
+        if (!groupId) {
+            showMessage("❌ ID группы не указан", "error");
+            return;
+        }
+
         isLoading = true;
-        var groupId = groupData.group_id;
         console.log("🔄 Обновление группы ID:", groupId, "Данные:", JSON.stringify(groupData));
 
-        mainWindow.mainApi.sendRequest("PUT", "/groups/" + groupId, groupData, function(response) {
+        mainWindow.mainApi.updateGroup(groupId, groupData, function(response) {
             isLoading = false;
-            if (response.success) {
-                showMessage("✅ Группа успешно обновлена", "success");
-                groupFormWindow.close();
+            if (response && response.success) {
+                showMessage("✅ " + ((response.message || response.data && response.data.message) || "Группа успешно обновлена"), "success");
+                if (groupFormWindow.item) {
+                    groupFormWindow.close();
+                }
                 refreshGroups();
             } else {
-                showMessage("❌ Ошибка обновления группы: " + response.error, "error");
+                var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
+                showMessage("❌ Ошибка обновления группы: " + errorMsg, "error");
+                if (groupFormWindow.item) {
+                    groupFormWindow.item.isSaving = false;
+                }
             }
         });
     }
 
     function deleteGroup(groupId, groupName) {
-        if (confirm("Вы уверены, что хотите удалить группу:\n" + groupName + "?")) {
+        if (!groupId) {
+            showMessage("❌ ID группы не указан", "error");
+            return;
+        }
+
+        if (confirm("Вы уверены, что хотите удалить группу:\n" + (groupName || "Без названия") + "?")) {
             isLoading = true;
-            mainWindow.mainApi.sendRequest("DELETE", "/groups/" + groupId, null, function(response) {
+            mainWindow.mainApi.deleteGroup(groupId, function(response) {
                 isLoading = false;
-                if (response.success) {
-                    showMessage("✅ Группа успешно удалена", "success");
+                if (response && response.success) {
+                    showMessage("✅ " + ((response.message || response.data && response.data.message) || "Группа успешно удалена"), "success");
                     refreshGroups();
                 } else {
-                    showMessage("❌ Ошибка удаления группы: " + response.error, "error");
+                    var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
+                    showMessage("❌ Ошибка удаления группы: " + errorMsg, "error");
                 }
             });
         }
     }
 
     function confirm(message) {
-        // Временная реализация - в реальном приложении нужно использовать диалог
         console.log("Подтверждение:", message);
         return true;
     }
@@ -137,10 +172,6 @@ Item {
     Component.onCompleted: {
         console.log("GroupsView: Component.onCompleted");
         refreshTeachers();
-    }
-
-    onGroupsChanged: {
-        console.log("🔄 GroupsView: groups изменен, длина:", groups.length);
     }
 
     ColumnLayout {
@@ -181,7 +212,7 @@ Item {
                 spacing: 15
 
                 Text {
-                    text: "Всего групп: " + groups.length
+                    text: "Всего групп: " + (groups ? groups.length : 0)
                     color: "white"
                     font.pixelSize: 14
                     font.bold: true
@@ -259,8 +290,11 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: {
-                            console.log("➕ Добавить группу - клик");
-                            groupFormWindow.openForAdd();
+                            if (groupFormWindow.item) {
+                                groupFormWindow.openForAdd();
+                            } else {
+                                groupFormWindow.active = true;
+                            }
                         }
                     }
                 }
@@ -298,18 +332,24 @@ Item {
             id: groupsTable
             Layout.fillWidth: true
             Layout.fillHeight: true
-            sourceModel: groupsView.groups
+            sourceModel: groupsView.groups || []
             itemType: "group"
             searchPlaceholder: "Поиск групп..."
-            sortOptions: ["По названию", "По количеству студентов", "По куратору"]
-            sortRoles: ["name", "studentCount", "teacherName"]
+            sortOptions: ["По названию", "По преподавателю", "По количеству студентов"]
+            sortRoles: ["name", "teacherName", "studentCount"]
 
             onItemEditRequested: function(itemData) {
+                if (!itemData) return;
                 console.log("✏️ GroupsView: редактирование запрошено для", itemData);
-                groupFormWindow.openForEdit(itemData);
+                if (groupFormWindow.item) {
+                    groupFormWindow.openForEdit(itemData);
+                } else {
+                    groupFormWindow.active = true;
+                }
             }
 
             onItemDeleteRequested: function(itemData) {
+                if (!itemData) return;
                 var groupId = itemData.groupId;
                 var groupName = itemData.name || "Без названия";
                 console.log("🗑️ GroupsView: удаление запрошено для", groupName, "ID:", groupId);
@@ -322,54 +362,47 @@ Item {
     Loader {
         id: groupFormWindow
         source: "../forms/GroupFormWindow.qml"
+        active: true
 
         onLoaded: {
             console.log("✅ GroupFormWindow загружен");
 
-            item.saved.connect(function(groupData) {
-                console.log("💾 Сохранение группы:", JSON.stringify(groupData));
+            if (item) {
+                item.saved.connect(function(groupData) {
+                    console.log("💾 Сохранение группы:", JSON.stringify(groupData));
+                    if (!groupData) return;
 
-                if (groupData.group_id && groupData.group_id !== 0) {
-                    updateGroup(groupData);
-                } else {
-                    addGroup(groupData);
-                }
-            });
+                    if (groupData.group_id && groupData.group_id !== 0) {
+                        updateGroup(groupData);
+                    } else {
+                        addGroup(groupData);
+                    }
+                });
 
-            item.cancelled.connect(function() {
-                console.log("❌ Отмена редактирования группы");
-                if (item) {
-                    item.closeWindow();
-                }
-            });
+                item.cancelled.connect(function() {
+                    console.log("❌ Отмена редактирования группы");
+                    if (item) {
+                        item.closeWindow();
+                    }
+                });
+            }
         }
 
         function openForAdd() {
             if (groupFormWindow.item) {
-                groupFormWindow.item.teachers = groupsView.teachers;
+                groupFormWindow.item.teachers = groupsView.teachers || [];
                 groupFormWindow.item.openForAdd();
             } else {
-                console.log("❌ GroupFormWindow не загружен, активируем Loader...");
                 groupFormWindow.active = true;
-                // Ждем загрузки и пробуем снова
-                groupFormWindow.onLoaded = function() {
-                    groupFormWindow.item.teachers = groupsView.teachers;
-                    groupFormWindow.item.openForAdd();
-                };
             }
         }
 
         function openForEdit(groupData) {
             if (groupFormWindow.item) {
-                groupFormWindow.item.teachers = groupsView.teachers;
+                groupFormWindow.item.teachers = groupsView.teachers || [];
                 groupFormWindow.item.openForEdit(groupData);
             } else {
-                console.log("❌ GroupFormWindow не загружен, активируем Loader...");
                 groupFormWindow.active = true;
-                groupFormWindow.onLoaded = function() {
-                    groupFormWindow.item.teachers = groupsView.teachers;
-                    groupFormWindow.item.openForEdit(groupData);
-                };
             }
         }
 

@@ -1,4 +1,3 @@
-// main/forms/StudentFormWindow.qml
 import QtQuick 2.15
 import QtQuick.Window 2.15
 import QtQuick.Controls 2.15
@@ -265,13 +264,6 @@ ApplicationWindow {
                                     Keys.onEnterPressed: navigateToNextField(lastNameField)
                                     Keys.onUpPressed: navigateToPreviousField(lastNameField)
                                     Keys.onDownPressed: navigateToNextField(lastNameField)
-
-                                    background: Rectangle {
-                                        radius: 6
-                                        border.color: lastNameField.activeFocus ? "#3498db" : "#bdc3c7"
-                                        border.width: 1
-                                        color: lastNameField.enabled ? "#ffffff" : "#f8f9fa"
-                                    }
                                 }
 
                                 TextField {
@@ -287,13 +279,6 @@ ApplicationWindow {
                                     Keys.onEnterPressed: navigateToNextField(firstNameField)
                                     Keys.onUpPressed: navigateToPreviousField(firstNameField)
                                     Keys.onDownPressed: navigateToNextField(firstNameField)
-
-                                    background: Rectangle {
-                                        radius: 6
-                                        border.color: firstNameField.activeFocus ? "#3498db" : "#bdc3c7"
-                                        border.width: 1
-                                        color: firstNameField.enabled ? "#ffffff" : "#f8f9fa"
-                                    }
                                 }
 
                                 TextField {
@@ -309,13 +294,6 @@ ApplicationWindow {
                                     Keys.onEnterPressed: navigateToNextField(middleNameField)
                                     Keys.onUpPressed: navigateToPreviousField(middleNameField)
                                     Keys.onDownPressed: navigateToNextField(middleNameField)
-
-                                    background: Rectangle {
-                                        radius: 6
-                                        border.color: middleNameField.activeFocus ? "#3498db" : "#bdc3c7"
-                                        border.width: 1
-                                        color: middleNameField.enabled ? "#ffffff" : "#f8f9fa"
-                                    }
                                 }
                             }
                         }
@@ -347,13 +325,6 @@ ApplicationWindow {
                                 Keys.onEnterPressed: navigateToNextField(emailField)
                                 Keys.onUpPressed: navigateToPreviousField(emailField)
                                 Keys.onDownPressed: navigateToNextField(emailField)
-
-                                background: Rectangle {
-                                    radius: 6
-                                    border.color: emailField.activeFocus ? "#3498db" : "#bdc3c7"
-                                    border.width: 1
-                                    color: emailField.enabled ? "#ffffff" : "#f8f9fa"
-                                }
                             }
 
                             TextField {
@@ -370,13 +341,6 @@ ApplicationWindow {
                                 Keys.onEnterPressed: navigateToNextField(phoneField)
                                 Keys.onUpPressed: navigateToPreviousField(phoneField)
                                 Keys.onDownPressed: navigateToNextField(phoneField)
-
-                                background: Rectangle {
-                                    radius: 6
-                                    border.color: phoneField.activeFocus ? "#3498db" : "#bdc3c7"
-                                    border.width: 1
-                                    color: phoneField.enabled ? "#ffffff" : "#f8f9fa"
-                                }
                             }
                         }
 
@@ -412,13 +376,6 @@ ApplicationWindow {
                                     Keys.onEnterPressed: navigateToNextField(passportSeriesField)
                                     Keys.onUpPressed: navigateToPreviousField(passportSeriesField)
                                     Keys.onDownPressed: navigateToNextField(passportSeriesField)
-
-                                    background: Rectangle {
-                                        radius: 6
-                                        border.color: passportSeriesField.activeFocus ? "#3498db" : "#bdc3c7"
-                                        border.width: 1
-                                        color: passportSeriesField.enabled ? "#ffffff" : "#f8f9fa"
-                                    }
                                 }
 
                                 TextField {
@@ -435,13 +392,6 @@ ApplicationWindow {
                                     Keys.onEnterPressed: navigateToNextField(passportNumberField)
                                     Keys.onUpPressed: navigateToPreviousField(passportNumberField)
                                     Keys.onDownPressed: navigateToNextField(passportNumberField)
-
-                                    background: Rectangle {
-                                        radius: 6
-                                        border.color: passportNumberField.activeFocus ? "#3498db" : "#bdc3c7"
-                                        border.width: 1
-                                        color: passportNumberField.enabled ? "#ffffff" : "#f8f9fa"
-                                    }
                                 }
                             }
                         }
@@ -473,61 +423,6 @@ ApplicationWindow {
                                 Keys.onEnterPressed: navigateToNextField(groupComboBox)
                                 Keys.onUpPressed: navigateToPreviousField(groupComboBox)
                                 Keys.onDownPressed: saveButton.forceActiveFocus()
-
-                                delegate: ItemDelegate {
-                                    width: groupComboBox.width - 20
-                                    height: 34
-                                    contentItem: Text {
-                                        text: modelData.name || "Без названия"
-                                        color: "#2c3e50"
-                                        font: groupComboBox.font
-                                        elide: Text.ElideRight
-                                        verticalAlignment: Text.AlignVCenter
-                                    }
-                                    background: Rectangle {
-                                        color: parent.highlighted ? "#3498db" : "transparent"
-                                    }
-                                    highlighted: groupComboBox.highlightedIndex === index
-                                }
-
-                                contentItem: Text {
-                                    text: groupComboBox.currentIndex >= 0 ?
-                                        (groups[groupComboBox.currentIndex].name || "Без названия") : "Выберите группу"
-                                    color: groupComboBox.currentIndex >= 0 ? "#2c3e50" : "#7f8c8d"
-                                    font: groupComboBox.font
-                                    horizontalAlignment: Text.AlignHCenter
-                                    verticalAlignment: Text.AlignVCenter
-                                    elide: Text.ElideRight
-                                }
-
-                                background: Rectangle {
-                                    radius: 6
-                                    border.color: groupComboBox.activeFocus ? "#3498db" : "#bdc3c7"
-                                    border.width: 1
-                                    color: groupComboBox.enabled ? "#ffffff" : "#f8f9fa"
-                                }
-
-                                popup: Popup {
-                                    y: groupComboBox.height
-                                    width: groupComboBox.width
-                                    implicitHeight: contentItem.implicitHeight
-                                    padding: 1
-
-                                    contentItem: ListView {
-                                        clip: true
-                                        implicitHeight: contentHeight
-                                        model: groupComboBox.popup.visible ? groupComboBox.delegateModel : null
-                                        currentIndex: groupComboBox.highlightedIndex
-
-                                        ScrollIndicator.vertical: ScrollIndicator { }
-                                    }
-
-                                    background: Rectangle {
-                                        radius: 6
-                                        border.color: "#bdc3c7"
-                                        color: "#ffffff"
-                                    }
-                                }
                             }
                         }
                     }
@@ -553,19 +448,6 @@ ApplicationWindow {
                         Keys.onReturnPressed: if (enabled && !isSaving) saveButton.clicked()
                         Keys.onEnterPressed: if (enabled && !isSaving) saveButton.clicked()
                         Keys.onUpPressed: groupComboBox.forceActiveFocus()
-
-                        background: Rectangle {
-                            radius: 8
-                            color: saveButton.enabled ? (saveButton.down ? "#27ae60" : "#2ecc71") : "#bdc3c7"
-                        }
-
-                        contentItem: Text {
-                            text: saveButton.text
-                            color: "#ffffff"
-                            font: saveButton.font
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
 
                         onClicked: {
                             if (lastNameField.text.trim() === "" || firstNameField.text.trim() === "") {
@@ -596,19 +478,6 @@ ApplicationWindow {
                         Keys.onReturnPressed: if (enabled) cancelButton.clicked()
                         Keys.onEnterPressed: if (enabled) cancelButton.clicked()
                         Keys.onUpPressed: saveButton.forceActiveFocus()
-
-                        background: Rectangle {
-                            radius: 8
-                            color: cancelButton.down ? "#e74c3c" : "#ecf0f1"
-                        }
-
-                        contentItem: Text {
-                            text: cancelButton.text
-                            color: cancelButton.down ? "#ffffff" : "#2c3e50"
-                            font: cancelButton.font
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
 
                         onClicked: {
                             cancelled()

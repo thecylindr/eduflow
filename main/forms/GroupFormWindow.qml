@@ -1,4 +1,3 @@
-// main/forms/GroupFormWindow.qml
 import QtQuick 2.15
 import QtQuick.Window 2.15
 import QtQuick.Controls 2.15
@@ -95,7 +94,7 @@ ApplicationWindow {
             group_id: groupId,
             name: nameField.text,
             teacher_id: teacherId,
-            student_count: 0 // Будет вычисляться автоматически на сервере
+            student_count: 0
         }
     }
 
@@ -195,15 +194,19 @@ ApplicationWindow {
             id: whiteForm
             width: 360
             height: 360
-            anchors.centerIn: parent
+            anchors {
+                top: titleBar.bottom
+                topMargin: 30
+                horizontalCenter: parent.horizontalCenter
+            }
             color: "#ffffff"
             opacity: 0.925
             radius: 12
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 16
-                spacing: 12
+                anchors.margins: 20
+                spacing: 16
 
                 // Прокручиваемая область с контентом
                 ScrollView {
@@ -213,162 +216,108 @@ ApplicationWindow {
 
                     Column {
                         width: parent.width
-                        spacing: 16
+                        spacing: 20
 
                         // Название группы
                         Column {
                             width: parent.width
-                            spacing: 6
+                            spacing: 8
 
                             Text {
                                 text: "Название группы:"
                                 color: "#2c3e50"
                                 font.bold: true
-                                font.pixelSize: 13
+                                font.pixelSize: 14
                                 anchors.horizontalCenter: parent.horizontalCenter
                             }
 
                             TextField {
                                 id: nameField
-                                width: 280
-                                height: 36
+                                width: parent.width - 40
+                                height: 40
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                placeholderText: "Название группы*"
+                                placeholderText: "Введите название группы*"
                                 horizontalAlignment: Text.AlignHCenter
                                 enabled: !isSaving
-                                font.pixelSize: 13
+                                font.pixelSize: 14
                                 KeyNavigation.tab: teacherComboBox
                                 Keys.onReturnPressed: navigateToNextField(nameField)
                                 Keys.onEnterPressed: navigateToNextField(nameField)
                                 Keys.onUpPressed: navigateToPreviousField(nameField)
                                 Keys.onDownPressed: navigateToNextField(nameField)
-
-                                background: Rectangle {
-                                    radius: 8
-                                    border.color: nameField.activeFocus ? "#3498db" : "#bdc3c7"
-                                    border.width: 1
-                                    color: nameField.enabled ? "#ffffff" : "#f8f9fa"
-                                }
                             }
                         }
 
                         // Преподаватель (куратор)
                         Column {
                             width: parent.width
-                            spacing: 6
+                            spacing: 8
 
                             Text {
                                 text: "Преподаватель (куратор):"
                                 color: "#2c3e50"
                                 font.bold: true
-                                font.pixelSize: 13
+                                font.pixelSize: 14
                                 anchors.horizontalCenter: parent.horizontalCenter
                             }
 
                             ComboBox {
                                 id: teacherComboBox
-                                width: 280
-                                height: 36
+                                width: parent.width - 40
+                                height: 40
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 enabled: !isSaving
-                                font.pixelSize: 13
+                                font.pixelSize: 14
                                 model: groupFormWindow.teachers
-                                textRole: "display"
+                                textRole: "name"
                                 KeyNavigation.tab: saveButton
                                 Keys.onReturnPressed: navigateToNextField(teacherComboBox)
                                 Keys.onEnterPressed: navigateToNextField(teacherComboBox)
                                 Keys.onUpPressed: navigateToPreviousField(teacherComboBox)
                                 Keys.onDownPressed: saveButton.forceActiveFocus()
-
-                                delegate: ItemDelegate {
-                                    width: teacherComboBox.width - 20
-                                    height: 36
-                                    contentItem: Text {
-                                        text: {
-                                            var teacher = modelData
-                                            var lastName = teacher.lastName || teacher.last_name || ""
-                                            var firstName = teacher.firstName || teacher.first_name || ""
-                                            var middleName = teacher.middleName || teacher.middle_name || ""
-                                            return [lastName, firstName, middleName].filter(Boolean).join(" ") || "Неизвестный преподаватель"
-                                        }
-                                        color: "#2c3e50"
-                                        font: teacherComboBox.font
-                                        elide: Text.ElideRight
-                                        verticalAlignment: Text.AlignVCenter
-                                    }
-                                    background: Rectangle {
-                                        color: parent.highlighted ? "#3498db" : "transparent"
-                                    }
-                                    highlighted: teacherComboBox.highlightedIndex === index
-                                }
-
-                                contentItem: Text {
-                                    text: teacherComboBox.currentIndex >= 0 ?
-                                        teacherComboBox.displayText : "Выберите преподавателя"
-                                    color: teacherComboBox.currentIndex >= 0 ? "#2c3e50" : "#7f8c8d"
-                                    font: teacherComboBox.font
-                                    horizontalAlignment: Text.AlignHCenter
-                                    verticalAlignment: Text.AlignVCenter
-                                    elide: Text.ElideRight
-                                }
-
-                                background: Rectangle {
-                                    radius: 8
-                                    border.color: teacherComboBox.activeFocus ? "#3498db" : "#bdc3c7"
-                                    border.width: 1
-                                    color: teacherComboBox.enabled ? "#ffffff" : "#f8f9fa"
-                                }
-
-                                popup: Popup {
-                                    y: teacherComboBox.height
-                                    width: teacherComboBox.width
-                                    implicitHeight: contentItem.implicitHeight
-                                    padding: 1
-
-                                    contentItem: ListView {
-                                        clip: true
-                                        implicitHeight: contentHeight
-                                        model: teacherComboBox.popup.visible ? teacherComboBox.delegateModel : null
-                                        currentIndex: teacherComboBox.highlightedIndex
-
-                                        ScrollIndicator.vertical: ScrollIndicator { }
-                                    }
-
-                                    background: Rectangle {
-                                        radius: 8
-                                        border.color: "#bdc3c7"
-                                        color: "#ffffff"
-                                    }
-                                }
                             }
                         }
 
                         // Информация
                         Rectangle {
-                            width: 280
-                            height: 60
+                            width: parent.width - 40
+                            height: 70
                             anchors.horizontalCenter: parent.horizontalCenter
-                            color: "#f8f9fa"
-                            radius: 8
-                            border.color: "#e0e0e0"
+                            color: "#e8f4fd"
+                            radius: 10
+                            border.color: "#3498db"
                             border.width: 1
 
-                            Column {
+                            Row {
                                 anchors.centerIn: parent
-                                spacing: 4
+                                spacing: 12
+                                width: parent.width - 24
 
                                 Text {
-                                    text: "💡 Информация"
-                                    color: "#2c3e50"
-                                    font.bold: true
-                                    font.pixelSize: 11
+                                    text: "💡"
+                                    font.pixelSize: 20
+                                    anchors.verticalCenter: parent.verticalCenter
                                 }
 
-                                Text {
-                                    text: "Количество студентов будет автоматически\nвычисляться на основе данных системы"
-                                    color: "#7f8c8d"
-                                    font.pixelSize: 9
-                                    horizontalAlignment: Text.AlignHCenter
+                                Column {
+                                    width: parent.width - 36
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    spacing: 4
+
+                                    Text {
+                                        text: "Информация о группе"
+                                        color: "#2c3e50"
+                                        font.bold: true
+                                        font.pixelSize: 12
+                                    }
+
+                                    Text {
+                                        width: parent.width
+                                        text: "Количество студентов автоматически рассчитывается при добавлении студентов в группу"
+                                        color: "#34495e"
+                                        font.pixelSize: 10
+                                        wrapMode: Text.WordWrap
+                                    }
                                 }
                             }
                         }
@@ -378,32 +327,19 @@ ApplicationWindow {
                 // Кнопки действий
                 RowLayout {
                     Layout.alignment: Qt.AlignHCenter
-                    spacing: 16
+                    spacing: 20
 
                     Button {
                         id: saveButton
                         text: isSaving ? "⏳ Сохранение..." : "💾 Сохранить"
-                        implicitWidth: 120
-                        implicitHeight: 36
+                        implicitWidth: 140
+                        implicitHeight: 40
                         enabled: !isSaving && nameField.text.trim() !== "" && teacherComboBox.currentIndex >= 0
-                        font.pixelSize: 13
+                        font.pixelSize: 14
                         KeyNavigation.tab: cancelButton
                         Keys.onReturnPressed: if (enabled && !isSaving) saveButton.clicked()
                         Keys.onEnterPressed: if (enabled && !isSaving) saveButton.clicked()
                         Keys.onUpPressed: teacherComboBox.forceActiveFocus()
-
-                        background: Rectangle {
-                            radius: 8
-                            color: saveButton.enabled ? (saveButton.down ? "#27ae60" : "#2ecc71") : "#bdc3c7"
-                        }
-
-                        contentItem: Text {
-                            text: saveButton.text
-                            color: "#ffffff"
-                            font: saveButton.font
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
 
                         onClicked: {
                             if (nameField.text.trim() === "") {
@@ -422,27 +358,14 @@ ApplicationWindow {
                     Button {
                         id: cancelButton
                         text: "❌ Отмена"
-                        implicitWidth: 120
-                        implicitHeight: 36
+                        implicitWidth: 140
+                        implicitHeight: 40
                         enabled: !isSaving
-                        font.pixelSize: 13
+                        font.pixelSize: 14
                         KeyNavigation.tab: nameField
                         Keys.onReturnPressed: if (enabled) cancelButton.clicked()
                         Keys.onEnterPressed: if (enabled) cancelButton.clicked()
                         Keys.onUpPressed: saveButton.forceActiveFocus()
-
-                        background: Rectangle {
-                            radius: 8
-                            color: cancelButton.down ? "#e74c3c" : "#ecf0f1"
-                        }
-
-                        contentItem: Text {
-                            text: cancelButton.text
-                            color: cancelButton.down ? "#ffffff" : "#2c3e50"
-                            font: cancelButton.font
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                        }
 
                         onClicked: {
                             cancelled()
@@ -451,17 +374,6 @@ ApplicationWindow {
                     }
                 }
             }
-        }
-    }
-
-    Component.onCompleted: {
-        // Устанавливаем отображение для модели преподавателей
-        for (var i = 0; i < teachers.length; i++) {
-            var teacher = teachers[i]
-            var displayName = (teacher.lastName || teacher.last_name || "") + " " +
-                            (teacher.firstName || teacher.first_name || "") + " " +
-                            (teacher.middleName || teacher.middle_name || "")
-            teachers[i].display = displayName.trim()
         }
     }
 }

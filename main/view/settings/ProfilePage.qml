@@ -6,7 +6,6 @@ Rectangle {
     id: profilePage
     color: "transparent"
 
-    // Делаем свойства публичными для внешнего доступа
     property alias userLogin: profilePage.userLoginInternal
     property alias userFirstName: profilePage.userFirstNameInternal
     property alias userLastName: profilePage.userLastNameInternal
@@ -20,7 +19,6 @@ Rectangle {
     property alias editEmail: profilePage.editEmailInternal
     property alias editPhoneNumber: profilePage.editPhoneNumberInternal
 
-    // Внутренние свойства
     property string userLoginInternal: ""
     property string userFirstNameInternal: ""
     property string userLastNameInternal: ""
@@ -39,12 +37,12 @@ Rectangle {
 
     ScrollView {
         anchors.fill: parent
-        anchors.margins: 20
+        anchors.margins: 10
         clip: true
 
         ColumnLayout {
             width: parent.width
-            spacing: 20
+            spacing: 10
 
             Rectangle {
                 Layout.fillWidth: true
@@ -67,20 +65,30 @@ Rectangle {
                             Layout.preferredWidth: 80
                             Layout.preferredHeight: 80
                             radius: 40
-                            color: "#e3f2fd"
+                            color: "transparent"
+                            border.color: "#3498db"
+                            border.width: 3
 
-                            Text {
+                            Rectangle {
+                                width: 70
+                                height: 70
+                                radius: 35
                                 anchors.centerIn: parent
-                                text: "👤"
-                                font.pixelSize: 32
+                                color: "#e3f2fd"
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "👤"
+                                    font.pixelSize: 32
+                                }
                             }
                         }
 
                         ColumnLayout {
-                            spacing: 4
+                            spacing: 6
 
                             Text {
-                                text: userLoginInternal || "Гость"
+                                text: "@" + userLoginInternal || "???"
                                 font.pixelSize: 20
                                 font.bold: true
                                 color: "#2c3e50"
@@ -93,11 +101,19 @@ Rectangle {
                                 color: "#6c757d"
                             }
 
-                            Text {
-                                text: "👤 Аккаунт пользователя"
-                                font.pixelSize: 12
-                                color: "#3498db"
-                                font.bold: true
+                            Rectangle {
+                                width: 140
+                                height: 24
+                                radius: 12
+                                color: "#e3f2fd"
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "👤 Аккаунт пользователя"
+                                    font.pixelSize: 10
+                                    color: "#3498db"
+                                    font.bold: true
+                                }
                             }
                         }
                     }
@@ -112,10 +128,17 @@ Rectangle {
                             spacing: 8
                             Layout.fillWidth: true
 
-                            Text {
-                                text: "📧"
-                                font.pixelSize: 14
-                                color: "#6c757d"
+                            Rectangle {
+                                width: 30
+                                height: 30
+                                radius: 15
+                                color: "#e3f2fd"
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "📧"
+                                    font.pixelSize: 14
+                                }
                             }
 
                             ColumnLayout {
@@ -143,10 +166,17 @@ Rectangle {
                             spacing: 8
                             Layout.fillWidth: true
 
-                            Text {
-                                text: "📱"
-                                font.pixelSize: 14
-                                color: "#6c757d"
+                            Rectangle {
+                                width: 30
+                                height: 30
+                                radius: 15
+                                color: "#e8f5e8"
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "📱"
+                                    font.pixelSize: 14
+                                }
                             }
 
                             ColumnLayout {
@@ -175,7 +205,7 @@ Rectangle {
 
             Rectangle {
                 Layout.fillWidth: true
-                Layout.minimumHeight: 500
+                height: 600
                 radius: 16
                 color: "#ffffff"
                 border.color: "#e0e0e0"
@@ -209,24 +239,37 @@ Rectangle {
                                 font.bold: true
                             }
 
-                            TextField {
+                            Rectangle {
                                 Layout.fillWidth: true
                                 height: 44
-                                text: profilePage.editLastNameInternal
-                                font.pixelSize: 14
-                                placeholderText: "Введите фамилию"
-                                placeholderTextColor: "#95a5a6"
+                                radius: 8
+                                border.color: lastNameField.activeFocus ? "#3498db" : "#e0e0e0"
+                                border.width: lastNameField.activeFocus ? 2 : 1
+                                color: "#ffffff"
 
-                                background: Rectangle {
-                                    radius: 8
-                                    border.color: parent.activeFocus ? "#3498db" : "#e0e0e0"
-                                    border.width: parent.activeFocus ? 2 : 1
-                                    color: "#ffffff"
+                                TextInput {
+                                    id: lastNameField
+                                    anchors.fill: parent
+                                    anchors.margins: 8
+                                    verticalAlignment: TextInput.AlignVCenter
+                                    text: profilePage.editLastNameInternal
+                                    font.pixelSize: 14
+                                    selectByMouse: true
+
+                                    onTextChanged: {
+                                        profilePage.editLastNameInternal = text
+                                        fieldChanged("lastName", text)
+                                    }
                                 }
 
-                                onTextChanged: {
-                                    profilePage.editLastNameInternal = text
-                                    fieldChanged("lastName", text)
+                                Text {
+                                    anchors.fill: parent
+                                    anchors.margins: 8
+                                    verticalAlignment: Text.AlignVCenter
+                                    text: "Введите фамилию"
+                                    color: "#a0a0a0"
+                                    visible: !lastNameField.text && !lastNameField.activeFocus
+                                    font.pixelSize: 14
                                 }
                             }
                         }
@@ -242,24 +285,37 @@ Rectangle {
                                 font.bold: true
                             }
 
-                            TextField {
+                            Rectangle {
                                 Layout.fillWidth: true
                                 height: 44
-                                text: profilePage.editFirstNameInternal
-                                font.pixelSize: 14
-                                placeholderText: "Введите имя"
-                                placeholderTextColor: "#95a5a6"
+                                radius: 8
+                                border.color: firstNameField.activeFocus ? "#3498db" : "#e0e0e0"
+                                border.width: firstNameField.activeFocus ? 2 : 1
+                                color: "#ffffff"
 
-                                background: Rectangle {
-                                    radius: 8
-                                    border.color: parent.activeFocus ? "#3498db" : "#e0e0e0"
-                                    border.width: parent.activeFocus ? 2 : 1
-                                    color: "#ffffff"
+                                TextInput {
+                                    id: firstNameField
+                                    anchors.fill: parent
+                                    anchors.margins: 8
+                                    verticalAlignment: TextInput.AlignVCenter
+                                    text: profilePage.editFirstNameInternal
+                                    font.pixelSize: 14
+                                    selectByMouse: true
+
+                                    onTextChanged: {
+                                        profilePage.editFirstNameInternal = text
+                                        fieldChanged("firstName", text)
+                                    }
                                 }
 
-                                onTextChanged: {
-                                    profilePage.editFirstNameInternal = text
-                                    fieldChanged("firstName", text)
+                                Text {
+                                    anchors.fill: parent
+                                    anchors.margins: 8
+                                    verticalAlignment: Text.AlignVCenter
+                                    text: "Введите имя"
+                                    color: "#a0a0a0"
+                                    visible: !firstNameField.text && !firstNameField.activeFocus
+                                    font.pixelSize: 14
                                 }
                             }
                         }
@@ -275,24 +331,37 @@ Rectangle {
                                 font.bold: true
                             }
 
-                            TextField {
+                            Rectangle {
                                 Layout.fillWidth: true
                                 height: 44
-                                text: profilePage.editMiddleNameInternal
-                                font.pixelSize: 14
-                                placeholderText: "Введите отчество"
-                                placeholderTextColor: "#95a5a6"
+                                radius: 8
+                                border.color: middleNameField.activeFocus ? "#3498db" : "#e0e0e0"
+                                border.width: middleNameField.activeFocus ? 2 : 1
+                                color: "#ffffff"
 
-                                background: Rectangle {
-                                    radius: 8
-                                    border.color: parent.activeFocus ? "#3498db" : "#e0e0e0"
-                                    border.width: parent.activeFocus ? 2 : 1
-                                    color: "#ffffff"
+                                TextInput {
+                                    id: middleNameField
+                                    anchors.fill: parent
+                                    anchors.margins: 8
+                                    verticalAlignment: TextInput.AlignVCenter
+                                    text: profilePage.editMiddleNameInternal
+                                    font.pixelSize: 14
+                                    selectByMouse: true
+
+                                    onTextChanged: {
+                                        profilePage.editMiddleNameInternal = text
+                                        fieldChanged("middleName", text)
+                                    }
                                 }
 
-                                onTextChanged: {
-                                    profilePage.editMiddleNameInternal = text
-                                    fieldChanged("middleName", text)
+                                Text {
+                                    anchors.fill: parent
+                                    anchors.margins: 8
+                                    verticalAlignment: Text.AlignVCenter
+                                    text: "Введите отчество"
+                                    color: "#a0a0a0"
+                                    visible: !middleNameField.text && !middleNameField.activeFocus
+                                    font.pixelSize: 14
                                 }
                             }
                         }
@@ -308,24 +377,37 @@ Rectangle {
                                 font.bold: true
                             }
 
-                            TextField {
+                            Rectangle {
                                 Layout.fillWidth: true
                                 height: 44
-                                text: profilePage.editEmailInternal
-                                font.pixelSize: 14
-                                placeholderText: "Введите email"
-                                placeholderTextColor: "#95a5a6"
+                                radius: 8
+                                border.color: emailField.activeFocus ? "#3498db" : "#e0e0e0"
+                                border.width: emailField.activeFocus ? 2 : 1
+                                color: "#ffffff"
 
-                                background: Rectangle {
-                                    radius: 8
-                                    border.color: parent.activeFocus ? "#3498db" : "#e0e0e0"
-                                    border.width: parent.activeFocus ? 2 : 1
-                                    color: "#ffffff"
+                                TextInput {
+                                    id: emailField
+                                    anchors.fill: parent
+                                    anchors.margins: 8
+                                    verticalAlignment: TextInput.AlignVCenter
+                                    text: profilePage.editEmailInternal
+                                    font.pixelSize: 14
+                                    selectByMouse: true
+
+                                    onTextChanged: {
+                                        profilePage.editEmailInternal = text
+                                        fieldChanged("email", text)
+                                    }
                                 }
 
-                                onTextChanged: {
-                                    profilePage.editEmailInternal = text
-                                    fieldChanged("email", text)
+                                Text {
+                                    anchors.fill: parent
+                                    anchors.margins: 8
+                                    verticalAlignment: Text.AlignVCenter
+                                    text: "Введите email"
+                                    color: "#a0a0a0"
+                                    visible: !emailField.text && !emailField.activeFocus
+                                    font.pixelSize: 14
                                 }
                             }
                         }
@@ -341,60 +423,78 @@ Rectangle {
                                 font.bold: true
                             }
 
-                            TextField {
+                            Rectangle {
                                 Layout.fillWidth: true
                                 height: 44
-                                text: profilePage.editPhoneNumberInternal
-                                font.pixelSize: 14
-                                placeholderText: "Введите телефон"
-                                placeholderTextColor: "#95a5a6"
+                                radius: 8
+                                border.color: phoneField.activeFocus ? "#3498db" : "#e0e0e0"
+                                border.width: phoneField.activeFocus ? 2 : 1
+                                color: "#ffffff"
 
-                                background: Rectangle {
-                                    radius: 8
-                                    border.color: parent.activeFocus ? "#3498db" : "#e0e0e0"
-                                    border.width: parent.activeFocus ? 2 : 1
-                                    color: "#ffffff"
+                                TextInput {
+                                    id: phoneField
+                                    anchors.fill: parent
+                                    anchors.margins: 8
+                                    verticalAlignment: TextInput.AlignVCenter
+                                    text: profilePage.editPhoneNumberInternal
+                                    font.pixelSize: 14
+                                    selectByMouse: true
+
+                                    onTextChanged: {
+                                        profilePage.editPhoneNumberInternal = text
+                                        fieldChanged("phoneNumber", text)
+                                    }
                                 }
 
-                                onTextChanged: {
-                                    profilePage.editPhoneNumberInternal = text
-                                    fieldChanged("phoneNumber", text)
+                                Text {
+                                    anchors.fill: parent
+                                    anchors.margins: 8
+                                    verticalAlignment: Text.AlignVCenter
+                                    text: "Введите телефон"
+                                    color: "#a0a0a0"
+                                    visible: !phoneField.text && !phoneField.activeFocus
+                                    font.pixelSize: 14
                                 }
                             }
                         }
                     }
 
-                    Rectangle {
-                        Layout.preferredWidth: 200
+                    Item {
+                        Layout.fillWidth: true
                         Layout.preferredHeight: 48
-                        Layout.alignment: Qt.AlignHCenter
-                        radius: 10
-                        color: saveMouseArea.containsMouse ? "#2980b9" : "#3498db"
 
-                        Row {
-                            anchors.centerIn: parent
-                            spacing: 8
+                        Rectangle {
+                            width: 200
+                            height: 48
+                            radius: 10
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            color: saveMouseArea.containsMouse ? "#2980b9" : "#3498db"
 
-                            Text {
-                                text: "💾"
-                                font.pixelSize: 16
-                                color: "white"
+                            Row {
+                                anchors.centerIn: parent
+                                spacing: 8
+
+                                Text {
+                                    text: "💾"
+                                    font.pixelSize: 16
+                                    color: "white"
+                                }
+
+                                Text {
+                                    text: "Сохранить изменения"
+                                    color: "white"
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                }
                             }
 
-                            Text {
-                                text: "Сохранить изменения"
-                                color: "white"
-                                font.pixelSize: 14
-                                font.bold: true
+                            MouseArea {
+                                id: saveMouseArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: saveRequested()
                             }
-                        }
-
-                        MouseArea {
-                            id: saveMouseArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: saveRequested()
                         }
                     }
                 }

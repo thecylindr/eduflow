@@ -14,16 +14,16 @@ Rectangle {
 
     ScrollView {
         anchors.fill: parent
-        anchors.margins: 20
+        anchors.margins: 10
         clip: true
 
         ColumnLayout {
             width: parent.width
-            spacing: 20
+            spacing: 10
 
             Rectangle {
                 Layout.fillWidth: true
-                height: 450
+                height: 550
                 radius: 16
                 color: "#ffffff"
                 border.color: "#e0e0e0"
@@ -57,23 +57,75 @@ Rectangle {
                                 font.bold: true
                             }
 
-                            TextField {
+                            RowLayout {
                                 Layout.fillWidth: true
-                                height: 44
-                                echoMode: TextInput.Password
-                                text: securityPage.currentPassword
-                                font.pixelSize: 14
-                                placeholderText: "Введите текущий пароль"
-                                placeholderTextColor: "#95a5a6"
+                                spacing: 6
 
-                                background: Rectangle {
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    height: 44
                                     radius: 8
-                                    border.color: parent.activeFocus ? "#3498db" : "#e0e0e0"
-                                    border.width: parent.activeFocus ? 2 : 1
+                                    border.color: currentPasswordField.activeFocus ? "#3498db" : "#e0e0e0"
+                                    border.width: currentPasswordField.activeFocus ? 2 : 1
                                     color: "#ffffff"
+
+                                    TextInput {
+                                        id: currentPasswordField
+                                        anchors.fill: parent
+                                        anchors.margins: 8
+                                        verticalAlignment: TextInput.AlignVCenter
+                                        echoMode: showCurrentPasswordButton.checked ? TextInput.Normal : TextInput.Password
+                                        text: securityPage.currentPassword
+                                        font.pixelSize: 14
+                                        selectByMouse: true
+
+                                        onTextChanged: securityPage.currentPassword = text
+                                    }
+
+                                    Text {
+                                        anchors.fill: parent
+                                        anchors.margins: 8
+                                        verticalAlignment: Text.AlignVCenter
+                                        text: "Введите текущий пароль"
+                                        color: "#a0a0a0"
+                                        visible: !currentPasswordField.text && !currentPasswordField.activeFocus
+                                        font.pixelSize: 14
+                                    }
                                 }
 
-                                onTextChanged: securityPage.currentPassword = text
+                                Rectangle {
+                                    id: showCurrentPasswordButton
+                                    width: 36
+                                    height: 36
+                                    radius: 8
+                                    border.color: showCurrentPasswordMouseArea.containsPress ? "#3498db" : "#d0d0d0"
+                                    border.width: 1
+                                    color: showCurrentPasswordButton.checked ? "#3498db" : "transparent"
+
+                                    property bool checked: false
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "👁"
+                                        font.pixelSize: 16
+                                        color: showCurrentPasswordButton.checked ? "white" : "#7f8c8d"
+                                    }
+
+                                    Rectangle {
+                                        visible: !showCurrentPasswordButton.checked
+                                        anchors.centerIn: parent
+                                        width: 20
+                                        height: 2
+                                        rotation: 45
+                                        color: "#7f8c8d"
+                                    }
+
+                                    MouseArea {
+                                        id: showCurrentPasswordMouseArea
+                                        anchors.fill: parent
+                                        onClicked: showCurrentPasswordButton.checked = !showCurrentPasswordButton.checked
+                                    }
+                                }
                             }
                         }
 
@@ -88,23 +140,75 @@ Rectangle {
                                 font.bold: true
                             }
 
-                            TextField {
+                            RowLayout {
                                 Layout.fillWidth: true
-                                height: 44
-                                echoMode: TextInput.Password
-                                text: securityPage.newPassword
-                                font.pixelSize: 14
-                                placeholderText: "Введите новый пароль"
-                                placeholderTextColor: "#95a5a6"
+                                spacing: 6
 
-                                background: Rectangle {
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    height: 44
                                     radius: 8
-                                    border.color: parent.activeFocus ? "#3498db" : "#e0e0e0"
-                                    border.width: parent.activeFocus ? 2 : 1
+                                    border.color: newPasswordField.activeFocus ? "#3498db" : "#e0e0e0"
+                                    border.width: newPasswordField.activeFocus ? 2 : 1
                                     color: "#ffffff"
+
+                                    TextInput {
+                                        id: newPasswordField
+                                        anchors.fill: parent
+                                        anchors.margins: 8
+                                        verticalAlignment: TextInput.AlignVCenter
+                                        echoMode: showNewPasswordButton.checked ? TextInput.Normal : TextInput.Password
+                                        text: securityPage.newPassword
+                                        font.pixelSize: 14
+                                        selectByMouse: true
+
+                                        onTextChanged: securityPage.newPassword = text
+                                    }
+
+                                    Text {
+                                        anchors.fill: parent
+                                        anchors.margins: 8
+                                        verticalAlignment: Text.AlignVCenter
+                                        text: "Введите новый пароль"
+                                        color: "#a0a0a0"
+                                        visible: !newPasswordField.text && !newPasswordField.activeFocus
+                                        font.pixelSize: 14
+                                    }
                                 }
 
-                                onTextChanged: securityPage.newPassword = text
+                                Rectangle {
+                                    id: showNewPasswordButton
+                                    width: 36
+                                    height: 36
+                                    radius: 8
+                                    border.color: showNewPasswordMouseArea.containsPress ? "#3498db" : "#d0d0d0"
+                                    border.width: 1
+                                    color: showNewPasswordButton.checked ? "#3498db" : "transparent"
+
+                                    property bool checked: false
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "👁"
+                                        font.pixelSize: 16
+                                        color: showNewPasswordButton.checked ? "white" : "#7f8c8d"
+                                    }
+
+                                    Rectangle {
+                                        visible: !showNewPasswordButton.checked
+                                        anchors.centerIn: parent
+                                        width: 20
+                                        height: 2
+                                        rotation: 45
+                                        color: "#7f8c8d"
+                                    }
+
+                                    MouseArea {
+                                        id: showNewPasswordMouseArea
+                                        anchors.fill: parent
+                                        onClicked: showNewPasswordButton.checked = !showNewPasswordButton.checked
+                                    }
+                                }
                             }
                         }
 
@@ -119,23 +223,75 @@ Rectangle {
                                 font.bold: true
                             }
 
-                            TextField {
+                            RowLayout {
                                 Layout.fillWidth: true
-                                height: 44
-                                echoMode: TextInput.Password
-                                text: securityPage.confirmPassword
-                                font.pixelSize: 14
-                                placeholderText: "Повторите новый пароль"
-                                placeholderTextColor: "#95a5a6"
+                                spacing: 6
 
-                                background: Rectangle {
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    height: 44
                                     radius: 8
-                                    border.color: parent.activeFocus ? "#3498db" : "#e0e0e0"
-                                    border.width: parent.activeFocus ? 2 : 1
+                                    border.color: confirmPasswordField.activeFocus ? "#3498db" : "#e0e0e0"
+                                    border.width: confirmPasswordField.activeFocus ? 2 : 1
                                     color: "#ffffff"
+
+                                    TextInput {
+                                        id: confirmPasswordField
+                                        anchors.fill: parent
+                                        anchors.margins: 8
+                                        verticalAlignment: TextInput.AlignVCenter
+                                        echoMode: showConfirmPasswordButton.checked ? TextInput.Normal : TextInput.Password
+                                        text: securityPage.confirmPassword
+                                        font.pixelSize: 14
+                                        selectByMouse: true
+
+                                        onTextChanged: securityPage.confirmPassword = text
+                                    }
+
+                                    Text {
+                                        anchors.fill: parent
+                                        anchors.margins: 8
+                                        verticalAlignment: Text.AlignVCenter
+                                        text: "Повторите новый пароль"
+                                        color: "#a0a0a0"
+                                        visible: !confirmPasswordField.text && !confirmPasswordField.activeFocus
+                                        font.pixelSize: 14
+                                    }
                                 }
 
-                                onTextChanged: securityPage.confirmPassword = text
+                                Rectangle {
+                                    id: showConfirmPasswordButton
+                                    width: 36
+                                    height: 36
+                                    radius: 8
+                                    border.color: showConfirmPasswordMouseArea.containsPress ? "#3498db" : "#d0d0d0"
+                                    border.width: 1
+                                    color: showConfirmPasswordButton.checked ? "#3498db" : "transparent"
+
+                                    property bool checked: false
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "👁"
+                                        font.pixelSize: 16
+                                        color: showConfirmPasswordButton.checked ? "white" : "#7f8c8d"
+                                    }
+
+                                    Rectangle {
+                                        visible: !showConfirmPasswordButton.checked
+                                        anchors.centerIn: parent
+                                        width: 20
+                                        height: 2
+                                        rotation: 45
+                                        color: "#7f8c8d"
+                                    }
+
+                                    MouseArea {
+                                        id: showConfirmPasswordMouseArea
+                                        anchors.fill: parent
+                                        onClicked: showConfirmPasswordButton.checked = !showConfirmPasswordButton.checked
+                                    }
+                                }
                             }
                         }
                     }
@@ -192,39 +348,44 @@ Rectangle {
                         }
                     }
 
-                    Rectangle {
-                        Layout.preferredWidth: 200
+                    Item {
+                        Layout.fillWidth: true
                         Layout.preferredHeight: 48
-                        Layout.alignment: Qt.AlignHCenter
-                        radius: 10
-                        color: changeMouseArea.containsMouse ? "#c0392b" : "#e74c3c"
-                        opacity: (securityPage.newPassword.length >= 6 && securityPage.newPassword === securityPage.confirmPassword && securityPage.currentPassword.length > 0) ? 1 : 0.6
 
-                        Row {
-                            anchors.centerIn: parent
-                            spacing: 8
+                        Rectangle {
+                            width: 200
+                            height: 48
+                            radius: 10
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            color: changeMouseArea.containsMouse ? "#c0392b" : "#e74c3c"
+                            opacity: (securityPage.newPassword.length >= 6 && securityPage.newPassword === securityPage.confirmPassword && securityPage.currentPassword.length > 0) ? 1 : 0.6
 
-                            Text {
-                                text: "🔄"
-                                font.pixelSize: 16
-                                color: "white"
+                            Row {
+                                anchors.centerIn: parent
+                                spacing: 8
+
+                                Text {
+                                    text: "🔄"
+                                    font.pixelSize: 16
+                                    color: "white"
+                                }
+
+                                Text {
+                                    text: "Сменить пароль"
+                                    color: "white"
+                                    font.pixelSize: 14
+                                    font.bold: true
+                                }
                             }
 
-                            Text {
-                                text: "Сменить пароль"
-                                color: "white"
-                                font.pixelSize: 14
-                                font.bold: true
+                            MouseArea {
+                                id: changeMouseArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                enabled: securityPage.newPassword.length >= 6 && securityPage.newPassword === securityPage.confirmPassword && securityPage.currentPassword.length > 0
+                                onClicked: changePasswordRequested()
                             }
-                        }
-
-                        MouseArea {
-                            id: changeMouseArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            enabled: securityPage.newPassword.length >= 6 && securityPage.newPassword === securityPage.confirmPassword && securityPage.currentPassword.length > 0
-                            onClicked: changePasswordRequested()
                         }
                     }
                 }

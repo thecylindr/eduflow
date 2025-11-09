@@ -332,6 +332,7 @@ Item {
     Loader {
         id: studentFormWindow
         source: "../forms/StudentFormWindow.qml"
+        active: true
 
         onLoaded: {
             console.log("✅ StudentFormWindow загружен");

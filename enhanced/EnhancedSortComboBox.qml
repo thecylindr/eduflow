@@ -22,19 +22,58 @@ Rectangle {
         anchors.fill: parent
         spacing: 5
 
-        ComboBox {
-            id: sortSelector
+        // Кастомный комбобокс без использования стилизованного ComboBox
+        Rectangle {
+            id: comboBoxRect
             width: parent.width - sortDirectionButton.width - 10
             height: parent.height
-            model: sortComboBox.sortOptions
-            currentIndex: sortComboBox.currentSortIndex
-            background: Rectangle {
-                color: "transparent"
-                border.width: 0
+            radius: 6
+            color: "transparent"
+
+            Text {
+                id: selectedText
+                anchors.left: parent.left
+                anchors.leftMargin: 10
+                anchors.verticalCenter: parent.verticalCenter
+                text: sortComboBox.sortOptions[sortComboBox.currentSortIndex] || ""
+                font.pixelSize: 12
+                color: "#666"
+                elide: Text.ElideRight
+                width: parent.width - 20
             }
-            onCurrentIndexChanged: {
-                sortComboBox.currentSortIndex = currentIndex
-                sortComboBox.sortChanged(currentIndex, sortComboBox.sortAscending)
+
+            // Стрелка вниз
+            Text {
+                anchors.right: parent.right
+                anchors.rightMargin: 8
+                anchors.verticalCenter: parent.verticalCenter
+                text: "▼"
+                font.pixelSize: 10
+                color: "#666"
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                onClicked: {
+                    // Показываем контекстное меню с опциями
+                    optionMenu.popup()
+                }
+            }
+
+            Menu {
+                id: optionMenu
+                y: comboBoxRect.height
+
+                Repeater {
+                    model: sortComboBox.sortOptions
+                    MenuItem {
+                        text: modelData
+                        onTriggered: {
+                            sortComboBox.currentSortIndex = index
+                            sortComboBox.sortChanged(index, sortComboBox.sortAscending)
+                        }
+                    }
+                }
             }
         }
 

@@ -47,7 +47,6 @@ Rectangle {
     property string currentPage: "main"
 
     function loadProfile() {
-        console.log("🔄 Загрузка профиля...")
         isLoading = true
 
         mainWindow.mainApi.getProfile(function(response) {
@@ -75,15 +74,7 @@ Rectangle {
                 editEmail = userEmail
                 editPhoneNumber = userPhoneNumber
 
-                // ИСПРАВЛЕНИЕ: извлекаем сессии из правильного места
                 sessions = profileData.sessions || []
-
-                console.log("📊 Загруженные данные:")
-                console.log("   Логин:", userLogin)
-                console.log("   ФИО:", userLastName, userFirstName, userMiddleName)
-                console.log("   Email:", userEmail)
-                console.log("   Телефон:", userPhoneNumber)
-                console.log("   Сессий:", sessions.length)
 
             } else {
                 console.log("❌ Ошибка загрузки профиля:", response.error)
@@ -176,8 +167,9 @@ Rectangle {
 
     function revokeSession(token) {
         mainWindow.mainApi.revokeSession(token, function(response) {
+            console.log("📨 Ответ отзыва сессии:", JSON.stringify(response))
             if (response.success) {
-                mainWindow.showMessage("✅ Сессия отозвана", "success")
+                mainWindow.showMessage("✅ Сессия успешно отозвана", "success")
                 loadProfile()
             } else {
                 mainWindow.showMessage("❌ Ошибка отзыва сессии: " + (response.error || "Неизвестная ошибка"), "error")
@@ -315,6 +307,8 @@ Rectangle {
             id: securityPage
             visible: currentPage === "security"
             anchors.fill: parent
+
+            // Используем прямые привязки вместо сигналов
             currentPassword: settingsView.currentPassword
             newPassword: settingsView.newPassword
             confirmPassword: settingsView.confirmPassword
@@ -392,7 +386,7 @@ Rectangle {
 
     function getPageTitle() {
         switch(currentPage) {
-            case "main": return "⚙️ Настройки системы"
+            case "main": return "⚙️ Настройки системы @" + settingsView.userLogin
             case "profile": return "👤 Профиль пользователя"
             case "security": return "🔐 Безопасность и пароли"
             case "sessions": return "📱 Активные сессии"

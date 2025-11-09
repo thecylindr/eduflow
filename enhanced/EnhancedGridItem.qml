@@ -75,6 +75,10 @@ Rectangle {
                         return last_name + "\n" + first_name + " " + middle_name;
                     } else if (itemType === "group") {
                         return itemData.name || "Без названия";
+                    } else if (itemType === "event") {
+                        return itemData.eventType || "Без типа";
+                    } else if (itemType === "portfolio") {
+                        return itemData.description || "Без описания";
                     }
                     return "Неизвестный тип";
                 }
@@ -96,6 +100,10 @@ Rectangle {
                         return "Группа: " + (itemData.groupName || itemData.group_name || "Не указана");
                     } else if (itemType === "group") {
                         return "Студентов: " + (itemData.studentCount || 0);
+                    } else if (itemType === "event") {
+                        return "Категория: " + (itemData.eventCategoryName || "Не указана");
+                    } else if (itemType === "portfolio") {
+                        return "Студент: " + (itemData.studentName || "Не указан");
                     }
                     return "";
                 }

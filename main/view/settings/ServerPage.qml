@@ -14,12 +14,12 @@ Rectangle {
 
     ScrollView {
         anchors.fill: parent
-        anchors.margins: 20
+        anchors.margins: 10
         clip: true
 
         ColumnLayout {
             width: parent.width
-            spacing: 20
+            spacing: 10
 
             Rectangle {
                 Layout.fillWidth: true

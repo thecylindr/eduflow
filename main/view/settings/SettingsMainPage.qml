@@ -30,9 +30,9 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 height: 60
-                color: profileMouseArea.containsMouse ? "#f0f8ff" : "#ffffff"
+                color: profileMouseArea.containsMouse ? "#e3f2fd" : "#ffffff"
                 radius: 6
-                border.color: profileMouseArea.containsMouse ? "#2196f3" : "transparent"
+                border.color: profileMouseArea.containsMouse ? "#2196f3" : "#e0e0e0"
                 border.width: 1
 
                 Row {
@@ -44,13 +44,14 @@ Rectangle {
                         width: 36
                         height: 36
                         radius: 6
-                        color: "#e3f2fd"
+                        color: profileMouseArea.containsMouse ? "#2196f3" : "#f8f9fa"
                         anchors.verticalCenter: parent.verticalCenter
 
                         Text {
                             anchors.centerIn: parent
                             text: "👤"
                             font.pixelSize: 14
+                            color: profileMouseArea.containsMouse ? "white" : "#2196f3"
                         }
                     }
 
@@ -63,7 +64,7 @@ Rectangle {
                             text: "Профиль пользователя"
                             font.pixelSize: 13
                             font.bold: true
-                            color: "#2c3e50"
+                            color: profileMouseArea.containsMouse ? "#2196f3" : "#2c3e50"
                             elide: Text.ElideRight
                             width: parent.width
                         }
@@ -71,7 +72,7 @@ Rectangle {
                         Text {
                             text: "Личная информация и контактные данные"
                             font.pixelSize: 11
-                            color: "#6c757d"
+                            color: profileMouseArea.containsMouse ? "#2196f3" : "#6c757d"
                             elide: Text.ElideRight
                             width: parent.width
                         }
@@ -80,7 +81,7 @@ Rectangle {
                     Text {
                         text: "›"
                         font.pixelSize: 16
-                        color: "#6c757d"
+                        color: profileMouseArea.containsMouse ? "#2196f3" : "#6c757d"
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }
@@ -98,9 +99,9 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 height: 60
-                color: securityMouseArea.containsMouse ? "#fffbf0" : "#ffffff"
+                color: securityMouseArea.containsMouse ? "#fff3e0" : "#ffffff"
                 radius: 6
-                border.color: securityMouseArea.containsMouse ? "#ffc107" : "transparent"
+                border.color: securityMouseArea.containsMouse ? "#ff9800" : "#e0e0e0"
                 border.width: 1
 
                 Row {
@@ -112,13 +113,14 @@ Rectangle {
                         width: 36
                         height: 36
                         radius: 6
-                        color: "#fff3cd"
+                        color: securityMouseArea.containsMouse ? "#ff9800" : "#f8f9fa"
                         anchors.verticalCenter: parent.verticalCenter
 
                         Text {
                             anchors.centerIn: parent
                             text: "🔐"
                             font.pixelSize: 14
+                            color: securityMouseArea.containsMouse ? "white" : "#ff9800"
                         }
                     }
 
@@ -131,7 +133,7 @@ Rectangle {
                             text: "Безопасность"
                             font.pixelSize: 13
                             font.bold: true
-                            color: "#2c3e50"
+                            color: securityMouseArea.containsMouse ? "#ff9800" : "#2c3e50"
                             elide: Text.ElideRight
                             width: parent.width
                         }
@@ -139,7 +141,7 @@ Rectangle {
                         Text {
                             text: "Смена пароля и настройки безопасности"
                             font.pixelSize: 11
-                            color: "#6c757d"
+                            color: securityMouseArea.containsMouse ? "#ff9800" : "#6c757d"
                             elide: Text.ElideRight
                             width: parent.width
                         }
@@ -148,7 +150,7 @@ Rectangle {
                     Text {
                         text: "›"
                         font.pixelSize: 16
-                        color: "#6c757d"
+                        color: securityMouseArea.containsMouse ? "#ff9800" : "#6c757d"
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }
@@ -166,9 +168,9 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 height: 60
-                color: sessionsMouseArea.containsMouse ? "#f0fff0" : "#ffffff"
+                color: sessionsMouseArea.containsMouse ? "#e8f5e8" : "#ffffff"
                 radius: 6
-                border.color: sessionsMouseArea.containsMouse ? "#4caf50" : "transparent"
+                border.color: sessionsMouseArea.containsMouse ? "#4caf50" : "#e0e0e0"
                 border.width: 1
 
                 Row {
@@ -180,13 +182,14 @@ Rectangle {
                         width: 36
                         height: 36
                         radius: 6
-                        color: "#e8f5e8"
+                        color: sessionsMouseArea.containsMouse ? "#4caf50" : "#f8f9fa"
                         anchors.verticalCenter: parent.verticalCenter
 
                         Text {
                             anchors.centerIn: parent
                             text: "📱"
                             font.pixelSize: 14
+                            color: sessionsMouseArea.containsMouse ? "white" : "#4caf50"
                         }
                     }
 
@@ -199,7 +202,7 @@ Rectangle {
                             text: "Активные сессии"
                             font.pixelSize: 13
                             font.bold: true
-                            color: "#2c3e50"
+                            color: sessionsMouseArea.containsMouse ? "#4caf50" : "#2c3e50"
                             elide: Text.ElideRight
                             width: parent.width
                         }
@@ -207,7 +210,7 @@ Rectangle {
                         Text {
                             text: "Управление устройствами и сессиями"
                             font.pixelSize: 11
-                            color: "#6c757d"
+                            color: sessionsMouseArea.containsMouse ? "#4caf50" : "#6c757d"
                             elide: Text.ElideRight
                             width: parent.width
                         }
@@ -216,7 +219,7 @@ Rectangle {
                     Text {
                         text: "›"
                         font.pixelSize: 16
-                        color: "#6c757d"
+                        color: sessionsMouseArea.containsMouse ? "#4caf50" : "#6c757d"
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }
@@ -234,9 +237,9 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 height: 60
-                color: serverMouseArea.containsMouse ? "#f0f8ff" : "#ffffff"
+                color: serverMouseArea.containsMouse ? "#f3e5f5" : "#ffffff"
                 radius: 6
-                border.color: serverMouseArea.containsMouse ? "#2196f3" : "transparent"
+                border.color: serverMouseArea.containsMouse ? "#9c27b0" : "#e0e0e0"
                 border.width: 1
 
                 Row {
@@ -248,13 +251,14 @@ Rectangle {
                         width: 36
                         height: 36
                         radius: 6
-                        color: "#e3f2fd"
+                        color: serverMouseArea.containsMouse ? "#9c27b0" : "#f8f9fa"
                         anchors.verticalCenter: parent.verticalCenter
 
                         Text {
                             anchors.centerIn: parent
                             text: "🌐"
                             font.pixelSize: 14
+                            color: serverMouseArea.containsMouse ? "white" : "#9c27b0"
                         }
                     }
 
@@ -267,7 +271,7 @@ Rectangle {
                             text: "Настройки сервера"
                             font.pixelSize: 13
                             font.bold: true
-                            color: "#2c3e50"
+                            color: serverMouseArea.containsMouse ? "#9c27b0" : "#2c3e50"
                             elide: Text.ElideRight
                             width: parent.width
                         }
@@ -275,7 +279,7 @@ Rectangle {
                         Text {
                             text: "Информация о подключении и статус сервера"
                             font.pixelSize: 11
-                            color: "#6c757d"
+                            color: serverMouseArea.containsMouse ? "#9c27b0" : "#6c757d"
                             elide: Text.ElideRight
                             width: parent.width
                         }
@@ -284,7 +288,7 @@ Rectangle {
                     Text {
                         text: "›"
                         font.pixelSize: 16
-                        color: "#6c757d"
+                        color: serverMouseArea.containsMouse ? "#9c27b0" : "#6c757d"
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }
@@ -302,9 +306,9 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 height: 60
-                color: aboutMouseArea.containsMouse ? "#f0f8ff" : "#ffffff"
+                color: aboutMouseArea.containsMouse ? "#e1f5fe" : "#ffffff"
                 radius: 6
-                border.color: aboutMouseArea.containsMouse ? "#2196f3" : "transparent"
+                border.color: aboutMouseArea.containsMouse ? "#03a9f4" : "#e0e0e0"
                 border.width: 1
 
                 Row {
@@ -316,13 +320,14 @@ Rectangle {
                         width: 36
                         height: 36
                         radius: 6
-                        color: "#e8f5e8"
+                        color: aboutMouseArea.containsMouse ? "#03a9f4" : "#f8f9fa"
                         anchors.verticalCenter: parent.verticalCenter
 
                         Text {
                             anchors.centerIn: parent
                             text: "ℹ️"
                             font.pixelSize: 14
+                            color: aboutMouseArea.containsMouse ? "white" : "#03a9f4"
                         }
                     }
 
@@ -335,7 +340,7 @@ Rectangle {
                             text: "О программе"
                             font.pixelSize: 13
                             font.bold: true
-                            color: "#2c3e50"
+                            color: aboutMouseArea.containsMouse ? "#03a9f4" : "#2c3e50"
                             elide: Text.ElideRight
                             width: parent.width
                         }
@@ -343,7 +348,7 @@ Rectangle {
                         Text {
                             text: "Информация о версии и проекте"
                             font.pixelSize: 11
-                            color: "#6c757d"
+                            color: aboutMouseArea.containsMouse ? "#03a9f4" : "#6c757d"
                             elide: Text.ElideRight
                             width: parent.width
                         }
@@ -352,7 +357,7 @@ Rectangle {
                     Text {
                         text: "›"
                         font.pixelSize: 16
-                        color: "#6c757d"
+                        color: aboutMouseArea.containsMouse ? "#03a9f4" : "#6c757d"
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }

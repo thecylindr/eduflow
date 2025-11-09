@@ -2,25 +2,44 @@ import QtQuick 2.15
 import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
-Rectangle {
+Page {
     id: sessionsPage
-    color: "transparent"
+    background: Rectangle {
+        color: "#f8f9fa"
+    }
 
     property var sessions: []
     signal revokeSession(string token)
 
-    ScrollView {
+    // Сортируем сессии: текущая первая
+    property var sortedSessions: {
+        if (!sessions) return [];
+        var current = [];
+        var others = [];
+
+        for (var i = 0; i < sessions.length; i++) {
+            if (sessions[i].isCurrent) {
+                current.push(sessions[i]);
+            } else {
+                others.push(sessions[i]);
+            }
+        }
+        return current.concat(others);
+    }
+
+    ColumnLayout {
         anchors.fill: parent
         anchors.margins: 15
-        clip: true
+        spacing: 10
 
+        // Заголовок
         ColumnLayout {
-            width: parent.width
-            spacing: 15
+            Layout.fillWidth: true
+            spacing: 5
 
             Text {
-                text: "Активные сессии"
-                font.pixelSize: 18
+                text: "💻 Активные сессии"
+                font.pixelSize: 24
                 font.bold: true
                 color: "#2c3e50"
                 Layout.alignment: Qt.AlignHCenter
@@ -28,292 +47,283 @@ Rectangle {
 
             Text {
                 text: "Всего активных сессий: " + sessions.length
-                font.pixelSize: 12
-                color: "#6c757d"
+                font.pixelSize: 14
+                color: "#7f8c8d"
                 Layout.alignment: Qt.AlignHCenter
             }
+        }
 
-            Repeater {
-                model: sessions
+        // Список сессий
+        ScrollView {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            clip: true
 
-                delegate: Rectangle {
-                    Layout.fillWidth: true
-                    height: 140
-                    radius: 12
-                    color: modelData.isCurrent ? "#e8f5e8" : "#ffffff"
-                    border.color: modelData.isCurrent ? "#4caf50" : "#e0e0e0"
-                    border.width: 1
+            Column {
+                id: sessionsColumn
+                width: parent.width
+                spacing: 12
+                anchors.horizontalCenter: parent.horizontalCenter
 
-                    ColumnLayout {
-                        anchors.fill: parent
-                        anchors.margins: 16
-                        spacing: 8
+                Repeater {
+                    model: sessionsPage.sortedSessions
 
-                        // Заголовок с статусом сессии
+                    Rectangle {
+                        id: sessionCard
+                        width: sessionsColumn.width
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        height: 100
+                        radius: 12
+                        color: modelData.isCurrent ? "#e3f2fd" : "#ffffff"
+                        border.color: modelData.isCurrent ? "#2196f3" : "#e0e0e0"
+                        border.width: 2
+
                         RowLayout {
-                            Layout.fillWidth: true
-                            spacing: 8
+                            anchors.fill: parent
+                            anchors.margins: 12
+                            spacing: 12
 
-                            Rectangle {
-                                width: 8
-                                height: 8
-                                radius: 4
-                                color: modelData.isCurrent ? "#4caf50" : "#ff9800"
-                            }
-
-                            Text {
-                                text: modelData.isCurrent ? "✅ Текущая сессия" : "📱 Другое устройство"
-                                font.pixelSize: 14
-                                color: modelData.isCurrent ? "#4caf50" : "#ff9800"
-                                font.bold: true
-                                Layout.fillWidth: true
-                            }
-
-                            Rectangle {
-                                visible: !modelData.isCurrent
+                            // Левая часть - статус и дата
+                            Column {
                                 Layout.preferredWidth: 100
-                                Layout.preferredHeight: 32
-                                radius: 6
-                                color: revokeMouseArea.containsMouse ? "#c0392b" : "#e74c3c"
+                                Layout.alignment: Qt.AlignTop
+                                spacing: 4
 
                                 Row {
-                                    anchors.centerIn: parent
-                                    spacing: 4
-
+                                    spacing: 6
                                     Text {
-                                        text: "🗑️"
-                                        font.pixelSize: 12
-                                        color: "white"
+                                        text: {
+                                            if (modelData.isCurrent) return "🟢";
+                                            var minutes = parseInt(modelData.inactiveMinutes || "0");
+                                            if (minutes <= 5) return "🔵";
+                                            var hours = parseInt(modelData.ageHours || "0");
+                                            if (hours >= 72) return "🔴";
+                                            return "🟡";
+                                        }
+                                        font.pixelSize: 14
                                     }
-
                                     Text {
-                                        text: "Отозвать"
-                                        color: "white"
+                                        text: {
+                                            if (modelData.isCurrent) return "Текущая";
+                                            var minutes = parseInt(modelData.inactiveMinutes || "0");
+                                            if (minutes <= 5) return "Активная";
+                                            var hours = parseInt(modelData.ageHours || "0");
+                                            if (hours >= 72) return "Давно";
+                                            return "Неактивная";
+                                        }
                                         font.pixelSize: 11
                                         font.bold: true
+                                        color: {
+                                            if (modelData.isCurrent) return "#2196f3";
+                                            var minutes = parseInt(modelData.inactiveMinutes || "0");
+                                            if (minutes <= 5) return "#2ecc71";
+                                            var hours = parseInt(modelData.ageHours || "0");
+                                            if (hours >= 72) return "#e74c3c";
+                                            return "#f39c12";
+                                        }
                                     }
                                 }
 
-                                MouseArea {
-                                    id: revokeMouseArea
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: revokeSession(modelData.token)
+                                Text {
+                                    text: formatDate(modelData.createdAt)
+                                    font.pixelSize: 9
+                                    color: "#95a5a6"
+                                    width: parent.width
+                                    elide: Text.ElideRight
                                 }
                             }
-                        }
 
-                        // Информация о сессии в две колонки
-                        GridLayout {
-                            Layout.fillWidth: true
-                            columns: 2
-                            columnSpacing: 20
-                            rowSpacing: 6
-
-                            // Левая колонка
-                            ColumnLayout {
+                            // Центральная часть - информация о сессии
+                            GridLayout {
                                 Layout.fillWidth: true
-                                spacing: 2
+                                Layout.fillHeight: true
+                                columns: 2
+                                columnSpacing: 8
+                                rowSpacing: 4
 
                                 // ОС
-                                RowLayout {
-                                    spacing: 6
+                                Text {
+                                    text: "💻 ОС:"
+                                    font.pixelSize: 11
+                                    color: "#7f8c8d"
+                                    font.bold: true
+                                }
+                                Text {
+                                    text: modelData.userOS && modelData.userOS !== "unknown" ? modelData.userOS : "Неизвестно"
+                                    font.pixelSize: 11
+                                    color: "#2c3e50"
                                     Layout.fillWidth: true
-
-                                    Text {
-                                        text: "💻"
-                                        font.pixelSize: 12
-                                        color: "#6c757d"
-                                        Layout.preferredWidth: 20
-                                    }
-
-                                    Text {
-                                        text: "ОС:"
-                                        font.pixelSize: 11
-                                        color: "#6c757d"
-                                        font.bold: true
-                                        Layout.preferredWidth: 70
-                                    }
-
-                                    Text {
-                                        text: getOSFromUserAgent(modelData.userAgent) || "Неизвестно"
-                                        font.pixelSize: 11
-                                        color: "#2c3e50"
-                                        Layout.fillWidth: true
-                                        elide: Text.ElideRight
-                                    }
+                                    elide: Text.ElideRight
                                 }
 
                                 // IP
-                                RowLayout {
-                                    spacing: 6
+                                Text {
+                                    text: "🌐 IP:"
+                                    font.pixelSize: 11
+                                    color: "#7f8c8d"
+                                    font.bold: true
+                                }
+                                Text {
+                                    text: modelData.ipAddress && modelData.ipAddress !== "unknown" ? modelData.ipAddress : "Неизвестно"
+                                    font.pixelSize: 11
+                                    color: "#2c3e50"
                                     Layout.fillWidth: true
-
-                                    Text {
-                                        text: "🌐"
-                                        font.pixelSize: 12
-                                        color: "#6c757d"
-                                        Layout.preferredWidth: 20
-                                    }
-
-                                    Text {
-                                        text: "IP:"
-                                        font.pixelSize: 11
-                                        color: "#6c757d"
-                                        font.bold: true
-                                        Layout.preferredWidth: 70
-                                    }
-
-                                    Text {
-                                        text: modelData.ipAddress || "Неизвестно"
-                                        font.pixelSize: 11
-                                        color: "#2c3e50"
-                                        Layout.fillWidth: true
-                                        elide: Text.ElideRight
-                                    }
+                                    elide: Text.ElideRight
                                 }
 
-                                // Возраст
-                                RowLayout {
-                                    spacing: 6
-                                    Layout.fillWidth: true
+                                // Время существования
+                                Text {
+                                    text: "🕒 Возраст:"
+                                    font.pixelSize: 11
+                                    color: "#7f8c8d"
+                                    font.bold: true
+                                }
+                                Text {
+                                    text: (modelData.ageHours || "0") + " ч."
+                                    font.pixelSize: 11
+                                    color: "#2c3e50"
+                                }
 
-                                    Text {
-                                        text: "🕒"
-                                        font.pixelSize: 12
-                                        color: "#6c757d"
-                                        Layout.preferredWidth: 20
+                                // Время неактивности
+                                Text {
+                                    text: "⏱️ Активность:"
+                                    font.pixelSize: 11
+                                    color: "#7f8c8d"
+                                    font.bold: true
+                                }
+                                Text {
+                                    text: {
+                                        var minutes = parseInt(modelData.inactiveMinutes || "0");
+                                        var hours = parseInt(modelData.ageHours || "0");
+
+                                        if (minutes <= 5) {
+                                            return "сейчас";
+                                        } else if (minutes < 60) {
+                                            return minutes + " мин. назад";
+                                        } else if (hours > 1) {
+                                            return hours + " ч. назад";
+                                        } else if (hours > 72) {
+                                            return Math.floor(hours / 24) + " д. назад";
+                                        } else {
+                                            return "Давно";
+                                        }
                                     }
+                                    font.pixelSize: 11
+                                    color: {
+                                        var minutes = parseInt(modelData.inactiveMinutes || "0");
+                                        var hours = parseInt(modelData.ageHours || "0");
 
-                                    Text {
-                                        text: "Возраст:"
-                                        font.pixelSize: 11
-                                        color: "#6c757d"
-                                        font.bold: true
-                                        Layout.preferredWidth: 70
+                                        if (minutes <= 5) return "#2ecc71";
+                                        if (hours < 12) return "#2c3e50";
+                                        if (hours < 72) return "#f39c12";
+                                        return "#e74c3c";
                                     }
-
-                                    Text {
-                                        text: (modelData.ageHours || "0") + " часов"
-                                        font.pixelSize: 11
-                                        color: "#2c3e50"
-                                        Layout.fillWidth: true
-                                        elide: Text.ElideRight
+                                    font.bold: {
+                                        var hours = parseInt(modelData.ageHours || "0");
+                                        return hours >= 72;
                                     }
                                 }
                             }
 
-                            // Правая колонка
-                            ColumnLayout {
-                                Layout.fillWidth: true
-                                spacing: 2
+                            // Правая часть - кнопка отзыва
+                            Item {
+                                Layout.preferredWidth: 80
+                                Layout.preferredHeight: 28
+                                Layout.alignment: Qt.AlignCenter
 
-                                // Создана
-                                RowLayout {
-                                    spacing: 6
-                                    Layout.fillWidth: true
-
-                                    Text {
-                                        text: "⏰"
-                                        font.pixelSize: 12
-                                        color: "#6c757d"
-                                        Layout.preferredWidth: 20
-                                    }
+                                // Кнопка "Отозвать" для не текущих сессий
+                                Rectangle {
+                                    visible: !modelData.isCurrent
+                                    anchors.fill: parent
+                                    radius: 6
+                                    color: revokeMouseArea.containsMouse ? "#c0392b" : "#e74c3c"
+                                    border.color: revokeMouseArea.containsMouse ? "#a93226" : "#c0392b"
+                                    border.width: 1
 
                                     Text {
-                                        text: "Создана:"
-                                        font.pixelSize: 11
-                                        color: "#6c757d"
+                                        anchors.centerIn: parent
+                                        text: "Отозвать"
+                                        font.pixelSize: 10
+                                        color: "white"
                                         font.bold: true
-                                        Layout.preferredWidth: 70
                                     }
 
-                                    Text {
-                                        text: formatDate(modelData.createdAt)
-                                        font.pixelSize: 11
-                                        color: "#2c3e50"
-                                        Layout.fillWidth: true
-                                        elide: Text.ElideRight
+                                    MouseArea {
+                                        id: revokeMouseArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            console.log("Отзыв сессии:", modelData.token);
+                                            sessionsPage.revokeSession(modelData.token);
+                                        }
                                     }
                                 }
 
-                                // Активность
-                                RowLayout {
-                                    spacing: 6
-                                    Layout.fillWidth: true
+                                // Заглушка "Текущая" для текущей сессии
+                                Rectangle {
+                                    visible: modelData.isCurrent
+                                    anchors.fill: parent
+                                    radius: 5
+                                    color: "transparent"
+                                    border.color: "#2196f3"
+                                    border.width: 1
 
                                     Text {
-                                        text: "📊"
-                                        font.pixelSize: 12
-                                        color: "#6c757d"
-                                        Layout.preferredWidth: 20
-                                    }
-
-                                    Text {
-                                        text: "Активность:"
-                                        font.pixelSize: 11
-                                        color: "#6c757d"
+                                        text: "Текущая"
+                                        color: "#2196f3"
+                                        font.pixelSize: 10
                                         font.bold: true
-                                        Layout.preferredWidth: 70
-                                    }
-
-                                    Text {
-                                        text: formatDate(modelData.lastActivity)
-                                        font.pixelSize: 11
-                                        color: "#2c3e50"
-                                        Layout.fillWidth: true
-                                        elide: Text.ElideRight
-                                    }
-                                }
-
-                                // Неактивна
-                                RowLayout {
-                                    spacing: 6
-                                    Layout.fillWidth: true
-
-                                    Text {
-                                        text: "⏱️"
-                                        font.pixelSize: 12
-                                        color: "#6c757d"
-                                        Layout.preferredWidth: 20
-                                    }
-
-                                    Text {
-                                        text: "Неактивна:"
-                                        font.pixelSize: 11
-                                        color: "#6c757d"
-                                        font.bold: true
-                                        Layout.preferredWidth: 70
-                                    }
-
-                                    Text {
-                                        text: (modelData.inactiveMinutes || "0") + " мин."
-                                        font.pixelSize: 11
-                                        color: "#2c3e50"
-                                        Layout.fillWidth: true
-                                        elide: Text.ElideRight
+                                        anchors.centerIn: parent
                                     }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            Text {
-                text: sessions.length === 0 ?
-                    "❌ Активные сессии не найдены" :
-                    "💡 Совет: Регулярно проверяйте активные сессии и отзывайте подозрительные"
-                font.pixelSize: 11
-                color: "#6c757d"
-                font.italic: true
-                Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 10
-                Layout.fillWidth: true
-                horizontalAlignment: Text.AlignHCenter
-                wrapMode: Text.WordWrap
+                // Сообщение когда нет сессий
+                Rectangle {
+                    width: sessionsColumn.width
+                    height: 100
+                    radius: 12
+                    color: "#ecf0f1"
+                    border.color: "#bdc3c7"
+                    visible: sessions.length === 0
+
+                    Column {
+                        anchors.centerIn: parent
+                        spacing: 8
+
+                        Text {
+                            text: "📱"
+                            font.pixelSize: 28
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        Text {
+                            text: "Активные сессии не найдены"
+                            font.pixelSize: 14
+                            color: "#7f8c8d"
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                    }
+                }
             }
+        }
+
+        // Подсказка
+        Text {
+            text: sessions.length === 0 ?
+                "" :
+                "💡 Сессии, неактивные более 5 минут, отмечены красным цветом"
+            font.pixelSize: 11
+            color: "#7f8c8d"
+            font.italic: true
+            Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.WordWrap
         }
     }
 
@@ -323,20 +333,7 @@ Rectangle {
         if (isNaN(date.getTime())) {
             return "Неизвестно";
         }
-        return date.toLocaleDateString(Qt.locale(), "dd.MM.yyyy") + " " +
-               date.toLocaleTimeString(Qt.locale(), "hh:mm:ss");
-    }
-
-    function getOSFromUserAgent(userAgent) {
-        if (!userAgent) return "Неизвестно";
-
-        var ua = userAgent.toLowerCase();
-        if (ua.includes("windows")) return "Windows";
-        if (ua.includes("mac os")) return "macOS";
-        if (ua.includes("linux")) return "Linux";
-        if (ua.includes("android")) return "Android";
-        if (ua.includes("ios") || ua.includes("iphone")) return "iOS";
-
-        return "Другая ОС";
+        return date.toLocaleDateString(Qt.locale(), "dd.MM.yy") + " " +
+               date.toLocaleTimeString(Qt.locale(), "HH:mm");
     }
 }

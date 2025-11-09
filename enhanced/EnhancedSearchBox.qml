@@ -35,27 +35,35 @@ Rectangle {
             }
         }
 
-        // Поле ввода с центрированным текстом
-        TextField {
-            id: searchField
+        // Заменяем TextField на TextInput с кастомным оформлением
+        Rectangle {
             width: parent.width - 40 - (clearButton.visible ? 35 : 0)
             height: parent.height
-            placeholderText: searchBox.placeholder
-            font.pixelSize: 14
-            placeholderTextColor: "#999"
+            color: "transparent"
 
-            // Центрирование текста по вертикали
-            topPadding: 0
-            bottomPadding: 0
-            verticalAlignment: TextInput.AlignVCenter
+            TextInput {
+                id: searchField
+                anchors.fill: parent
+                anchors.leftMargin: 5
+                anchors.rightMargin: 5
+                verticalAlignment: TextInput.AlignVCenter
+                font.pixelSize: 14
+                color: "#2c3e50"
 
-            background: Rectangle {
-                color: "transparent"
-                border.width: 0
-            }
-            onTextChanged: {
-                searchBox.searchText = text
-                searchTimer.restart()
+                Text {
+                    id: placeholder
+                    anchors.fill: parent
+                    verticalAlignment: TextInput.AlignVCenter
+                    text: searchBox.placeholder
+                    font: searchField.font
+                    color: "#999"
+                    visible: !searchField.text && !searchField.activeFocus
+                }
+
+                onTextChanged: {
+                    searchBox.searchText = text
+                    searchTimer.restart()
+                }
             }
         }
 

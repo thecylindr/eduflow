@@ -23,20 +23,26 @@ Rectangle {
             color: "#2c3e50"
         }
 
-        TextField {
+        Rectangle {
             Layout.fillWidth: true
             height: 35
-            echoMode: TextInput.Password
-            text: value
-            font.pixelSize: 13
-            placeholderText: "Введите пароль"
-            background: Rectangle {
-                radius: 6
-                border.color: parent.activeFocus ? "#2196f3" : "#ced4da"
-                border.width: 1
-                color: "#ffffff"
+            radius: 6
+            border.color: textField.activeFocus ? "#2196f3" : "#ced4da"
+            border.width: 1
+            color: "#ffffff"
+
+            TextField {
+                id: textField
+                anchors.fill: parent
+                anchors.margins: 2
+                echoMode: TextInput.Password
+                text: value
+                font.pixelSize: 13
+                placeholderText: "Введите пароль"
+                background: null
+
+                onTextChanged: valueChanged(text)
             }
-            onTextChanged: valueChanged(text)
         }
     }
 }

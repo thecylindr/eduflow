@@ -21,88 +21,98 @@ Item {
     property bool sortAscending: true
 
     function updateDisplayedModel() {
-        console.log("Updating displayed model. Source length:", sourceModel.length, "Search:", searchText, "Sort index:", sortIndex, "Ascending:", sortAscending);
+            console.log("Updating displayed model. Source length:", sourceModel.length, "Search:", searchText, "Sort index:", sortIndex, "Ascending:", sortAscending);
 
-        // Фильтрация
-        var filtered = sourceModel.filter(function(item) {
-            if (!searchText) return true;
+            // Фильтрация
+            var filtered = sourceModel.filter(function(item) {
+                if (!searchText) return true;
 
-            var searchLower = searchText.toLowerCase();
-            if (itemType === "teacher") {
-                var teacherName = ((item.lastName || "") + " " + (item.firstName || "") + " " + (item.middleName || "")).toLowerCase();
-                var teacherSpecialization = (item.specialization || "").toLowerCase();
-                var teacherEmail = (item.email || "").toLowerCase();
-                return teacherName.includes(searchLower) || teacherSpecialization.includes(searchLower) || teacherEmail.includes(searchLower);
-            } else if (itemType === "student") {
-                var studentName = ((item.last_name || "") + " " + (item.first_name || "") + " " + (item.middle_name || "")).toLowerCase();
-                var studentEmail = (item.email || "").toLowerCase();
-                var studentPhone = (item.phone_number || "").toLowerCase();
-                var studentGroup = (item.group_id || "").toLowerCase();
-                return studentName.includes(searchLower) || studentEmail.includes(searchLower) || studentPhone.includes(searchLower) || studentGroup.includes(searchLower);
-            } else if (itemType === "group") {
-                var groupName = (item.name || "").toLowerCase();
-                var teacherName = (item.teacherName || "").toLowerCase();
-                return groupName.includes(searchLower) || teacherName.includes(searchLower);
-            }
-            return true;
-        });
-
-        // Сортировка
-        if (sortRoles.length > sortIndex) {
-            var sortRole = sortRoles[sortIndex];
-            console.log("Sorting by role:", sortRole, "for itemType:", itemType);
-
-            filtered.sort(function(a, b) {
-                var aVal, bVal;
-
-                // Обработка разных типов данных
-                if (itemType === "student") {
-                    if (sortRole === "full_name") {
-                        aVal = ((a.last_name || "") + " " + (a.first_name || "") + " " + (a.middle_name || "")).toLowerCase();
-                        bVal = ((b.last_name || "") + " " + (b.first_name || "") + " " + (b.middle_name || "")).toLowerCase();
-                    } else if (sortRole === "group_id") {
-                        aVal = (a.group_id || "").toString().toLowerCase();
-                        bVal = (b.group_id || "").toString().toLowerCase();
-                    } else if (sortRole === "phone_number") {
-                        aVal = (a.phone_number || "").toString().toLowerCase();
-                        bVal = (b.phone_number || "").toString().toLowerCase();
-                    } else if (sortRole === "email") {
-                        aVal = (a.email || "").toString().toLowerCase();
-                        bVal = (b.email || "").toString().toLowerCase();
-                    } else {
-                        aVal = (a[sortRole] || "").toString().toLowerCase();
-                        bVal = (b[sortRole] || "").toString().toLowerCase();
-                    }
+                var searchLower = searchText.toLowerCase();
+                if (itemType === "teacher") {
+                    var teacherName = ((item.lastName || "") + " " + (item.firstName || "") + " " + (item.middleName || "")).toLowerCase();
+                    var teacherSpecialization = (item.specialization || "").toLowerCase();
+                    var teacherEmail = (item.email || "").toLowerCase();
+                    return teacherName.includes(searchLower) || teacherSpecialization.includes(searchLower) || teacherEmail.includes(searchLower);
+                } else if (itemType === "student") {
+                    var studentName = ((item.last_name || item.lastName || "") + " " + (item.first_name || item.firstName || "") + " " + (item.middle_name || item.middleName || "")).toLowerCase();
+                    var studentEmail = (item.email || "").toLowerCase();
+                    var studentPhone = (item.phone_number || item.phoneNumber || "").toLowerCase();
+                    var studentGroup = (item.group_id || item.groupId || "").toString().toLowerCase();
+                    return studentName.includes(searchLower) || studentEmail.includes(searchLower) || studentPhone.includes(searchLower) || studentGroup.includes(searchLower);
+                } else if (itemType === "group") {
+                    var groupName = (item.name || "").toLowerCase();
+                    var teacherName = (item.teacherName || "").toLowerCase();
+                    return groupName.includes(searchLower) || teacherName.includes(searchLower);
+                } else if (itemType === "event") {
+                    var eventCategory = (item.eventCategoryName || "").toLowerCase();
+                    var eventType = (item.eventType || "").toLowerCase();
+                    var eventLocation = (item.location || "").toLowerCase();
+                    var eventStatus = (item.status || "").toLowerCase();
+                    return eventCategory.includes(searchLower) || eventType.includes(searchLower) || eventLocation.includes(searchLower) || eventStatus.includes(searchLower);
+                } else if (itemType === "portfolio") {
+                    var studentName = (item.studentName || "").toLowerCase();
+                    var description = (item.description || "").toLowerCase();
+                    return studentName.includes(searchLower) || description.includes(searchLower);
                 }
-                else if (itemType === "teacher") {
-                    if (sortRole === "full_name") {
-                        aVal = ((a.lastName || "") + " " + (a.firstName || "") + " " + (a.middleName || "")).toLowerCase();
-                        bVal = ((b.lastName || "") + " " + (b.firstName || "") + " " + (b.middleName || "")).toLowerCase();
-                    } else {
-                        aVal = (a[sortRole] || "").toString().toLowerCase();
-                        bVal = (b[sortRole] || "").toString().toLowerCase();
-                    }
-                }
-                else if (itemType === "group") {
-                    aVal = (a[sortRole] || "").toString().toLowerCase();
-                    bVal = (b[sortRole] || "").toString().toLowerCase();
-                }
-                else {
-                    aVal = (a[sortRole] || "").toString().toLowerCase();
-                    bVal = (b[sortRole] || "").toString().toLowerCase();
-                }
-
-                var result = 0;
-                if (aVal < bVal) result = -1;
-                else if (aVal > bVal) result = 1;
-
-                return sortAscending ? result : -result;
+                return true;
             });
-        }
 
-        filteredModel = filtered;
-        console.log("Displayed model length:", filteredModel.length);
-    }
+            // Сортировка
+            if (sortRoles.length > sortIndex) {
+                var sortRole = sortRoles[sortIndex];
+                console.log("Sorting by role:", sortRole, "for itemType:", itemType);
+
+                filtered.sort(function(a, b) {
+                    var aVal, bVal;
+
+                    // Обработка разных типов данных
+                    if (itemType === "student") {
+                        if (sortRole === "full_name") {
+                            aVal = ((a.last_name || a.lastName || "") + " " + (a.first_name || a.firstName || "") + " " + (a.middle_name || a.middleName || "")).toLowerCase();
+                            bVal = ((b.last_name || b.lastName || "") + " " + (b.first_name || b.firstName || "") + " " + (b.middle_name || b.middleName || "")).toLowerCase();
+                        } else if (sortRole === "group_id") {
+                            aVal = (a.group_id || a.groupId || "").toString().toLowerCase();
+                            bVal = (b.group_id || b.groupId || "").toString().toLowerCase();
+                        } else if (sortRole === "phone_number") {
+                            aVal = (a.phone_number || a.phoneNumber || "").toString().toLowerCase();
+                            bVal = (b.phone_number || b.phoneNumber || "").toString().toLowerCase();
+                        } else if (sortRole === "email") {
+                            aVal = (a.email || "").toString().toLowerCase();
+                            bVal = (b.email || "").toString().toLowerCase();
+                        } else {
+                            aVal = (a[sortRole] || "").toString().toLowerCase();
+                            bVal = (b[sortRole] || "").toString().toLowerCase();
+                        }
+                    }
+                    else if (itemType === "teacher") {
+                        if (sortRole === "full_name") {
+                            aVal = ((a.lastName || "") + " " + (a.firstName || "") + " " + (a.middleName || "")).toLowerCase();
+                            bVal = ((b.lastName || "") + " " + (b.firstName || "") + " " + (b.middleName || "")).toLowerCase();
+                        } else {
+                            aVal = (a[sortRole] || "").toString().toLowerCase();
+                            bVal = (b[sortRole] || "").toString().toLowerCase();
+                        }
+                    }
+                    else if (itemType === "group") {
+                        aVal = (a[sortRole] || "").toString().toLowerCase();
+                        bVal = (b[sortRole] || "").toString().toLowerCase();
+                    }
+                    else {
+                        aVal = (a[sortRole] || "").toString().toLowerCase();
+                        bVal = (b[sortRole] || "").toString().toLowerCase();
+                    }
+
+                    var result = 0;
+                    if (aVal < bVal) result = -1;
+                    else if (aVal > bVal) result = 1;
+
+                    return sortAscending ? result : -result;
+                });
+            }
+
+            filteredModel = filtered;
+            console.log("Displayed model length:", filteredModel.length);
+        }
 
     onSourceModelChanged: {
         console.log("Source model changed, length:", sourceModel.length);

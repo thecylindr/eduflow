@@ -21,7 +21,6 @@ QtObject {
 
         // ОСОБАЯ ЛОГИКА ДЛЯ WINDOWS
         if (Qt.platform.os === "windows") {
-            console.log("🖥️ Обнаружена Windows, применяем специальные настройки...");
             if (url && url.length > 0) {
                 baseUrl = url;
             } else {
@@ -30,7 +29,6 @@ QtObject {
                     var serverAddress = settingsManager.serverAddress;
                     if (serverAddress.includes("localhost")) {
                         baseUrl = serverAddress.replace("localhost", "127.0.0.1");
-                        console.log("🔄 Windows: автоматически заменяем localhost на 127.0.0.1");
                     } else {
                         baseUrl = serverAddress;
                     }
@@ -48,12 +46,6 @@ QtObject {
                     (remoteApiBaseUrl + ":" + remotePort);
             }
         }
-
-        console.log("🔧 Инициализация AuthAPI:");
-        console.log("   Платформа:", Qt.platform.os);
-        console.log("   Base URL:", baseUrl);
-        console.log("   Токен длина:", authToken.length);
-        console.log("   Локальный сервер:", settingsManager.useLocalServer);
     }
 
     function testConnection(callback) {
@@ -62,23 +54,19 @@ QtObject {
             testXhr.onreadystatechange = function() {
                 if (testXhr.readyState === XMLHttpRequest.DONE) {
                     var success = testXhr.status === 200 || testXhr.status === 404;
-                    // 404 тоже считается успехом, так как сервер отвечает
-                    console.log("🔗 Тест соединения с", baseUrl, ":", success ? "УСПЕХ" : "НЕУДАЧА");
                     if (callback) callback(success);
                 }
             };
             testXhr.ontimeout = function() {
-                console.log("⏰ Таймаут теста соединения с", baseUrl);
                 if (callback) callback(false);
             };
             testXhr.onerror = function() {
-                console.log("❌ Ошибка теста соединения с", baseUrl);
                 if (callback) callback(false);
             };
             try {
                 var testUrl = baseUrl + "/api/status";
-                console.log("🔍 Тестируем соединение с:", testUrl);
                 testXhr.open("GET", testUrl, true);
+
                 // Кросс-платформенные заголовки
                 testXhr.setRequestHeader("Content-Type", "application/json");
                 testXhr.setRequestHeader("Accept", "application/json");
@@ -95,7 +83,6 @@ QtObject {
 
     function validateToken(callback) {
         if (!authToken || authToken.length === 0) {
-            console.log("🔐 Токен пустой, пропускаем проверку");
             if (callback) callback({
                 success: false,
                 valid: false,
@@ -104,14 +91,11 @@ QtObject {
             return;
         }
 
-        console.log("🔐 Начинаем проверку токена, длина:", authToken.length);
-
         var requestData = {
             token: authToken
         };
 
         sendRequest("POST", "/verify-token", requestData, function(response) {
-            console.log("🔐 Ответ verify-token:", JSON.stringify(response));
 
             var isValid = false;
             if (response.success) {
@@ -127,8 +111,6 @@ QtObject {
                 }
             }
 
-            console.log("🔐 Токен валиден:", isValid);
-
             if (callback) callback({
                 success: response.success,
                 valid: isValid,
@@ -140,12 +122,10 @@ QtObject {
     }
 
     function sendRegistrationRequest(userData, callback) {
-        console.log("👤 Регистрация пользователя:", JSON.stringify(userData));
 
         testConnection(function(success) {
             if (!success && Qt.platform.os === "windows" && baseUrl.includes("localhost")) {
                 var altUrl = baseUrl.replace("localhost", "127.0.0.1");
-                console.log("🔄 Localhost не работает, пробуем:", altUrl);
                 var originalBaseUrl = baseUrl;
                 baseUrl = altUrl;
 
@@ -172,22 +152,15 @@ QtObject {
         if (cleanPassword.startsWith('"') && cleanPassword.endsWith('"')) {
             cleanPassword = cleanPassword.substring(1, cleanPassword.length - 1);
         }
-
-        console.log("🔐 Очищенный логин:", cleanLogin);
-        console.log("🔐 Очищенный пароль:", cleanPassword.substring(0, 5) + "...");
-
         var loginData = {
             login: cleanLogin,
             password: cleanPassword,
             os: Qt.platform.os
         };
 
-        console.log("🔐 Данные для входа:", JSON.stringify(loginData));
-
         testConnection(function(success) {
             if (!success && Qt.platform.os === "windows" && baseUrl.includes("localhost")) {
                 var altUrl = baseUrl.replace("localhost", "127.0.0.1");
-                console.log("🔄 Localhost не работает, пробуем:", altUrl);
                 var originalBaseUrl = baseUrl;
                 baseUrl = altUrl;
 
@@ -207,25 +180,21 @@ QtObject {
         var xhr = new XMLHttpRequest();
 
         if (Qt.platform.os === "windows") {
-            xhr.timeout = 15000;
+            xhr.timeout = 5000;
         } else {
-            xhr.timeout = 10000;
+            xhr.timeout = 3500;
         }
 
         var normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
         var normalizedEndpoint = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
         var url = normalizedBaseUrl + normalizedEndpoint;
 
-        console.log("🌐 Отправка запроса:", method, url);
-
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.DONE) {
-                console.log("📨 Получен ответ:", xhr.status, "для", url);
 
                 if (xhr.status === 200 || xhr.status === 201) {
                     try {
                         var response = JSON.parse(xhr.responseText);
-                        console.log("✅ Успешный ответ от", endpoint);
 
                         if (callback) callback({
                             success: true,
@@ -236,7 +205,7 @@ QtObject {
                             status: xhr.status
                         });
                     } catch (e) {
-                        console.log("❌ Ошибка парсинга JSON:", e);
+                        console.log("Ошибка парсинга JSON:", e);
                         if (callback) callback({
                             success: false,
                             error: "Ошибка формата ответа: " + e.toString(),
@@ -244,9 +213,6 @@ QtObject {
                         });
                     }
                 } else if (xhr.status === 0) {
-                    console.log("❌ Сетевая ошибка - сервер недоступен");
-                    console.log("   Таймаут:", xhr.timeout);
-                    console.log("   Состояние:", xhr.readyState);
                     if (callback) callback({
                         success: false,
                         error: "Сервер недоступен",
@@ -255,14 +221,14 @@ QtObject {
                 } else {
                     try {
                         var errorResponse = JSON.parse(xhr.responseText);
-                        console.log("❌ Ошибка сервера:", errorResponse.error);
+                        console.log("Ошибка сервера:", errorResponse.error);
                         if (callback) callback({
                             success: false,
                             error: errorResponse.error || "Ошибка сервера (" + xhr.status + ")",
                             status: xhr.status
                         });
                     } catch (e) {
-                        console.log("❌ Ошибка парсинга ошибки:", e);
+                        console.log("Ошибка парсинга ошибки:", e);
                         if (callback) callback({
                             success: false,
                             error: "Сетевая ошибка (" + xhr.status + ")",
@@ -274,7 +240,6 @@ QtObject {
         };
 
         xhr.ontimeout = function() {
-            console.log("⏰ Таймаут запроса к", url);
             if (callback) callback({
                 success: false,
                 error: "Таймаут соединения",
@@ -283,7 +248,7 @@ QtObject {
         };
 
         xhr.onerror = function() {
-            console.log("❌ Ошибка сети для", url);
+            console.log("Ошибка сети для", url);
             console.log("   Таймаут:", xhr.timeout);
             console.log("   Состояние:", xhr.readyState);
             if (callback) callback({
@@ -310,7 +275,6 @@ QtObject {
             }
 
             var requestBody = data ? JSON.stringify(data) : "";
-            console.log("📦 Тело запроса:", requestBody.substring(0, 200) + "...");
 
             xhr.send(requestBody);
 
