@@ -40,6 +40,8 @@ Rectangle {
                 if (itemType === "teacher") return "#3498db";
                 if (itemType === "student") return "#2ecc71";
                 if (itemType === "group") return "#e74c3c";
+                if (itemType === "event") return "#f39c12";
+                if (itemType === "portfolio") return "#9b59b6";
                 return "#95a5a6";
             }
             anchors.horizontalCenter: parent.horizontalCenter
@@ -50,6 +52,8 @@ Rectangle {
                     if (itemType === "teacher") return "👨‍🏫";
                     if (itemType === "student") return "👨‍🎓";
                     if (itemType === "group") return "👥";
+                    if (itemType === "event") return "🎯";
+                    if (itemType === "portfolio") return "📁";
                     return "❓";
                 }
                 font.pixelSize: 20
@@ -78,7 +82,14 @@ Rectangle {
                     } else if (itemType === "event") {
                         return itemData.eventType || "Без типа";
                     } else if (itemType === "portfolio") {
-                        return itemData.description || "Без описания";
+                        // ФОРМАТ: Портфолио студента #приказ
+                        var studentName = itemData.studentName || "Неизвестный студент";
+                        var decree = itemData.decree || "";
+                        if (decree) {
+                            return "Портфолио студента\n#" + decree;
+                        } else {
+                            return "Портфолио студента\n" + studentName;
+                        }
                     }
                     return "Неизвестный тип";
                 }
@@ -88,7 +99,7 @@ Rectangle {
                 wrapMode: Text.WordWrap
                 horizontalAlignment: Text.AlignHCenter
                 width: parent.width
-                maximumLineCount: 2
+                maximumLineCount: 3
                 elide: Text.ElideRight
             }
 
@@ -103,7 +114,13 @@ Rectangle {
                     } else if (itemType === "event") {
                         return "Категория: " + (itemData.eventCategoryName || "Не указана");
                     } else if (itemType === "portfolio") {
-                        return "Студент: " + (itemData.studentName || "Не указан");
+                        var studentName = itemData.studentName || "Неизвестный студент";
+                        var date = itemData.date || "";
+                        if (date) {
+                            return studentName + "\n" + date;
+                        } else {
+                            return studentName;
+                        }
                     }
                     return "";
                 }
@@ -111,6 +128,8 @@ Rectangle {
                 color: "#7f8c8d"
                 horizontalAlignment: Text.AlignHCenter
                 width: parent.width
+                wrapMode: Text.WordWrap
+                maximumLineCount: 2
                 elide: Text.ElideRight
             }
         }
@@ -122,7 +141,7 @@ Rectangle {
         anchors.right: parent.right
         anchors.margins: 6
         spacing: 4
-        z: 1000 // Очень высокий z-index
+        z: 1000
 
         Rectangle {
             id: editButton
@@ -193,7 +212,6 @@ Rectangle {
         propagateComposedEvents: true
 
         onClicked: {
-            // Пропускаем клик только если не нажата кнопка
             if (!editMouseArea.containsMouse && !deleteMouseArea.containsMouse) {
                 mouse.accepted = false;
             }

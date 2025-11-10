@@ -43,7 +43,6 @@ Item {
                 eventsView.events = processedEvents;
                 console.log("✅ События обработаны:", eventsView.events.length);
 
-                // Проверяем, что данные правильно установлены
                 if (eventsView.events.length > 0) {
                     console.log("📊 Первое событие:", JSON.stringify(eventsView.events[0]));
                 }
@@ -62,7 +61,10 @@ Item {
                 eventsView.eventCategories = response.data || [];
                 console.log("✅ Категории событий загружены:", eventsView.eventCategories.length);
 
-                // Загружаем события после загрузки категорий
+                if (eventsView.eventCategories.length > 0) {
+                    console.log("📊 Первая категория:", JSON.stringify(eventsView.eventCategories[0]));
+                }
+
                 refreshEvents();
             } else {
                 var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
@@ -85,8 +87,8 @@ Item {
 
         for (var i = 0; i < eventCategories.length; i++) {
             var category = eventCategories[i];
-            if (category && category.event_category_id === categoryId) {
-                return category.name || "Без названия";
+            if (category && (category.event_category_id === categoryId || category.id === categoryId)) {
+                return category.category || category.name || "Без названия";
             }
         }
         return "Неизвестная категория";

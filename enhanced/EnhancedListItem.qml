@@ -11,7 +11,6 @@ Rectangle {
 
     scale: itemMouseArea.containsMouse ? 1.01 : 1.0
 
-    // Упрощенная установка ширины - без конфликтующих якорей
     width: parent ? parent.width - 30 : 90
     anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
 
@@ -45,6 +44,8 @@ Rectangle {
                 if (itemType === "teacher") return "#3498db";
                 if (itemType === "student") return "#2ecc71";
                 if (itemType === "group") return "#e74c3c";
+                if (itemType === "event") return "#f39c12";
+                if (itemType === "portfolio") return "#9b59b6";
                 return "#95a5a6";
             }
 
@@ -54,6 +55,8 @@ Rectangle {
                     if (itemType === "teacher") return "👨‍🏫";
                     if (itemType === "student") return "👨‍🎓";
                     if (itemType === "group") return "👥";
+                    if (itemType === "event") return "🎯";
+                    if (itemType === "portfolio") return "📁";
                     return "❓";
                 }
                 font.pixelSize: 16
@@ -76,6 +79,17 @@ Rectangle {
                         return last_name + " " + first_name + " " + middle_name;
                     } else if (itemType === "group") {
                         return itemData.name || "Без названия";
+                    } else if (itemType === "event") {
+                        return itemData.eventType || "Без типа";
+                    } else if (itemType === "portfolio") {
+                        // ФОРМАТ: Портфолио студента #приказ
+                        var studentName = itemData.studentName || "Неизвестный студент";
+                        var decree = itemData.decree || "";
+                        if (decree) {
+                            return "Портфолио студента #" + decree;
+                        } else {
+                            return "Портфолио студента " + studentName;
+                        }
                     }
                     return "Неизвестный тип";
                 }
@@ -94,6 +108,16 @@ Rectangle {
                         return "Группа: " + (itemData.groupName || itemData.group_name || "Не указана");
                     } else if (itemType === "group") {
                         return "Студентов: " + (itemData.studentCount || 0) + " · " + (itemData.teacherName || "Без куратора");
+                    } else if (itemType === "event") {
+                        return "Категория: " + (itemData.eventCategoryName || "Не указана") + " · " + (itemData.location || "");
+                    } else if (itemType === "portfolio") {
+                        var studentName = itemData.studentName || "Неизвестный студент";
+                        var date = itemData.date || "";
+                        if (date) {
+                            return studentName + " · " + date;
+                        } else {
+                            return studentName;
+                        }
                     }
                     return "";
                 }
@@ -105,13 +129,13 @@ Rectangle {
         }
     }
 
-    // Кнопки действий - ВСЕГДА на переднем плане
+    // Кнопки действий
     Row {
         anchors.right: parent.right
         anchors.rightMargin: 12
         anchors.verticalCenter: parent.verticalCenter
         spacing: 8
-        z: 1000 // Очень высокий z-index чтобы быть поверх всего
+        z: 1000
 
         Rectangle {
             id: editButton
@@ -182,7 +206,6 @@ Rectangle {
         propagateComposedEvents: true
 
         onClicked: {
-            // Пропускаем клик только если не нажата кнопка
             if (!editMouseArea.containsMouse && !deleteMouseArea.containsMouse) {
                 mouse.accepted = false;
             }

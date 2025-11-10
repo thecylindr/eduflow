@@ -17,20 +17,34 @@ Item {
             isLoading = false;
             if (response && response.success) {
                 console.log("✅ Данные портфолио получены:", JSON.stringify(response.data));
-                var portfoliosData = response.data || [];
+
+                var responseData = response.data;
+                var portfoliosData = [];
+
+                if (responseData && responseData.data && Array.isArray(responseData.data)) {
+                    portfoliosData = responseData.data;
+                } else if (responseData && Array.isArray(responseData)) {
+                    portfoliosData = responseData;
+                } else if (responseData && responseData.success && Array.isArray(responseData.data)) {
+                    portfoliosData = responseData.data;
+                }
+
+                console.log("📊 Извлечено портфолио:", portfoliosData.length);
                 var processedPortfolios = [];
 
                 for (var i = 0; i < portfoliosData.length; i++) {
                     var portfolio = portfoliosData[i];
+                    var studentName = getStudentName(portfolio.studentCode || portfolio.student_code);
+
                     var processedPortfolio = {
                         portfolioId: portfolio.portfolioId || portfolio.portfolio_id,
                         studentCode: portfolio.studentCode || portfolio.student_code,
-                        studentName: getStudentName(portfolio.studentCode || portfolio.student_code),
-                        eventId: portfolio.eventId || portfolio.event_id,
-                        eventName: getEventName(portfolio.eventId || portfolio.event_id),
+                        studentName: studentName,
                         date: portfolio.date || "",
-                        description: portfolio.description || "",
-                        filePath: portfolio.filePath || portfolio.file_path || ""
+                        decree: portfolio.decree || "",
+                        // УБИРАЕМ description, так как теперь формируем его в компонентах отображения
+                        eventId: portfolio.eventId || portfolio.event_id,
+                        eventName: getEventName(portfolio.eventId || portfolio.event_id)
                     };
                     processedPortfolios.push(processedPortfolio);
                 }
@@ -368,9 +382,9 @@ Item {
             Layout.fillHeight: true
             sourceModel: portfolioView.portfolios || []
             itemType: "portfolio"
-            searchPlaceholder: "Поиск портфолио..."
-            sortOptions: ["По студенту", "По дате", "По описанию"]
-            sortRoles: ["studentName", "date", "description"]
+            searchPlaceholder: "Поиск по студенту или приказу..."
+            sortOptions: ["По студенту", "По дате", "По приказу"]
+            sortRoles: ["studentName", "date", "decree"]
 
             onItemEditRequested: function(itemData) {
                 if (!itemData) return;

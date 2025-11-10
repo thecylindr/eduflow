@@ -7,7 +7,7 @@ import "../../common" as Common
 ApplicationWindow {
     id: portfolioFormWindow
     width: 450
-    height: 550
+    height: 450
     flags: Qt.Dialog | Qt.FramelessWindowHint
     modality: Qt.ApplicationModal
     color: "transparent"
@@ -17,15 +17,13 @@ ApplicationWindow {
     property bool isEditMode: false
     property bool isSaving: false
     property var students: []
-    property var events: []
 
     signal saved(var portfolioData)
     signal cancelled()
     signal saveCompleted(bool success, string message)
 
-    // Обновляем порядок навигации
     property var fieldNavigation: [
-        studentComboBox, eventComboBox, dateField, descriptionField
+        studentComboBox, dateField, decreeField
     ]
 
     function openForAdd() {
@@ -58,19 +56,19 @@ ApplicationWindow {
 
     function clearForm() {
         studentComboBox.currentIndex = -1
-        eventComboBox.currentIndex = -1
         dateField.text = ""
-        descriptionField.text = ""
+        decreeField.text = ""
     }
 
     function fillForm(portfolioData) {
-        // Заполняем студента
+        // Заполняем студента - ПРЕОБРАЗУЕМ В ЧИСЛО
         var studentCode = portfolioData.studentCode || portfolioData.student_code
         if (studentCode) {
+            var numericStudentCode = parseInt(studentCode)
             for (var i = 0; i < students.length; i++) {
                 var student = students[i]
-                var currentStudentCode = student.studentCode || student.student_code
-                if (currentStudentCode === studentCode) {
+                var currentStudentCode = parseInt(student.studentCode || student.student_code || 0)
+                if (currentStudentCode === numericStudentCode) {
                     studentComboBox.currentIndex = i
                     break
                 }
@@ -79,51 +77,87 @@ ApplicationWindow {
             studentComboBox.currentIndex = -1
         }
 
-        // Заполняем событие
-        var eventId = portfolioData.eventId || portfolioData.event_id
-        if (eventId) {
-            for (var j = 0; j < events.length; j++) {
-                var eventItem = events[j]
-                var currentEventId = eventItem.eventId || eventItem.event_id
-                if (currentEventId === eventId) {
-                    eventComboBox.currentIndex = j
-                    break
-                }
+        // Преобразуем дату из ГГГГ-ММ-ДД в ДД.ММ.ГГГГ
+        var serverDate = portfolioData.date || ""
+        if (serverDate) {
+            var parts = serverDate.split('-')
+            if (parts.length === 3) {
+                dateField.text = parts[2] + "." + parts[1] + "." + parts[0]
+            } else {
+                dateField.text = serverDate
             }
         } else {
-            eventComboBox.currentIndex = -1
+            dateField.text = ""
         }
 
-        dateField.text = portfolioData.date || ""
-        descriptionField.text = portfolioData.description || ""
+        decreeField.text = portfolioData.decree || ""
     }
 
     function getPortfolioData() {
-        var portfolioId = 0
+        var portfolioId = 0;
         if (isEditMode && currentPortfolio) {
-            portfolioId = currentPortfolio.portfolioId || currentPortfolio.portfolio_id || 0
+            portfolioId = currentPortfolio.portfolioId || currentPortfolio.portfolio_id || 0;
         }
 
         var selectedStudent = studentComboBox.currentIndex >= 0 ?
-            students[studentComboBox.currentIndex] : null
+            students[studentComboBox.currentIndex] : null;
+
+        // ИСПРАВЛЕНИЕ: Убеждаемся, что student_code передается как число
         var studentCode = selectedStudent ?
-            (selectedStudent.studentCode || selectedStudent.student_code) : ""
+            parseInt(selectedStudent.studentCode || selectedStudent.student_code || 0) : 0;
 
-        var selectedEvent = eventComboBox.currentIndex >= 0 ?
-            events[eventComboBox.currentIndex] : null
-        var eventId = selectedEvent ?
-            (selectedEvent.eventId || selectedEvent.event_id) : 0
-
-        return {
-            portfolio_id: portfolioId,
-            student_code: studentCode,
-            event_id: eventId,
-            date: dateField.text,
-            description: descriptionField.text,
-            passport_series: "", // Обязательные поля для сервера
-            passport_number: "", // Обязательные поля для сервера
-            file_path: "" // Обязательные поля для сервера
+        // Преобразуем дату из ДД.ММ.ГГГГ в ГГГГ-ММ-ДД для сервера
+        var dateText = dateField.text;
+        var formattedDate = dateText;
+        if (dateText) {
+            var parts = dateText.split('.');
+            if (parts.length === 3) {
+                formattedDate = parts[2] + "-" + parts[1] + "-" + parts[0];
+            }
         }
+
+        // ИСПРАВЛЕНИЕ: Создаем объект с правильными типами данных
+        var portfolioData = {
+            portfolio_id: portfolioId,
+            student_code: studentCode, // Теперь это число
+            date: formattedDate,
+            decree: decreeField.text
+        };
+
+        console.log("📦 Подготовленные данные портфолио:", JSON.stringify(portfolioData));
+        return portfolioData;
+    }
+
+    function formatDateText(text) {
+        // Удаляем все нецифры
+        var cleanText = text.replace(/[^\d]/g, '')
+
+        // Форматируем в ДД.ММ.ГГГГ
+        if (cleanText.length <= 2) {
+            return cleanText
+        } else if (cleanText.length <= 4) {
+            return cleanText.substring(0, 2) + '.' + cleanText.substring(2)
+        } else {
+            return cleanText.substring(0, 2) + '.' + cleanText.substring(2, 4) + '.' + cleanText.substring(4, 8)
+        }
+    }
+
+    function validateDate(text) {
+        if (!text) return true
+
+        var parts = text.split('.')
+        if (parts.length !== 3) return false
+
+        var day = parseInt(parts[0])
+        var month = parseInt(parts[1])
+        var year = parseInt(parts[2])
+
+        // Базовая валидация
+        if (day < 1 || day > 31) return false
+        if (month < 1 || month > 12) return false
+        if (year < 1900 || year > 2100) return false
+
+        return true
     }
 
     function handleSaveResponse(response) {
@@ -221,10 +255,10 @@ ApplicationWindow {
         Rectangle {
             id: whiteForm
             width: 410
-            height: 470
+            height: 400
             anchors {
                 top: titleBar.bottom
-                topMargin: 16
+                topMargin: 30
                 horizontalCenter: parent.horizontalCenter
             }
             color: "#ffffff"
@@ -236,141 +270,170 @@ ApplicationWindow {
                 anchors.margins: 20
                 spacing: 16
 
-                // Контент формы
-                Column {
+                // Прокручиваемая область с контентом
+                ScrollView {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    spacing: 20
+                    clip: true
 
-                    // Студент
                     Column {
                         width: parent.width
-                        spacing: 8
+                        spacing: 20
 
-                        Text {
-                            text: "Студент:"
-                            color: "#2c3e50"
-                            font.bold: true
-                            font.pixelSize: 14
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
+                        // Студент
+                        Column {
+                            width: parent.width
+                            spacing: 8
 
-                        ComboBox {
-                            id: studentComboBox
-                            width: parent.width - 40
-                            height: 40
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            enabled: !isSaving
-                            font.pixelSize: 14
-                            model: portfolioFormWindow.students
-                            textRole: "displayName"
-                            KeyNavigation.tab: eventComboBox
-                            Keys.onReturnPressed: navigateToNextField(studentComboBox)
-                            Keys.onEnterPressed: navigateToNextField(studentComboBox)
-                            Keys.onUpPressed: navigateToPreviousField(studentComboBox)
-                            Keys.onDownPressed: navigateToNextField(studentComboBox)
+                            Text {
+                                text: "Студент:"
+                                color: "#2c3e50"
+                                font.bold: true
+                                font.pixelSize: 14
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
 
-                            // Функция для отображения ФИО студента
-                            property string displayName: {
-                                if (model && currentIndex >= 0) {
-                                    var student = students[currentIndex]
-                                    var lastName = student.lastName || student.last_name || ""
-                                    var firstName = student.firstName || student.first_name || ""
-                                    var middleName = student.middleName || student.middle_name || ""
-                                    return [lastName, firstName, middleName].filter(Boolean).join(" ")
+                            ComboBox {
+                                id: studentComboBox
+                                width: parent.width - 40
+                                height: 40
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                enabled: !isSaving && students.length > 0
+                                font.pixelSize: 14
+                                model: portfolioFormWindow.students
+                                textRole: "displayName"
+                                KeyNavigation.tab: dateField
+                                Keys.onReturnPressed: navigateToNextField(studentComboBox)
+                                Keys.onEnterPressed: navigateToNextField(studentComboBox)
+                                Keys.onUpPressed: navigateToPreviousField(studentComboBox)
+                                Keys.onDownPressed: navigateToNextField(studentComboBox)
+
+                                // Функция для отображения ФИО студента
+                                property string displayName: {
+                                    if (model && currentIndex >= 0) {
+                                        var student = students[currentIndex]
+                                        var lastName = student.lastName || student.last_name || ""
+                                        var firstName = student.firstName || student.first_name || ""
+                                        var middleName = student.middleName || student.middle_name || ""
+                                        var studentCode = student.studentCode || student.student_code || ""
+                                        return [lastName, firstName, middleName].filter(Boolean).join(" ") + " (" + studentCode + ")"
+                                    }
+                                    return students.length > 0 ? "Выберите студента" : "Нет студентов"
                                 }
-                                return ""
+
+                                // Делегат для отображения в выпадающем списке
+                                delegate: ItemDelegate {
+                                    width: parent.width
+                                    text: {
+                                        var lastName = modelData.lastName || modelData.last_name || ""
+                                        var firstName = modelData.firstName || modelData.first_name || ""
+                                        var middleName = modelData.middleName || modelData.middle_name || ""
+                                        var studentCode = modelData.studentCode || modelData.student_code || ""
+                                        return [lastName, firstName, middleName].filter(Boolean).join(" ") + " (" + studentCode + ")"
+                                    }
+                                }
+                            }
+
+                            Text {
+                                text: students.length === 0 ? "❌ Нет доступных студентов" : ""
+                                color: "#e74c3c"
+                                font.pixelSize: 12
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                visible: students.length === 0
                             }
                         }
-                    }
 
-                    // Событие
-                    Column {
-                        width: parent.width
-                        spacing: 8
+                        // Дата
+                        Column {
+                            width: parent.width
+                            spacing: 8
 
-                        Text {
-                            text: "Событие:"
-                            color: "#2c3e50"
-                            font.bold: true
-                            font.pixelSize: 14
-                            anchors.horizontalCenter: parent.horizontalCenter
+                            Text {
+                                text: "Дата:"
+                                color: "#2c3e50"
+                                font.bold: true
+                                font.pixelSize: 14
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
+
+                            TextField {
+                                id: dateField
+                                width: parent.width - 40
+                                height: 40
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                placeholderText: "ДД.ММ.ГГГГ"
+                                horizontalAlignment: Text.AlignHCenter
+                                enabled: !isSaving
+                                font.pixelSize: 14
+                                KeyNavigation.tab: decreeField
+                                Keys.onReturnPressed: navigateToNextField(dateField)
+                                Keys.onEnterPressed: navigateToNextField(dateField)
+                                Keys.onUpPressed: navigateToPreviousField(dateField)
+                                Keys.onDownPressed: navigateToNextField(dateField)
+
+                                // Валидатор для даты
+                                validator: RegularExpressionValidator {
+                                    regularExpression: /^(\d{0,2}\.?\d{0,2}\.?\d{0,4})$/
+                                }
+
+                                // Обработка изменения текста для форматирования
+                                onTextChanged: {
+                                    if (text.length > 10) {
+                                        text = text.substring(0, 10)
+                                    }
+                                    var cursorPos = cursorPosition
+                                    var formatted = formatDateText(text)
+                                    if (formatted !== text) {
+                                        text = formatted
+                                        cursorPosition = Math.min(cursorPos, text.length)
+                                    }
+                                }
+
+                                background: Rectangle {
+                                    radius: 6
+                                    color: "#ffffff"
+                                    border.color: validateDate(dateField.text) ? "#e0e0e0" : "#e74c3c"
+                                    border.width: 2
+                                }
+                            }
+
+                            Text {
+                                text: !validateDate(dateField.text) && dateField.text !== "" ? "❌ Неверный формат даты" : ""
+                                color: "#e74c3c"
+                                font.pixelSize: 11
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                visible: !validateDate(dateField.text) && dateField.text !== ""
+                            }
                         }
 
-                        ComboBox {
-                            id: eventComboBox
-                            width: parent.width - 40
-                            height: 40
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            enabled: !isSaving
-                            font.pixelSize: 14
-                            model: portfolioFormWindow.events
-                            textRole: "eventType"
-                            KeyNavigation.tab: dateField
-                            Keys.onReturnPressed: navigateToNextField(eventComboBox)
-                            Keys.onEnterPressed: navigateToNextField(eventComboBox)
-                            Keys.onUpPressed: navigateToPreviousField(eventComboBox)
-                            Keys.onDownPressed: navigateToNextField(eventComboBox)
-                        }
-                    }
+                        // Приказ (decree)
+                        Column {
+                            width: parent.width
+                            spacing: 8
 
-                    // Дата
-                    Column {
-                        width: parent.width
-                        spacing: 8
+                            Text {
+                                text: "Приказ:"
+                                color: "#2c3e50"
+                                font.bold: true
+                                font.pixelSize: 14
+                                anchors.horizontalCenter: parent.horizontalCenter
+                            }
 
-                        Text {
-                            text: "Дата:"
-                            color: "#2c3e50"
-                            font.bold: true
-                            font.pixelSize: 14
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        TextField {
-                            id: dateField
-                            width: parent.width - 40
-                            height: 40
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            placeholderText: "ГГГГ-ММ-ДД"
-                            horizontalAlignment: Text.AlignHCenter
-                            enabled: !isSaving
-                            font.pixelSize: 14
-                            KeyNavigation.tab: descriptionField
-                            Keys.onReturnPressed: navigateToNextField(dateField)
-                            Keys.onEnterPressed: navigateToNextField(dateField)
-                            Keys.onUpPressed: navigateToPreviousField(dateField)
-                            Keys.onDownPressed: navigateToNextField(dateField)
-                        }
-                    }
-
-                    // Описание
-                    Column {
-                        width: parent.width
-                        spacing: 8
-
-                        Text {
-                            text: "Описание:"
-                            color: "#2c3e50"
-                            font.bold: true
-                            font.pixelSize: 14
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
-                        TextArea {
-                            id: descriptionField
-                            width: parent.width - 40
-                            height: 80
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            placeholderText: "Введите описание портфолио..."
-                            wrapMode: Text.WordWrap
-                            enabled: !isSaving
-                            font.pixelSize: 12
-                            KeyNavigation.tab: saveButton
-                            Keys.onReturnPressed: navigateToNextField(descriptionField)
-                            Keys.onEnterPressed: navigateToNextField(descriptionField)
-                            Keys.onUpPressed: navigateToPreviousField(descriptionField)
-                            Keys.onDownPressed: saveButton.forceActiveFocus()
+                            TextField {
+                                id: decreeField
+                                width: parent.width - 40
+                                height: 40
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                placeholderText: "Введите номер приказа*"
+                                horizontalAlignment: Text.AlignHCenter
+                                enabled: !isSaving
+                                font.pixelSize: 14
+                                KeyNavigation.tab: saveButton
+                                Keys.onReturnPressed: navigateToNextField(decreeField)
+                                Keys.onEnterPressed: navigateToNextField(decreeField)
+                                Keys.onUpPressed: navigateToPreviousField(decreeField)
+                                Keys.onDownPressed: saveButton.forceActiveFocus()
+                            }
                         }
                     }
                 }
@@ -385,16 +448,31 @@ ApplicationWindow {
                         text: isSaving ? "⏳ Сохранение..." : "💾 Сохранить"
                         implicitWidth: 140
                         implicitHeight: 40
-                        enabled: !isSaving && studentComboBox.currentIndex >= 0
+                        enabled: !isSaving && studentComboBox.currentIndex >= 0 &&
+                                dateField.text.trim() !== "" && validateDate(dateField.text) &&
+                                decreeField.text.trim() !== "" &&
+                                students.length > 0
                         font.pixelSize: 14
                         KeyNavigation.tab: cancelButton
                         Keys.onReturnPressed: if (enabled && !isSaving) saveButton.clicked()
                         Keys.onEnterPressed: if (enabled && !isSaving) saveButton.clicked()
-                        Keys.onUpPressed: descriptionField.forceActiveFocus()
+                        Keys.onUpPressed: decreeField.forceActiveFocus()
 
                         onClicked: {
                             if (studentComboBox.currentIndex < 0) {
                                 showMessage("❌ Выберите студента", "error")
+                                return
+                            }
+                            if (dateField.text.trim() === "") {
+                                showMessage("❌ Введите дату", "error")
+                                return
+                            }
+                            if (!validateDate(dateField.text)) {
+                                showMessage("❌ Неверный формат даты", "error")
+                                return
+                            }
+                            if (decreeField.text.trim() === "") {
+                                showMessage("❌ Введите номер приказа", "error")
                                 return
                             }
                             isSaving = true

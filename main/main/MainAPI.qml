@@ -285,9 +285,29 @@ QtObject {
         sendRequest("GET", "/portfolio", null, function(response) {
             console.log("📊 Ответ портфолио:", JSON.stringify(response));
             if (response.success) {
+                var responseData = response.data;
+                var portfolioData = [];
+
+                // ИСПРАВЛЕНИЕ: Правильно извлекаем данные из ответа
+                if (responseData && responseData.data && Array.isArray(responseData.data)) {
+                    portfolioData = responseData.data;
+                } else if (responseData && Array.isArray(responseData)) {
+                    portfolioData = responseData;
+                }
+
+                // Преобразуем даты обратно в ДД.ММ.ГГГГ для отображения
+                portfolioData.forEach(function(item) {
+                    if (item.date) {
+                        var parts = item.date.split('-');
+                        if (parts.length === 3) {
+                            item.date = parts[2] + '.' + parts[1] + '.' + parts[0];
+                        }
+                    }
+                });
+
                 callback({
                     success: true,
-                    data: response.data || [],
+                    data: portfolioData,
                     status: response.status
                 });
             } else {
@@ -301,19 +321,20 @@ QtObject {
         });
     }
 
+    // В функции addPortfolio
     function addPortfolio(portfolioData, callback) {
-        // Передаем все обязательные поля для сервера
-        var fullPortfolioData = {
+        console.log("➕ Добавление портфолио:", JSON.stringify(portfolioData));
+
+        // Согласуем с серверными требованиями
+        var cleanPortfolioData = {
             student_code: portfolioData.student_code,
-            event_id: portfolioData.event_id,
             date: portfolioData.date,
-            description: portfolioData.description,
-            passport_series: portfolioData.passport_series || "",
-            passport_number: portfolioData.passport_number || "",
-            file_path: portfolioData.file_path || ""
+            decree: portfolioData.decree
         };
 
-        sendRequest("POST", "/portfolio", fullPortfolioData, function(response) {
+        sendRequest("POST", "/portfolio", cleanPortfolioData, function(response) {
+            console.log("📨 Ответ добавления портфолио:", response);
+
             if (callback) {
                 if (response.success) {
                     callback({
@@ -333,17 +354,14 @@ QtObject {
         });
     }
 
+    // В функции updatePortfolio
     function updatePortfolio(portfolioId, portfolioData, callback) {
-        // При обновлении передаем только редактируемые поля
-        var updatePortfolioData = {
-            student_code: portfolioData.student_code,
-            event_id: portfolioData.event_id,
-            date: portfolioData.date,
-            description: portfolioData.description
-        };
+        console.log("🔄 Обновление портфолио ID:", portfolioId, "Данные:", JSON.stringify(portfolioData));
 
         var endpoint = "/portfolio/" + portfolioId;
-        sendRequest("PUT", endpoint, updatePortfolioData, function(response) {
+        sendRequest("PUT", endpoint, portfolioData, function(response) {
+            console.log("📨 Ответ обновления портфолио:", response);
+
             if (callback) {
                 if (response.success) {
                     callback({
@@ -384,42 +402,78 @@ QtObject {
         });
     }
 
+
     function getEvents(callback) {
-        sendRequest("GET", "/events", null, function(response) {
+            sendRequest("GET", "/events", null, function(response) {
+                if (response.success) {
+                    // ИСПРАВЛЕНИЕ: Правильно извлекаем массив событий из ответа
+                    var eventsData = response.data || {};
+                    var eventsArray = [];
+
+                    if (eventsData && eventsData.data && Array.isArray(eventsData.data)) {
+                        eventsArray = eventsData.data;
+                    } else if (Array.isArray(eventsData)) {
+                        eventsArray = eventsData;
+                    }
+
+                    callback({
+                        success: true,
+                        data: eventsArray,
+                        status: response.status
+                    });
+                } else {
+                    callback({
+                        success: false,
+                        error: response.error,
+                        data: [],
+                        status: response.status
+                    });
+                }
+            });
+        }
+
+    function openPortfolioForm() {
+        // Загружаем студентов перед открытием формы
+        mainApi.loadStudentsForPortfolio(function(response) {
             if (response.success) {
-                var eventsData = response.data || [];
-                callback({
-                    success: true,
-                    data: eventsData,
-                    status: response.status
-                });
+                portfolioFormWindow.students = response.data;
+                portfolioFormWindow.openForAdd();
             } else {
-                callback({
-                    success: false,
-                    error: response.error,
-                    data: [],
-                    status: response.status
-                });
+                console.log("❌ Ошибка загрузки студентов:", response.error);
+                showMessage("❌ Не удалось загрузить список студентов", "error");
+            }
+        });
+    }
+
+    function editPortfolio(portfolioData) {
+        // Загружаем студентов перед открытием формы редактирования
+        mainApi.loadStudentsForPortfolio(function(response) {
+            if (response.success) {
+                portfolioFormWindow.students = response.data;
+                portfolioFormWindow.openForEdit(portfolioData);
+            } else {
+                console.log("❌ Ошибка загрузки студентов:", response.error);
+                showMessage("❌ Не удалось загрузить список студентов", "error");
             }
         });
     }
 
     function addEvent(eventData, callback) {
-        // Передаем все обязательные поля для сервера
-        var fullEventData = {
+        console.log("➕ Добавление события:", JSON.stringify(eventData));
+
+        // Согласуем с серверными требованиями
+        var cleanEventData = {
             event_type: eventData.event_type,
-            event_category_id: eventData.event_category_id,
+            event_category: eventData.event_category,
             start_date: eventData.start_date,
             end_date: eventData.end_date,
             location: eventData.location,
-            lore: eventData.lore,
-            max_participants: eventData.max_participants,
-            measure_code: eventData.measure_code || 0,
-            current_participants: eventData.current_participants || 0,
-            status: eventData.status || "active"
+            lore: eventData.lore
         };
 
-        sendRequest("POST", "/events", fullEventData, function(response) {
+        sendRequest("POST", "/events", cleanEventData, function(response) {
+            console.log("📨 Ответ добавления события:", response);
+
             if (callback) {
                 if (response.success) {
                     callback({
@@ -439,20 +493,24 @@ QtObject {
         });
     }
 
+
     function updateEvent(eventId, eventData, callback) {
-        // При обновлении передаем только редактируемые поля
-        var updateEventData = {
+        console.log("🔄 Обновление события ID:", eventId, "Данные:", JSON.stringify(eventData));
+
+        // Согласуем с серверными требованиями
+        var cleanEventData = {
             event_type: eventData.event_type,
-            event_category_id: eventData.event_category_id,
+            event_category: eventData.event_category,
             start_date: eventData.start_date,
             end_date: eventData.end_date,
             location: eventData.location,
-            lore: eventData.lore,
-            max_participants: eventData.max_participants
+            lore: eventData.lore
         };
 
         var endpoint = "/events/" + eventId;
-        sendRequest("PUT", endpoint, updateEventData, function(response) {
+        sendRequest("PUT", endpoint, cleanEventData, function(response) {
+            console.log("📨 Ответ обновления события:", response);
+
             if (callback) {
                 if (response.success) {
                     callback({
@@ -494,30 +552,65 @@ QtObject {
     }
 
     function getEventCategories(callback) {
-        sendRequest("GET", "/event-categories", null, function(response) {
-            if (response.success) {
-                var categoriesData = response.data || [];
-                console.log("📊 Получено категорий событий:", categoriesData.length);
+            sendRequest("GET", "/event-categories", null, function(response) {
+                if (response.success) {
+                    // ИСПРАВЛЕНИЕ: Правильно извлекаем массив категорий из ответа
+                    var categoriesData = response.data || {};
+                    var categoriesArray = [];
 
-                callback({
-                    success: true,
-                    data: categoriesData,
-                    status: response.status
-                });
-            } else {
-                console.log("❌ Ошибка загрузки категорий событий, возвращаем пустой массив");
-                callback({
-                    success: false,
-                    error: response.error,
-                    data: [],
-                    status: response.status
-                });
-            }
-        });
-    }
+                    if (categoriesData && categoriesData.data && Array.isArray(categoriesData.data)) {
+                        categoriesArray = categoriesData.data;
+                    } else if (Array.isArray(categoriesData)) {
+                        categoriesArray = categoriesData;
+                    }
+
+                    console.log("📊 Получено категорий событий:", categoriesArray.length);
+
+                    // Логируем структуру данных для отладки
+                    if (categoriesArray.length > 0) {
+                        console.log("📊 Первая категория:",
+                            "event_type:", categoriesArray[0].event_type,
+                            "category:", categoriesArray[0].category);
+                    }
+
+                    callback({
+                        success: true,
+                        data: categoriesArray,
+                        status: response.status
+                    });
+                } else {
+                    console.log("❌ Ошибка загрузки категорий событий, возвращаем пустой массив");
+                    callback({
+                        success: false,
+                        error: response.error,
+                        data: [],
+                        status: response.status
+                    });
+                }
+            });
+        }
 
     function addEventCategory(categoryData, callback) {
         console.log("➕ Добавление категории события:", JSON.stringify(categoryData));
+
+        // Валидация длины полей
+        if (categoryData.event_type && categoryData.event_type.length > 24) {
+            console.log("❌ Слишком длинное короткое наименование (макс. 24 символа)");
+            if (callback) callback({
+                success: false,
+                error: "Короткое наименование (event_type) не должно превышать 24 символа"
+            });
+            return;
+        }
+
+        if (categoryData.category && categoryData.category.length > 64) {
+            console.log("❌ Слишком длинное полное наименование (макс. 64 символа)");
+            if (callback) callback({
+                success: false,
+                error: "Полное наименование (category) не должно превышать 64 символа"
+            });
+            return;
+        }
 
         sendRequest("POST", "/event-categories", categoryData, function(response) {
             console.log("📨 Ответ добавления категории события:", response);
@@ -544,7 +637,17 @@ QtObject {
     function updateEventCategory(categoryId, categoryData, callback) {
         console.log("🔄 Обновление категории события ID:", categoryId, "Данные:", JSON.stringify(categoryData));
 
-        var endpoint = "/event-categories/" + categoryId;
+        // Валидация длины полей
+        if (categoryData.category && categoryData.category.length > 64) {
+            console.log("❌ Слишком длинное полное наименование (макс. 64 символа)");
+            if (callback) callback({
+                success: false,
+                error: "Полное наименование (category) не должно превышать 64 символа"
+            });
+            return;
+        }
+
+        var endpoint = "/event-categories/" + encodeURIComponent(categoryId);
         sendRequest("PUT", endpoint, categoryData, function(response) {
             console.log("📨 Ответ обновления категории события:", response);
 
