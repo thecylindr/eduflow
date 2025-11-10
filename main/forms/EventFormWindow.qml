@@ -7,7 +7,7 @@ import "../../common" as Common
 ApplicationWindow {
     id: eventFormWindow
     width: 450
-    height: 550 // Уменьшена высота
+    height: 550
     flags: Qt.Dialog | Qt.FramelessWindowHint
     modality: Qt.ApplicationModal
     color: "transparent"
@@ -70,7 +70,7 @@ ApplicationWindow {
         eventTypeField.text = eventData.eventType || eventData.event_type || ""
 
         // Находим индекс категории в комбобоксе
-        var categoryId = eventData.eventCategory || eventData.event_category
+        var categoryId = eventData.eventCategory || eventData.event_category || eventData.event_category_id
         if (categoryId) {
             for (var i = 0; i < eventCategories.length; i++) {
                 var category = eventCategories[i]
@@ -105,12 +105,15 @@ ApplicationWindow {
         return {
             event_id: eventId,
             event_type: eventTypeField.text,
-            event_category: categoryId,
+            event_category_id: categoryId, // Исправлено для соответствия серверу
             start_date: startDateField.text,
             end_date: endDateField.text,
             location: locationField.text,
             lore: loreField.text,
-            max_participants: parseInt(maxParticipantsField.text) || 0
+            max_participants: parseInt(maxParticipantsField.text) || 0,
+            measure_code: 0, // Обязательное поле для сервера
+            current_participants: 0, // Обязательное поле для сервера
+            status: "active" // Обязательное поле для сервера
         }
     }
 
@@ -209,10 +212,10 @@ ApplicationWindow {
         Rectangle {
             id: whiteForm
             width: 430
-            height: 500 // Уменьшена высота
+            height: 460
             anchors {
                 top: titleBar.bottom
-                topMargin: 20
+                topMargin: 16
                 horizontalCenter: parent.horizontalCenter
             }
             color: "#ffffff"
@@ -224,7 +227,7 @@ ApplicationWindow {
                 anchors.margins: 15
                 spacing: 12
 
-                // Контент без прокрутки
+                // Контент формы
                 Column {
                     Layout.fillWidth: true
                     Layout.fillHeight: true

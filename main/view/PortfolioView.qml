@@ -12,7 +12,6 @@ Item {
     property bool isLoading: false
 
     function refreshPortfolios() {
-        console.log("🔄 Загрузка портфолио...");
         isLoading = true;
         mainWindow.mainApi.getPortfolio(function(response) {
             isLoading = false;
@@ -46,7 +45,6 @@ Item {
     }
 
     function refreshStudents() {
-        console.log("👨‍🎓 Загрузка студентов для портфолио...");
         mainWindow.mainApi.getStudents(function(response) {
             if (response && response.success) {
                 portfolioView.students = response.data || [];

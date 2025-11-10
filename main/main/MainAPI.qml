@@ -1,4 +1,3 @@
-// main/api/MainAPI.qml
 import QtQuick 2.15
 
 QtObject {
@@ -24,8 +23,6 @@ QtObject {
     }
 
     function revokeSession(token, callback) {
-        console.log("🔐 Отзыв сессии с токеном:", token)
-
         // Используем токен в URL вместо тела запроса
         var endpoint = "/sessions/" + encodeURIComponent(token);
 
@@ -59,8 +56,6 @@ QtObject {
 
         // ОСОБАЯ ЛОГИКА ДЛЯ WINDOWS
         if (Qt.platform.os === "windows") {
-            console.log("🖥️ Обнаружена Windows, применяем специальные настройки...");
-
             if (url && url.length > 0) {
                 baseUrl = url;
             } else {
@@ -91,7 +86,6 @@ QtObject {
             validateToken(function(response) {
                 tokenValid = response.success;
                 tokenStatus = response.success ? "валиден" : "невалиден";
-                console.log("🔐 Статус токена:", tokenStatus);
 
                 if (!response.success) {
                     console.log("❌ Токен невалиден, очищаем...");
@@ -126,7 +120,6 @@ QtObject {
 
         try {
             var testUrl = baseUrl + "/api/status";
-            console.log("🔍 Тестируем соединение с:", testUrl);
             testXhr.open("GET", testUrl, true);
 
             // Кросс-платформенные заголовки
@@ -146,11 +139,7 @@ QtObject {
     }
 
     function updateProfile(profileData, callback) {
-        console.log("🔄 Обновление профиля. Данные:", JSON.stringify(profileData));
-
         sendRequest("PUT", "/profile", profileData, function(response) {
-            console.log("📨 Ответ обновления профиля:", response);
-
             if (callback) {
                 if (response.success) {
                     callback({
@@ -171,8 +160,6 @@ QtObject {
     }
 
     function changePassword(currentPassword, newPassword, callback) {
-        console.log("🔄 Смена пароля");
-
         var passwordData = {
             currentPassword: currentPassword,
             newPassword: newPassword
@@ -211,9 +198,6 @@ QtObject {
                 } else if (responseData && Array.isArray(responseData)) {
                     teachersArray = responseData;
                 }
-
-                console.log("📊 Получено преподавателей:", teachersArray.length);
-
                 callback({
                     success: true,
                     data: teachersArray,
@@ -242,9 +226,6 @@ QtObject {
                 } else if (responseData && Array.isArray(responseData)) {
                     studentsArray = responseData;
                 }
-
-                console.log("📊 Получено студентов:", studentsArray.length);
-
                 callback({
                     success: true,
                     data: studentsArray,
@@ -273,9 +254,6 @@ QtObject {
                 } else if (responseData && Array.isArray(responseData)) {
                     groupsArray = responseData;
                 }
-
-                console.log("📊 Получено групп:", groupsArray.length);
-
                 callback({
                     success: true,
                     data: groupsArray,
@@ -324,19 +302,18 @@ QtObject {
     }
 
     function addPortfolio(portfolioData, callback) {
-        console.log("➕ Добавление портфолио:", JSON.stringify(portfolioData));
-
-        // Убираем паспортные данные из запроса
-        var cleanPortfolioData = {
+        // Передаем все обязательные поля для сервера
+        var fullPortfolioData = {
             student_code: portfolioData.student_code,
             event_id: portfolioData.event_id,
             date: portfolioData.date,
-            description: portfolioData.description
+            description: portfolioData.description,
+            passport_series: portfolioData.passport_series || "",
+            passport_number: portfolioData.passport_number || "",
+            file_path: portfolioData.file_path || ""
         };
 
-        sendRequest("POST", "/portfolio", cleanPortfolioData, function(response) {
-            console.log("📨 Ответ добавления портфолио:", response);
-
+        sendRequest("POST", "/portfolio", fullPortfolioData, function(response) {
             if (callback) {
                 if (response.success) {
                     callback({
@@ -357,10 +334,8 @@ QtObject {
     }
 
     function updatePortfolio(portfolioId, portfolioData, callback) {
-        console.log("🔄 Обновление портфолио ID:", portfolioId, "Данные:", JSON.stringify(portfolioData));
-
-        // Убираем паспортные данные из запроса
-        var cleanPortfolioData = {
+        // При обновлении передаем только редактируемые поля
+        var updatePortfolioData = {
             student_code: portfolioData.student_code,
             event_id: portfolioData.event_id,
             date: portfolioData.date,
@@ -368,9 +343,7 @@ QtObject {
         };
 
         var endpoint = "/portfolio/" + portfolioId;
-        sendRequest("PUT", endpoint, cleanPortfolioData, function(response) {
-            console.log("📨 Ответ обновления портфолио:", response);
-
+        sendRequest("PUT", endpoint, updatePortfolioData, function(response) {
             if (callback) {
                 if (response.success) {
                     callback({
@@ -391,12 +364,8 @@ QtObject {
     }
 
     function deletePortfolio(portfolioId, callback) {
-        console.log("🗑️ Удаление портфолио ID:", portfolioId);
-
         var endpoint = "/portfolio/" + portfolioId;
         sendRequest("DELETE", endpoint, null, function(response) {
-            console.log("📨 Ответ удаления портфолио:", response);
-
             if (callback) {
                 if (response.success) {
                     callback({
@@ -419,15 +388,12 @@ QtObject {
         sendRequest("GET", "/events", null, function(response) {
             if (response.success) {
                 var eventsData = response.data || [];
-                console.log("📊 Получено событий:", eventsData.length);
-
                 callback({
                     success: true,
                     data: eventsData,
                     status: response.status
                 });
             } else {
-                console.log("❌ Ошибка загрузки событий, возвращаем пустой массив");
                 callback({
                     success: false,
                     error: response.error,
@@ -439,11 +405,21 @@ QtObject {
     }
 
     function addEvent(eventData, callback) {
-        console.log("➕ Добавление события:", JSON.stringify(eventData));
+        // Передаем все обязательные поля для сервера
+        var fullEventData = {
+            event_type: eventData.event_type,
+            event_category_id: eventData.event_category_id,
+            start_date: eventData.start_date,
+            end_date: eventData.end_date,
+            location: eventData.location,
+            lore: eventData.lore,
+            max_participants: eventData.max_participants,
+            measure_code: eventData.measure_code || 0,
+            current_participants: eventData.current_participants || 0,
+            status: eventData.status || "active"
+        };
 
-        sendRequest("POST", "/events", eventData, function(response) {
-            console.log("📨 Ответ добавления события:", response);
-
+        sendRequest("POST", "/events", fullEventData, function(response) {
             if (callback) {
                 if (response.success) {
                     callback({
@@ -464,12 +440,19 @@ QtObject {
     }
 
     function updateEvent(eventId, eventData, callback) {
-        console.log("🔄 Обновление события ID:", eventId, "Данные:", JSON.stringify(eventData));
+        // При обновлении передаем только редактируемые поля
+        var updateEventData = {
+            event_type: eventData.event_type,
+            event_category_id: eventData.event_category_id,
+            start_date: eventData.start_date,
+            end_date: eventData.end_date,
+            location: eventData.location,
+            lore: eventData.lore,
+            max_participants: eventData.max_participants
+        };
 
         var endpoint = "/events/" + eventId;
-        sendRequest("PUT", endpoint, eventData, function(response) {
-            console.log("📨 Ответ обновления события:", response);
-
+        sendRequest("PUT", endpoint, updateEventData, function(response) {
             if (callback) {
                 if (response.success) {
                     callback({
@@ -490,12 +473,8 @@ QtObject {
     }
 
     function deleteEvent(eventId, callback) {
-        console.log("🗑️ Удаление события ID:", eventId);
-
         var endpoint = "/events/" + eventId;
         sendRequest("DELETE", endpoint, null, function(response) {
-            console.log("📨 Ответ удаления события:", response);
-
             if (callback) {
                 if (response.success) {
                     callback({

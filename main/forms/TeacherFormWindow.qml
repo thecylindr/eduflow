@@ -219,268 +219,266 @@ ApplicationWindow {
             id: whiteForm
             width: 450
             height: 550
-            anchors.centerIn: parent
+            anchors {
+                top: titleBar.bottom
+                topMargin: 16
+                horizontalCenter: parent.horizontalCenter
+            }
             color: "#ffffff"
             opacity: 0.925
             radius: 12
-
 
             ColumnLayout {
                 anchors.fill: parent
                 anchors.margins: 20
                 spacing: 12
 
-                // Прокручиваемая область с контентом
-                ScrollView {
+                // Контент формы
+                Column {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    clip: true
+                    spacing: 15
 
+                    // ФИО - теперь горизонтально
                     Column {
                         width: parent.width
-                        spacing: 15
+                        spacing: 8
 
-                        // ФИО - теперь горизонтально
-                        Column {
-                            width: parent.width
-                            spacing: 8
+                        Text {
+                            text: "ФИО:"
+                            color: "#2c3e50"
+                            font.bold: true
+                            font.pixelSize: 14
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
 
-                            Text {
-                                text: "ФИО:"
-                                color: "#2c3e50"
-                                font.bold: true
-                                font.pixelSize: 14
-                                anchors.horizontalCenter: parent.horizontalCenter
+                        Row {
+                            width: 350
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            spacing: 10
+
+                            TextField {
+                                id: lastNameField
+                                width: 110
+                                placeholderText: "Фамилия*"
+                                horizontalAlignment: Text.AlignHCenter
+                                enabled: !isSaving
+                                KeyNavigation.tab: firstNameField
+                                Keys.onReturnPressed: navigateToNextField(lastNameField)
+                                Keys.onEnterPressed: navigateToNextField(lastNameField)
+                                Keys.onUpPressed: navigateToPreviousField(lastNameField)
+                                Keys.onDownPressed: navigateToNextField(lastNameField)
                             }
 
-                            Row {
-                                width: 350
-                                anchors.horizontalCenter: parent.horizontalCenter
+                            TextField {
+                                id: firstNameField
+                                width: 110
+                                placeholderText: "Имя*"
+                                horizontalAlignment: Text.AlignHCenter
+                                enabled: !isSaving
+                                KeyNavigation.tab: middleNameField
+                                Keys.onReturnPressed: navigateToNextField(firstNameField)
+                                Keys.onEnterPressed: navigateToNextField(firstNameField)
+                                Keys.onUpPressed: navigateToPreviousField(firstNameField)
+                                Keys.onDownPressed: navigateToNextField(firstNameField)
+                            }
+
+                            TextField {
+                                id: middleNameField
+                                width: 110
+                                placeholderText: "Отчество"
+                                horizontalAlignment: Text.AlignHCenter
+                                enabled: !isSaving
+                                KeyNavigation.tab: emailField
+                                Keys.onReturnPressed: navigateToNextField(middleNameField)
+                                Keys.onEnterPressed: navigateToNextField(middleNameField)
+                                Keys.onUpPressed: navigateToPreviousField(middleNameField)
+                                Keys.onDownPressed: navigateToNextField(middleNameField)
+                            }
+                        }
+                    }
+
+                    // Контакты
+                    Column {
+                        width: parent.width
+                        spacing: 8
+
+                        Text {
+                            text: "Контакты:"
+                            color: "#2c3e50"
+                            font.bold: true
+                            font.pixelSize: 14
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        TextField {
+                            id: emailField
+                            width: 350
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            placeholderText: "Email"
+                            horizontalAlignment: Text.AlignHCenter
+                            enabled: !isSaving
+                            KeyNavigation.tab: phoneField
+                            Keys.onReturnPressed: navigateToNextField(emailField)
+                            Keys.onEnterPressed: navigateToNextField(emailField)
+                            Keys.onUpPressed: navigateToPreviousField(emailField)
+                            Keys.onDownPressed: navigateToNextField(emailField)
+                        }
+
+                        TextField {
+                            id: phoneField
+                            width: 350
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            placeholderText: "Телефон"
+                            horizontalAlignment: Text.AlignHCenter
+                            enabled: !isSaving
+                            KeyNavigation.tab: experienceField
+                            Keys.onReturnPressed: navigateToNextField(phoneField)
+                            Keys.onEnterPressed: navigateToNextField(phoneField)
+                            Keys.onUpPressed: navigateToPreviousField(phoneField)
+                            Keys.onDownPressed: navigateToNextField(phoneField)
+                        }
+                    }
+
+                    // Опыт работы
+                    Column {
+                        width: parent.width
+                        spacing: 8
+
+                        Text {
+                            text: "Опыт работы (лет):"
+                            color: "#2c3e50"
+                            font.bold: true
+                            font.pixelSize: 14
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        SpinBox {
+                            id: experienceField
+                            width: 150
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            from: 0
+                            to: 50
+                            value: 0
+                            enabled: !isSaving
+                            KeyNavigation.tab: newSpecializationField
+                            Keys.onReturnPressed: navigateToNextField(experienceField)
+                            Keys.onEnterPressed: navigateToNextField(experienceField)
+                            Keys.onUpPressed: navigateToPreviousField(experienceField)
+                            Keys.onDownPressed: navigateToNextField(experienceField)
+
+                            contentItem: Text {
+                                text: experienceField.value
+                                color: enabled ? "#2c3e50" : "#7f8c8d"
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                            }
+                        }
+                    }
+
+                    // Специализации
+                    Column {
+                        width: parent.width
+                        spacing: 8
+
+                        Text {
+                            text: "Специализации:"
+                            color: "#2c3e50"
+                            font.bold: true
+                            font.pixelSize: 14
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        // Список специализаций
+                        Rectangle {
+                            width: 350
+                            height: 100
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            color: "#f8f9fa"
+                            radius: 8
+                            border.color: "#e0e0e0"
+                            border.width: 1
+
+                            ListView {
+                                id: specializationListView
+                                anchors.fill: parent
+                                anchors.margins: 5
+                                model: ListModel { id: specializationModel }
+                                spacing: 3
+                                clip: true
+
+                                delegate: Rectangle {
+                                    width: specializationListView.width
+                                    height: 25
+                                    radius: 6
+                                    color: index % 2 === 0 ? "#e3f2fd" : "#f3e5f5"
+                                    border.color: "#bbdefb"
+
+                                    Row {
+                                        anchors.fill: parent
+                                        anchors.margins: 3
+                                        spacing: 5
+
+                                        Text {
+                                            text: model.name
+                                            width: parent.width - 30
+                                            height: parent.height
+                                            verticalAlignment: Text.AlignVCenter
+                                            horizontalAlignment: Text.AlignHCenter
+                                            font.pixelSize: 11
+                                            color: "#2c3e50"
+                                            elide: Text.ElideRight
+                                        }
+
+                                        Button {
+                                            width: 20
+                                            height: 20
+                                            text: "❌"
+                                            enabled: !isSaving
+                                            onClicked: specializationModel.remove(index)
+                                        }
+                                    }
+                                }
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "Нет специализаций"
+                                    color: "#7f8c8d"
+                                    font.italic: true
+                                    visible: specializationModel.count === 0
+                                }
+                            }
+                        }
+
+                        // Добавление новой специализации
+                        Item {
+                            width: 350
+                            height: 40
+                            anchors.horizontalCenter: parent.horizontalCenter
+
+                            RowLayout {
+                                anchors.fill: parent
                                 spacing: 10
 
                                 TextField {
-                                    id: lastNameField
-                                    width: 110
-                                    placeholderText: "Фамилия*"
+                                    id: newSpecializationField
+                                    Layout.fillWidth: true
+                                    placeholderText: "Новая специализация"
                                     horizontalAlignment: Text.AlignHCenter
                                     enabled: !isSaving
-                                    KeyNavigation.tab: firstNameField
-                                    Keys.onReturnPressed: navigateToNextField(lastNameField)
-                                    Keys.onEnterPressed: navigateToNextField(lastNameField)
-                                    Keys.onUpPressed: navigateToPreviousField(lastNameField)
-                                    Keys.onDownPressed: navigateToNextField(lastNameField)
+                                    KeyNavigation.tab: saveButton
+                                    Keys.onReturnPressed: addSpecialization()
+                                    Keys.onEnterPressed: addSpecialization()
+                                    Keys.onUpPressed: navigateToPreviousField(newSpecializationField)
+                                    Keys.onDownPressed: saveButton.forceActiveFocus()
                                 }
 
-                                TextField {
-                                    id: firstNameField
-                                    width: 110
-                                    placeholderText: "Имя*"
-                                    horizontalAlignment: Text.AlignHCenter
+                                Button {
+                                    Layout.preferredWidth: 40
+                                    Layout.preferredHeight: 40
+                                    text: "➕"
                                     enabled: !isSaving
-                                    KeyNavigation.tab: middleNameField
-                                    Keys.onReturnPressed: navigateToNextField(firstNameField)
-                                    Keys.onEnterPressed: navigateToNextField(firstNameField)
-                                    Keys.onUpPressed: navigateToPreviousField(firstNameField)
-                                    Keys.onDownPressed: navigateToNextField(firstNameField)
-                                }
-
-                                TextField {
-                                    id: middleNameField
-                                    width: 110
-                                    placeholderText: "Отчество"
-                                    horizontalAlignment: Text.AlignHCenter
-                                    enabled: !isSaving
-                                    KeyNavigation.tab: emailField
-                                    Keys.onReturnPressed: navigateToNextField(middleNameField)
-                                    Keys.onEnterPressed: navigateToNextField(middleNameField)
-                                    Keys.onUpPressed: navigateToPreviousField(middleNameField)
-                                    Keys.onDownPressed: navigateToNextField(middleNameField)
-                                }
-                            }
-                        }
-
-                        // Контакты
-                        Column {
-                            width: parent.width
-                            spacing: 8
-
-                            Text {
-                                text: "Контакты:"
-                                color: "#2c3e50"
-                                font.bold: true
-                                font.pixelSize: 14
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
-
-                            TextField {
-                                id: emailField
-                                width: 350
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                placeholderText: "Email"
-                                horizontalAlignment: Text.AlignHCenter
-                                enabled: !isSaving
-                                KeyNavigation.tab: phoneField
-                                Keys.onReturnPressed: navigateToNextField(emailField)
-                                Keys.onEnterPressed: navigateToNextField(emailField)
-                                Keys.onUpPressed: navigateToPreviousField(emailField)
-                                Keys.onDownPressed: navigateToNextField(emailField)
-                            }
-
-                            TextField {
-                                id: phoneField
-                                width: 350
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                placeholderText: "Телефон"
-                                horizontalAlignment: Text.AlignHCenter
-                                enabled: !isSaving
-                                KeyNavigation.tab: experienceField
-                                Keys.onReturnPressed: navigateToNextField(phoneField)
-                                Keys.onEnterPressed: navigateToNextField(phoneField)
-                                Keys.onUpPressed: navigateToPreviousField(phoneField)
-                                Keys.onDownPressed: navigateToNextField(phoneField)
-                            }
-                        }
-
-                        // Опыт работы
-                        Column {
-                            width: parent.width
-                            spacing: 8
-
-                            Text {
-                                text: "Опыт работы (лет):"
-                                color: "#2c3e50"
-                                font.bold: true
-                                font.pixelSize: 14
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
-
-                            SpinBox {
-                                id: experienceField
-                                width: 150
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                from: 0
-                                to: 50
-                                value: 0
-                                enabled: !isSaving
-                                KeyNavigation.tab: newSpecializationField
-                                Keys.onReturnPressed: navigateToNextField(experienceField)
-                                Keys.onEnterPressed: navigateToNextField(experienceField)
-                                Keys.onUpPressed: navigateToPreviousField(experienceField)
-                                Keys.onDownPressed: navigateToNextField(experienceField)
-
-                                contentItem: Text {
-                                    text: experienceField.value
-                                    color: enabled ? "#2c3e50" : "#7f8c8d"
-                                    horizontalAlignment: Text.AlignHCenter
-                                    verticalAlignment: Text.AlignVCenter
-                                }
-                            }
-                        }
-
-                        // Специализации
-                        Column {
-                            width: parent.width
-                            spacing: 8
-
-                            Text {
-                                text: "Специализации:"
-                                color: "#2c3e50"
-                                font.bold: true
-                                font.pixelSize: 14
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
-
-                            // Список специализаций
-                            Rectangle {
-                                width: 350
-                                height: 100
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                color: "#f8f9fa"
-                                radius: 8
-                                border.color: "#e0e0e0"
-                                border.width: 1
-
-                                ListView {
-                                    id: specializationListView
-                                    anchors.fill: parent
-                                    anchors.margins: 5
-                                    model: ListModel { id: specializationModel }
-                                    spacing: 3
-                                    clip: true
-
-                                    delegate: Rectangle {
-                                        width: specializationListView.width
-                                        height: 25
-                                        radius: 6
-                                        color: index % 2 === 0 ? "#e3f2fd" : "#f3e5f5"
-                                        border.color: "#bbdefb"
-
-                                        Row {
-                                            anchors.fill: parent
-                                            anchors.margins: 3
-                                            spacing: 5
-
-                                            Text {
-                                                text: model.name
-                                                width: parent.width - 30
-                                                height: parent.height
-                                                verticalAlignment: Text.AlignVCenter
-                                                horizontalAlignment: Text.AlignHCenter
-                                                font.pixelSize: 11
-                                                color: "#2c3e50"
-                                                elide: Text.ElideRight
-                                            }
-
-                                            Button {
-                                                width: 20
-                                                height: 20
-                                                text: "❌"
-                                                enabled: !isSaving
-                                                onClicked: specializationModel.remove(index)
-                                            }
-                                        }
-                                    }
-
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: "Нет специализаций"
-                                        color: "#7f8c8d"
-                                        font.italic: true
-                                        visible: specializationModel.count === 0
-                                    }
-                                }
-                            }
-
-                            // Добавление новой специализации
-                            Item {
-                                width: 350
-                                height: 40
-                                anchors.horizontalCenter: parent.horizontalCenter
-
-                                RowLayout {
-                                    anchors.fill: parent
-                                    spacing: 10
-
-                                    TextField {
-                                        id: newSpecializationField
-                                        Layout.fillWidth: true
-                                        placeholderText: "Новая специализация"
-                                        horizontalAlignment: Text.AlignHCenter
-                                        enabled: !isSaving
-                                        KeyNavigation.tab: saveButton
-                                        Keys.onReturnPressed: addSpecialization()
-                                        Keys.onEnterPressed: addSpecialization()
-                                        Keys.onUpPressed: navigateToPreviousField(newSpecializationField)
-                                        Keys.onDownPressed: saveButton.forceActiveFocus()
-                                    }
-
-                                    Button {
-                                        Layout.preferredWidth: 40
-                                        Layout.preferredHeight: 40
-                                        text: "➕"
-                                        enabled: !isSaving
-                                        onClicked: addSpecialization()
-                                    }
+                                    onClicked: addSpecialization()
                                 }
                             }
                         }

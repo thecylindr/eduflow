@@ -31,7 +31,6 @@ ApplicationWindow {
     property bool apiInitialized: false
 
     function navigateTo(view) {
-        console.log("🧭 Навигация на:", view);
         currentView = view;
 
         // Автоматически загружаем данные при переходе
@@ -75,14 +74,11 @@ ApplicationWindow {
 
     // Функция инициализации API из Auth окна
     function initializeProfile(token, baseUrl) {
-        console.log("🔐 Инициализация профиля с токеном длиной:", token ? token.length : 0);
-
         var actualToken = token;
         var actualBaseUrl = baseUrl;
 
         if (!actualToken || actualToken.length === 0) {
             actualToken = settingsManager.authToken || "";
-            console.log("🔐 Токен взят из настроек, длина:", actualToken.length);
         }
 
         if (!actualBaseUrl || actualBaseUrl.length === 0) {
@@ -91,16 +87,9 @@ ApplicationWindow {
                 mainApi.remoteApiBaseUrl + ":" + mainApi.remotePort;
         }
 
-        console.log("🔐 Финальные параметры инициализации:");
-        console.log("   Токен длина:", actualToken.length);
-        console.log("   Base URL:", actualBaseUrl);
-
         // Инициализируем API объект
         mainApi.initialize(actualToken, actualBaseUrl);
         apiInitialized = true;
-
-        // СРАЗУ загружаем данные, БЕЗ ПРОВЕРКИ ТОКЕНА
-        console.log("✅ Пропускаем проверку токена, сразу загружаем данные");
         loadTeachers();
         loadStudents();
         loadGroups();
@@ -116,7 +105,6 @@ ApplicationWindow {
         mainApi.getStudents(function(response) {
             if (response.success) {
                 mainWindow.students = response.data || [];
-                showMessage("✅ Студенты успешно загружены", "success");
             } else {
                 showMessage("❌ Ошибка загрузки студентов: " + response.error, "error");
             }
@@ -124,19 +112,14 @@ ApplicationWindow {
     }
 
     function loadGroups() {
-        console.log("📥 Загрузка групп...");
-        console.log("   API аутентифицирован:", mainApi.isAuthenticated);
-
         if (!mainApi.isAuthenticated) {
             showMessage("❌ Требуется аутентификация", "error");
             return;
         }
 
         mainApi.getGroups(function(response) {
-            console.log("📨 Ответ от сервера (группы):", response);
             if (response.success) {
                 mainWindow.groups = response.data || [];
-                showMessage("✅ Группы успешно загружены", "success");
             } else {
                 showMessage("❌ Ошибка загрузки групп: " + response.error, "error");
             }
@@ -152,7 +135,6 @@ ApplicationWindow {
         mainApi.getTeachers(function(response) {
             if (response.success) {
                 mainWindow.teachers = response.data || [];
-                showMessage("✅ Преподаватели успешно загружены", "success");
             } else {
                 showMessage("❌ Ошибка загрузки преподавателей: " + response.error, "error");
             }

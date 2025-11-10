@@ -119,7 +119,10 @@ ApplicationWindow {
             student_code: studentCode,
             event_id: eventId,
             date: dateField.text,
-            description: descriptionField.text
+            description: descriptionField.text,
+            passport_series: "", // Обязательные поля для сервера
+            passport_number: "", // Обязательные поля для сервера
+            file_path: "" // Обязательные поля для сервера
         }
     }
 
@@ -218,10 +221,10 @@ ApplicationWindow {
         Rectangle {
             id: whiteForm
             width: 410
-            height: 520
+            height: 470
             anchors {
                 top: titleBar.bottom
-                topMargin: 30
+                topMargin: 16
                 horizontalCenter: parent.horizontalCenter
             }
             color: "#ffffff"
@@ -233,146 +236,141 @@ ApplicationWindow {
                 anchors.margins: 20
                 spacing: 16
 
-                // Прокручиваемая область с контентом
-                ScrollView {
+                // Контент формы
+                Column {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    clip: true
+                    spacing: 20
 
+                    // Студент
                     Column {
                         width: parent.width
-                        spacing: 20
+                        spacing: 8
 
-                        // Студент
-                        Column {
-                            width: parent.width
-                            spacing: 8
+                        Text {
+                            text: "Студент:"
+                            color: "#2c3e50"
+                            font.bold: true
+                            font.pixelSize: 14
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
 
-                            Text {
-                                text: "Студент:"
-                                color: "#2c3e50"
-                                font.bold: true
-                                font.pixelSize: 14
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
+                        ComboBox {
+                            id: studentComboBox
+                            width: parent.width - 40
+                            height: 40
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            enabled: !isSaving
+                            font.pixelSize: 14
+                            model: portfolioFormWindow.students
+                            textRole: "displayName"
+                            KeyNavigation.tab: eventComboBox
+                            Keys.onReturnPressed: navigateToNextField(studentComboBox)
+                            Keys.onEnterPressed: navigateToNextField(studentComboBox)
+                            Keys.onUpPressed: navigateToPreviousField(studentComboBox)
+                            Keys.onDownPressed: navigateToNextField(studentComboBox)
 
-                            ComboBox {
-                                id: studentComboBox
-                                width: parent.width - 40
-                                height: 40
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                enabled: !isSaving
-                                font.pixelSize: 14
-                                model: portfolioFormWindow.students
-                                textRole: "displayName"
-                                KeyNavigation.tab: eventComboBox
-                                Keys.onReturnPressed: navigateToNextField(studentComboBox)
-                                Keys.onEnterPressed: navigateToNextField(studentComboBox)
-                                Keys.onUpPressed: navigateToPreviousField(studentComboBox)
-                                Keys.onDownPressed: navigateToNextField(studentComboBox)
-
-                                // Функция для отображения ФИО студента
-                                property string displayName: {
-                                    if (model && currentIndex >= 0) {
-                                        var student = students[currentIndex]
-                                        var lastName = student.lastName || student.last_name || ""
-                                        var firstName = student.firstName || student.first_name || ""
-                                        var middleName = student.middleName || student.middle_name || ""
-                                        return [lastName, firstName, middleName].filter(Boolean).join(" ")
-                                    }
-                                    return ""
+                            // Функция для отображения ФИО студента
+                            property string displayName: {
+                                if (model && currentIndex >= 0) {
+                                    var student = students[currentIndex]
+                                    var lastName = student.lastName || student.last_name || ""
+                                    var firstName = student.firstName || student.first_name || ""
+                                    var middleName = student.middleName || student.middle_name || ""
+                                    return [lastName, firstName, middleName].filter(Boolean).join(" ")
                                 }
+                                return ""
                             }
                         }
+                    }
 
-                        // Событие
-                        Column {
-                            width: parent.width
-                            spacing: 8
+                    // Событие
+                    Column {
+                        width: parent.width
+                        spacing: 8
 
-                            Text {
-                                text: "Событие:"
-                                color: "#2c3e50"
-                                font.bold: true
-                                font.pixelSize: 14
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
-
-                            ComboBox {
-                                id: eventComboBox
-                                width: parent.width - 40
-                                height: 40
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                enabled: !isSaving
-                                font.pixelSize: 14
-                                model: portfolioFormWindow.events
-                                textRole: "eventType"
-                                KeyNavigation.tab: dateField
-                                Keys.onReturnPressed: navigateToNextField(eventComboBox)
-                                Keys.onEnterPressed: navigateToNextField(eventComboBox)
-                                Keys.onUpPressed: navigateToPreviousField(eventComboBox)
-                                Keys.onDownPressed: navigateToNextField(eventComboBox)
-                            }
+                        Text {
+                            text: "Событие:"
+                            color: "#2c3e50"
+                            font.bold: true
+                            font.pixelSize: 14
+                            anchors.horizontalCenter: parent.horizontalCenter
                         }
 
-                        // Дата
-                        Column {
-                            width: parent.width
-                            spacing: 8
+                        ComboBox {
+                            id: eventComboBox
+                            width: parent.width - 40
+                            height: 40
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            enabled: !isSaving
+                            font.pixelSize: 14
+                            model: portfolioFormWindow.events
+                            textRole: "eventType"
+                            KeyNavigation.tab: dateField
+                            Keys.onReturnPressed: navigateToNextField(eventComboBox)
+                            Keys.onEnterPressed: navigateToNextField(eventComboBox)
+                            Keys.onUpPressed: navigateToPreviousField(eventComboBox)
+                            Keys.onDownPressed: navigateToNextField(eventComboBox)
+                        }
+                    }
 
-                            Text {
-                                text: "Дата:"
-                                color: "#2c3e50"
-                                font.bold: true
-                                font.pixelSize: 14
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
+                    // Дата
+                    Column {
+                        width: parent.width
+                        spacing: 8
 
-                            TextField {
-                                id: dateField
-                                width: parent.width - 40
-                                height: 40
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                placeholderText: "ГГГГ-ММ-ДД"
-                                horizontalAlignment: Text.AlignHCenter
-                                enabled: !isSaving
-                                font.pixelSize: 14
-                                KeyNavigation.tab: descriptionField
-                                Keys.onReturnPressed: navigateToNextField(dateField)
-                                Keys.onEnterPressed: navigateToNextField(dateField)
-                                Keys.onUpPressed: navigateToPreviousField(dateField)
-                                Keys.onDownPressed: navigateToNextField(dateField)
-                            }
+                        Text {
+                            text: "Дата:"
+                            color: "#2c3e50"
+                            font.bold: true
+                            font.pixelSize: 14
+                            anchors.horizontalCenter: parent.horizontalCenter
                         }
 
-                        // Описание
-                        Column {
-                            width: parent.width
-                            spacing: 8
+                        TextField {
+                            id: dateField
+                            width: parent.width - 40
+                            height: 40
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            placeholderText: "ГГГГ-ММ-ДД"
+                            horizontalAlignment: Text.AlignHCenter
+                            enabled: !isSaving
+                            font.pixelSize: 14
+                            KeyNavigation.tab: descriptionField
+                            Keys.onReturnPressed: navigateToNextField(dateField)
+                            Keys.onEnterPressed: navigateToNextField(dateField)
+                            Keys.onUpPressed: navigateToPreviousField(dateField)
+                            Keys.onDownPressed: navigateToNextField(dateField)
+                        }
+                    }
 
-                            Text {
-                                text: "Описание:"
-                                color: "#2c3e50"
-                                font.bold: true
-                                font.pixelSize: 14
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
+                    // Описание
+                    Column {
+                        width: parent.width
+                        spacing: 8
 
-                            TextArea {
-                                id: descriptionField
-                                width: parent.width - 40
-                                height: 80
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                placeholderText: "Введите описание портфолио..."
-                                wrapMode: Text.WordWrap
-                                enabled: !isSaving
-                                font.pixelSize: 12
-                                KeyNavigation.tab: saveButton
-                                Keys.onReturnPressed: navigateToNextField(descriptionField)
-                                Keys.onEnterPressed: navigateToNextField(descriptionField)
-                                Keys.onUpPressed: navigateToPreviousField(descriptionField)
-                                Keys.onDownPressed: saveButton.forceActiveFocus()
-                            }
+                        Text {
+                            text: "Описание:"
+                            color: "#2c3e50"
+                            font.bold: true
+                            font.pixelSize: 14
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        TextArea {
+                            id: descriptionField
+                            width: parent.width - 40
+                            height: 80
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            placeholderText: "Введите описание портфолио..."
+                            wrapMode: Text.WordWrap
+                            enabled: !isSaving
+                            font.pixelSize: 12
+                            KeyNavigation.tab: saveButton
+                            Keys.onReturnPressed: navigateToNextField(descriptionField)
+                            Keys.onEnterPressed: navigateToNextField(descriptionField)
+                            Keys.onUpPressed: navigateToPreviousField(descriptionField)
+                            Keys.onDownPressed: saveButton.forceActiveFocus()
                         }
                     }
                 }

@@ -213,7 +213,11 @@ ApplicationWindow {
             id: whiteForm
             width: 380
             height: 500
-            anchors.centerIn: parent
+            anchors {
+                top: titleBar.bottom
+                topMargin: 16
+                horizontalCenter: parent.horizontalCenter
+            }
             color: "#ffffff"
             opacity: 0.925
             radius: 12
@@ -223,207 +227,202 @@ ApplicationWindow {
                 anchors.margins: 16
                 spacing: 12
 
-                // Прокручиваемая область с контентом
-                ScrollView {
+                // Контент формы
+                Column {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    clip: true
+                    spacing: 14
 
+                    // ФИО
                     Column {
                         width: parent.width
-                        spacing: 14
+                        spacing: 6
 
-                        // ФИО
-                        Column {
-                            width: parent.width
-                            spacing: 6
-
-                            Text {
-                                text: "ФИО:"
-                                color: "#2c3e50"
-                                font.bold: true
-                                font.pixelSize: 13
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
-
-                            Row {
-                                width: 300
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                spacing: 8
-
-                                TextField {
-                                    id: lastNameField
-                                    width: 96
-                                    height: 34
-                                    placeholderText: "Фамилия*"
-                                    horizontalAlignment: Text.AlignHCenter
-                                    enabled: !isSaving
-                                    font.pixelSize: 12
-                                    KeyNavigation.tab: firstNameField
-                                    Keys.onReturnPressed: navigateToNextField(lastNameField)
-                                    Keys.onEnterPressed: navigateToNextField(lastNameField)
-                                    Keys.onUpPressed: navigateToPreviousField(lastNameField)
-                                    Keys.onDownPressed: navigateToNextField(lastNameField)
-                                }
-
-                                TextField {
-                                    id: firstNameField
-                                    width: 96
-                                    height: 34
-                                    placeholderText: "Имя*"
-                                    horizontalAlignment: Text.AlignHCenter
-                                    enabled: !isSaving
-                                    font.pixelSize: 12
-                                    KeyNavigation.tab: middleNameField
-                                    Keys.onReturnPressed: navigateToNextField(firstNameField)
-                                    Keys.onEnterPressed: navigateToNextField(firstNameField)
-                                    Keys.onUpPressed: navigateToPreviousField(firstNameField)
-                                    Keys.onDownPressed: navigateToNextField(firstNameField)
-                                }
-
-                                TextField {
-                                    id: middleNameField
-                                    width: 96
-                                    height: 34
-                                    placeholderText: "Отчество"
-                                    horizontalAlignment: Text.AlignHCenter
-                                    enabled: !isSaving
-                                    font.pixelSize: 12
-                                    KeyNavigation.tab: emailField
-                                    Keys.onReturnPressed: navigateToNextField(middleNameField)
-                                    Keys.onEnterPressed: navigateToNextField(middleNameField)
-                                    Keys.onUpPressed: navigateToPreviousField(middleNameField)
-                                    Keys.onDownPressed: navigateToNextField(middleNameField)
-                                }
-                            }
+                        Text {
+                            text: "ФИО:"
+                            color: "#2c3e50"
+                            font.bold: true
+                            font.pixelSize: 13
+                            anchors.horizontalCenter: parent.horizontalCenter
                         }
 
-                        // Контакты
-                        Column {
-                            width: parent.width
-                            spacing: 6
-
-                            Text {
-                                text: "Контакты:"
-                                color: "#2c3e50"
-                                font.bold: true
-                                font.pixelSize: 13
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
+                        Row {
+                            width: 300
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            spacing: 8
 
                             TextField {
-                                id: emailField
-                                width: 280
+                                id: lastNameField
+                                width: 96
                                 height: 34
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                placeholderText: "Email"
+                                placeholderText: "Фамилия*"
                                 horizontalAlignment: Text.AlignHCenter
                                 enabled: !isSaving
                                 font.pixelSize: 12
-                                KeyNavigation.tab: phoneField
-                                Keys.onReturnPressed: navigateToNextField(emailField)
-                                Keys.onEnterPressed: navigateToNextField(emailField)
-                                Keys.onUpPressed: navigateToPreviousField(emailField)
-                                Keys.onDownPressed: navigateToNextField(emailField)
+                                KeyNavigation.tab: firstNameField
+                                Keys.onReturnPressed: navigateToNextField(lastNameField)
+                                Keys.onEnterPressed: navigateToNextField(lastNameField)
+                                Keys.onUpPressed: navigateToPreviousField(lastNameField)
+                                Keys.onDownPressed: navigateToNextField(lastNameField)
                             }
 
                             TextField {
-                                id: phoneField
-                                width: 280
+                                id: firstNameField
+                                width: 96
                                 height: 34
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                placeholderText: "Телефон"
+                                placeholderText: "Имя*"
                                 horizontalAlignment: Text.AlignHCenter
                                 enabled: !isSaving
                                 font.pixelSize: 12
-                                KeyNavigation.tab: passportSeriesField
-                                Keys.onReturnPressed: navigateToNextField(phoneField)
-                                Keys.onEnterPressed: navigateToNextField(phoneField)
-                                Keys.onUpPressed: navigateToPreviousField(phoneField)
-                                Keys.onDownPressed: navigateToNextField(phoneField)
-                            }
-                        }
-
-                        // Паспортные данные
-                        Column {
-                            width: parent.width
-                            spacing: 6
-
-                            Text {
-                                text: "Паспортные данные:"
-                                color: "#2c3e50"
-                                font.bold: true
-                                font.pixelSize: 13
-                                anchors.horizontalCenter: parent.horizontalCenter
+                                KeyNavigation.tab: middleNameField
+                                Keys.onReturnPressed: navigateToNextField(firstNameField)
+                                Keys.onEnterPressed: navigateToNextField(firstNameField)
+                                Keys.onUpPressed: navigateToPreviousField(firstNameField)
+                                Keys.onDownPressed: navigateToNextField(firstNameField)
                             }
 
-                            Row {
-                                width: 280
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                spacing: 8
-
-                                TextField {
-                                    id: passportSeriesField
-                                    width: 136
-                                    height: 34
-                                    placeholderText: "Серия паспорта*"
-                                    horizontalAlignment: Text.AlignHCenter
-                                    enabled: !isSaving
-                                    font.pixelSize: 12
-                                    validator: IntValidator { bottom: 1000; top: 9999 }
-                                    KeyNavigation.tab: passportNumberField
-                                    Keys.onReturnPressed: navigateToNextField(passportSeriesField)
-                                    Keys.onEnterPressed: navigateToNextField(passportSeriesField)
-                                    Keys.onUpPressed: navigateToPreviousField(passportSeriesField)
-                                    Keys.onDownPressed: navigateToNextField(passportSeriesField)
-                                }
-
-                                TextField {
-                                    id: passportNumberField
-                                    width: 136
-                                    height: 34
-                                    placeholderText: "Номер паспорта*"
-                                    horizontalAlignment: Text.AlignHCenter
-                                    enabled: !isSaving
-                                    font.pixelSize: 12
-                                    validator: IntValidator { bottom: 100000; top: 999999 }
-                                    KeyNavigation.tab: groupComboBox
-                                    Keys.onReturnPressed: navigateToNextField(passportNumberField)
-                                    Keys.onEnterPressed: navigateToNextField(passportNumberField)
-                                    Keys.onUpPressed: navigateToPreviousField(passportNumberField)
-                                    Keys.onDownPressed: navigateToNextField(passportNumberField)
-                                }
-                            }
-                        }
-
-                        // Группа
-                        Column {
-                            width: parent.width
-                            spacing: 6
-
-                            Text {
-                                text: "Группа:"
-                                color: "#2c3e50"
-                                font.bold: true
-                                font.pixelSize: 13
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
-
-                            ComboBox {
-                                id: groupComboBox
-                                width: 280
+                            TextField {
+                                id: middleNameField
+                                width: 96
                                 height: 34
-                                anchors.horizontalCenter: parent.horizontalCenter
+                                placeholderText: "Отчество"
+                                horizontalAlignment: Text.AlignHCenter
                                 enabled: !isSaving
                                 font.pixelSize: 12
-                                model: studentFormWindow.groups
-                                textRole: "name"
-                                KeyNavigation.tab: saveButton
-                                Keys.onReturnPressed: navigateToNextField(groupComboBox)
-                                Keys.onEnterPressed: navigateToNextField(groupComboBox)
-                                Keys.onUpPressed: navigateToPreviousField(groupComboBox)
-                                Keys.onDownPressed: saveButton.forceActiveFocus()
+                                KeyNavigation.tab: emailField
+                                Keys.onReturnPressed: navigateToNextField(middleNameField)
+                                Keys.onEnterPressed: navigateToNextField(middleNameField)
+                                Keys.onUpPressed: navigateToPreviousField(middleNameField)
+                                Keys.onDownPressed: navigateToNextField(middleNameField)
                             }
+                        }
+                    }
+
+                    // Контакты
+                    Column {
+                        width: parent.width
+                        spacing: 6
+
+                        Text {
+                            text: "Контакты:"
+                            color: "#2c3e50"
+                            font.bold: true
+                            font.pixelSize: 13
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        TextField {
+                            id: emailField
+                            width: 280
+                            height: 34
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            placeholderText: "Email"
+                            horizontalAlignment: Text.AlignHCenter
+                            enabled: !isSaving
+                            font.pixelSize: 12
+                            KeyNavigation.tab: phoneField
+                            Keys.onReturnPressed: navigateToNextField(emailField)
+                            Keys.onEnterPressed: navigateToNextField(emailField)
+                            Keys.onUpPressed: navigateToPreviousField(emailField)
+                            Keys.onDownPressed: navigateToNextField(emailField)
+                        }
+
+                        TextField {
+                            id: phoneField
+                            width: 280
+                            height: 34
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            placeholderText: "Телефон"
+                            horizontalAlignment: Text.AlignHCenter
+                            enabled: !isSaving
+                            font.pixelSize: 12
+                            KeyNavigation.tab: passportSeriesField
+                            Keys.onReturnPressed: navigateToNextField(phoneField)
+                            Keys.onEnterPressed: navigateToNextField(phoneField)
+                            Keys.onUpPressed: navigateToPreviousField(phoneField)
+                            Keys.onDownPressed: navigateToNextField(phoneField)
+                        }
+                    }
+
+                    // Паспортные данные
+                    Column {
+                        width: parent.width
+                        spacing: 6
+
+                        Text {
+                            text: "Паспортные данные:"
+                            color: "#2c3e50"
+                            font.bold: true
+                            font.pixelSize: 13
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        Row {
+                            width: 280
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            spacing: 8
+
+                            TextField {
+                                id: passportSeriesField
+                                width: 136
+                                height: 34
+                                placeholderText: "Серия паспорта*"
+                                horizontalAlignment: Text.AlignHCenter
+                                enabled: !isSaving
+                                font.pixelSize: 12
+                                validator: IntValidator { bottom: 1000; top: 9999 }
+                                KeyNavigation.tab: passportNumberField
+                                Keys.onReturnPressed: navigateToNextField(passportSeriesField)
+                                Keys.onEnterPressed: navigateToNextField(passportSeriesField)
+                                Keys.onUpPressed: navigateToPreviousField(passportSeriesField)
+                                Keys.onDownPressed: navigateToNextField(passportSeriesField)
+                            }
+
+                            TextField {
+                                id: passportNumberField
+                                width: 136
+                                height: 34
+                                placeholderText: "Номер паспорта*"
+                                horizontalAlignment: Text.AlignHCenter
+                                enabled: !isSaving
+                                font.pixelSize: 12
+                                validator: IntValidator { bottom: 100000; top: 999999 }
+                                KeyNavigation.tab: groupComboBox
+                                Keys.onReturnPressed: navigateToNextField(passportNumberField)
+                                Keys.onEnterPressed: navigateToNextField(passportNumberField)
+                                Keys.onUpPressed: navigateToPreviousField(passportNumberField)
+                                Keys.onDownPressed: navigateToNextField(passportNumberField)
+                            }
+                        }
+                    }
+
+                    // Группа
+                    Column {
+                        width: parent.width
+                        spacing: 6
+
+                        Text {
+                            text: "Группа:"
+                            color: "#2c3e50"
+                            font.bold: true
+                            font.pixelSize: 13
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        ComboBox {
+                            id: groupComboBox
+                            width: 280
+                            height: 34
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            enabled: !isSaving
+                            font.pixelSize: 12
+                            model: studentFormWindow.groups
+                            textRole: "name"
+                            KeyNavigation.tab: saveButton
+                            Keys.onReturnPressed: navigateToNextField(groupComboBox)
+                            Keys.onEnterPressed: navigateToNextField(groupComboBox)
+                            Keys.onUpPressed: navigateToPreviousField(groupComboBox)
+                            Keys.onDownPressed: saveButton.forceActiveFocus()
                         }
                     }
                 }

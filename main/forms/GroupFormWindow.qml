@@ -27,11 +27,61 @@ ApplicationWindow {
         nameField, teacherComboBox
     ]
 
+    // Модель для отображения преподавателей
+    ListModel {
+        id: teacherDisplayModel
+    }
+
+    function updateTeacherModel() {
+        teacherDisplayModel.clear()
+        console.log("🔄 Обновление модели преподавателей. Всего:", teachers.length)
+
+        for (var i = 0; i < teachers.length; i++) {
+            var teacher = teachers[i]
+            var displayName = formatTeacherName(teacher)
+            var teacherId = teacher.teacher_id || teacher.teacherId || teacher.id || 0
+
+            teacherDisplayModel.append({
+                displayName: displayName,
+                teacherId: teacherId,
+                originalIndex: i
+            })
+
+            console.log("  👨‍🏫 Добавлен:", displayName, "(ID:", teacherId + ")")
+        }
+
+        // Восстанавливаем выбранного преподавателя после обновления модели
+        if (isEditMode && currentGroup) {
+            restoreSelectedTeacher()
+        }
+    }
+
+    function formatTeacherName(teacher) {
+        var lastName = teacher.last_name || teacher.lastName || ""
+        var firstName = teacher.first_name || teacher.firstName || ""
+        var middleName = teacher.middle_name || teacher.middleName || ""
+        return [lastName, firstName, middleName].filter(Boolean).join(" ").trim()
+    }
+
+    function restoreSelectedTeacher() {
+        var teacherId = currentGroup.teacher_id || currentGroup.teacherId
+        if (teacherId) {
+            for (var i = 0; i < teacherDisplayModel.count; i++) {
+                if (teacherDisplayModel.get(i).teacherId === teacherId) {
+                    teacherComboBox.currentIndex = i
+                    console.log("🎯 Восстановлен выбранный преподаватель:", teacherDisplayModel.get(i).displayName)
+                    break
+                }
+            }
+        }
+    }
+
     function openForAdd() {
         currentGroup = null
         isEditMode = false
         isSaving = false
         clearForm()
+        updateTeacherModel()
         groupFormWindow.show()
         groupFormWindow.requestActivate()
         groupFormWindow.x = (Screen.width - groupFormWindow.width) / 2
@@ -43,6 +93,7 @@ ApplicationWindow {
         currentGroup = groupData
         isEditMode = true
         isSaving = false
+        updateTeacherModel()
         fillForm(groupData)
         groupFormWindow.show()
         groupFormWindow.requestActivate()
@@ -62,21 +113,7 @@ ApplicationWindow {
 
     function fillForm(groupData) {
         nameField.text = groupData.name || ""
-
-        // Находим индекс преподавателя в комбобоксе
-        var teacherId = groupData.teacherId || groupData.teacher_id
-        if (teacherId) {
-            for (var i = 0; i < teachers.length; i++) {
-                var teacher = teachers[i]
-                var currentTeacherId = teacher.teacherId || teacher.teacher_id
-                if (currentTeacherId === teacherId) {
-                    teacherComboBox.currentIndex = i
-                    break
-                }
-            }
-        } else {
-            teacherComboBox.currentIndex = -1
-        }
+        console.log("📝 Заполнение формы группы:", groupData.name)
     }
 
     function getGroupData() {
@@ -85,10 +122,17 @@ ApplicationWindow {
             groupId = currentGroup.groupId || currentGroup.group_id || 0
         }
 
-        var selectedTeacher = teacherComboBox.currentIndex >= 0 ?
-            teachers[teacherComboBox.currentIndex] : null
-        var teacherId = selectedTeacher ?
-            (selectedTeacher.teacherId || selectedTeacher.teacher_id) : 0
+        var selectedTeacher = null
+        var teacherId = 0
+
+        if (teacherComboBox.currentIndex >= 0) {
+            var selectedItem = teacherDisplayModel.get(teacherComboBox.currentIndex)
+            teacherId = selectedItem.teacherId
+            selectedTeacher = teachers[selectedItem.originalIndex]
+            console.log("📤 Выбран преподаватель:", selectedItem.displayName, "ID:", teacherId)
+        } else {
+            console.log("❌ Преподаватель не выбран")
+        }
 
         return {
             group_id: groupId,
@@ -148,6 +192,12 @@ ApplicationWindow {
         }
     }
 
+    // Обновляем модель при изменении списка преподавателей
+    onTeachersChanged: {
+        console.log("📋 Список преподавателей изменен, количество:", teachers.length)
+        updateTeacherModel()
+    }
+
     // Основной контейнер с градиентом
     Rectangle {
         id: windowContainer
@@ -196,7 +246,7 @@ ApplicationWindow {
             height: 360
             anchors {
                 top: titleBar.bottom
-                topMargin: 30
+                topMargin: 16
                 horizontalCenter: parent.horizontalCenter
             }
             color: "#ffffff"
@@ -208,116 +258,202 @@ ApplicationWindow {
                 anchors.margins: 20
                 spacing: 16
 
-                // Прокручиваемая область с контентом
-                ScrollView {
+                // Контент формы
+                Column {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    clip: true
+                    spacing: 20
 
+                    // Название группы
                     Column {
                         width: parent.width
-                        spacing: 20
+                        spacing: 8
 
-                        // Название группы
-                        Column {
-                            width: parent.width
-                            spacing: 8
-
-                            Text {
-                                text: "Название группы:"
-                                color: "#2c3e50"
-                                font.bold: true
-                                font.pixelSize: 14
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
-
-                            TextField {
-                                id: nameField
-                                width: parent.width - 40
-                                height: 40
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                placeholderText: "Введите название группы*"
-                                horizontalAlignment: Text.AlignHCenter
-                                enabled: !isSaving
-                                font.pixelSize: 14
-                                KeyNavigation.tab: teacherComboBox
-                                Keys.onReturnPressed: navigateToNextField(nameField)
-                                Keys.onEnterPressed: navigateToNextField(nameField)
-                                Keys.onUpPressed: navigateToPreviousField(nameField)
-                                Keys.onDownPressed: navigateToNextField(nameField)
-                            }
-                        }
-
-                        // Преподаватель (куратор)
-                        Column {
-                            width: parent.width
-                            spacing: 8
-
-                            Text {
-                                text: "Преподаватель (куратор):"
-                                color: "#2c3e50"
-                                font.bold: true
-                                font.pixelSize: 14
-                                anchors.horizontalCenter: parent.horizontalCenter
-                            }
-
-                            ComboBox {
-                                id: teacherComboBox
-                                width: parent.width - 40
-                                height: 40
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                enabled: !isSaving
-                                font.pixelSize: 14
-                                model: groupFormWindow.teachers
-                                textRole: "name"
-                                KeyNavigation.tab: saveButton
-                                Keys.onReturnPressed: navigateToNextField(teacherComboBox)
-                                Keys.onEnterPressed: navigateToNextField(teacherComboBox)
-                                Keys.onUpPressed: navigateToPreviousField(teacherComboBox)
-                                Keys.onDownPressed: saveButton.forceActiveFocus()
-                            }
-                        }
-
-                        // Информация
-                        Rectangle {
-                            width: parent.width - 40
-                            height: 70
+                        Text {
+                            text: "Название группы:"
+                            color: "#2c3e50"
+                            font.bold: true
+                            font.pixelSize: 14
                             anchors.horizontalCenter: parent.horizontalCenter
-                            color: "#e8f4fd"
-                            radius: 10
-                            border.color: "#3498db"
-                            border.width: 1
+                        }
 
-                            Row {
-                                anchors.centerIn: parent
-                                spacing: 12
-                                width: parent.width - 24
+                        TextField {
+                            id: nameField
+                            width: parent.width - 40
+                            height: 40
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            placeholderText: "Введите название группы*"
+                            horizontalAlignment: Text.AlignHCenter
+                            enabled: !isSaving
+                            font.pixelSize: 14
+                            KeyNavigation.tab: teacherComboBox
+                            Keys.onReturnPressed: navigateToNextField(nameField)
+                            Keys.onEnterPressed: navigateToNextField(nameField)
+                            Keys.onUpPressed: navigateToPreviousField(nameField)
+                            Keys.onDownPressed: navigateToNextField(nameField)
+                        }
+                    }
 
-                                Text {
-                                    text: "💡"
-                                    font.pixelSize: 20
-                                    anchors.verticalCenter: parent.verticalCenter
+                    // Преподаватель (куратор)
+                    Column {
+                        width: parent.width
+                        spacing: 8
+
+                        Text {
+                            text: "Преподаватель (куратор):"
+                            color: "#2c3e50"
+                            font.bold: true
+                            font.pixelSize: 14
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        ComboBox {
+                            id: teacherComboBox
+                            width: parent.width - 40
+                            height: 40
+                            anchors.horizontalCenter: parent.horizontalCenter
+                            enabled: !isSaving && teacherDisplayModel.count > 0
+                            font.pixelSize: 14
+
+                            // Используем отдельную модель для отображения
+                            model: teacherDisplayModel
+                            textRole: "displayName"
+
+                            // Стилизация ComboBox
+                            background: Rectangle {
+                                border.color: teacherComboBox.enabled ? "#e0e0e0" : "#f0f0f0"
+                                border.width: 1
+                                radius: 8
+                                color: teacherComboBox.enabled ? "white" : "#f8f8f8"
+                            }
+
+                            contentItem: Text {
+                                text: teacherComboBox.displayText
+                                font: teacherComboBox.font
+                                color: teacherComboBox.enabled ? "#2c3e50" : "#7f8c8d"
+                                verticalAlignment: Text.AlignVCenter
+                                horizontalAlignment: Text.AlignHCenter
+                                elide: Text.ElideRight
+                            }
+
+                            // Улучшенный выпадающий список
+                            popup: Popup {
+                                y: teacherComboBox.height
+                                width: teacherComboBox.width
+                                implicitHeight: Math.min(400, contentItem.implicitHeight)
+                                padding: 1
+
+                                contentItem: ListView {
+                                    clip: true
+                                    implicitHeight: contentHeight
+                                    model: teacherComboBox.popup.visible ? teacherComboBox.delegateModel : null
+                                    currentIndex: teacherComboBox.highlightedIndex
+
+                                    ScrollIndicator.vertical: ScrollIndicator { }
                                 }
 
-                                Column {
-                                    width: parent.width - 36
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    spacing: 4
+                                background: Rectangle {
+                                    border.color: "#e0e0e0"
+                                    radius: 8
+                                    color: "white"
+                                }
+                            }
 
-                                    Text {
-                                        text: "Информация о группе"
-                                        color: "#2c3e50"
-                                        font.bold: true
-                                        font.pixelSize: 12
-                                    }
+                            // Делегат для элементов списка
+                            delegate: ItemDelegate {
+                                width: teacherComboBox.width
+                                height: 36
+                                text: model.displayName
+                                font: teacherComboBox.font
+                                highlighted: teacherComboBox.highlightedIndex === index
 
-                                    Text {
-                                        width: parent.width
-                                        text: "Количество студентов автоматически рассчитывается при добавлении студентов в группу"
-                                        color: "#34495e"
-                                        font.pixelSize: 10
-                                        wrapMode: Text.WordWrap
-                                    }
+                                background: Rectangle {
+                                    color: highlighted ? "#e3f2fd" :
+                                           (index % 2 === 0 ? "#f8f9fa" : "white")
+                                }
+
+                                contentItem: Text {
+                                    text: model.displayName
+                                    font: parent.font
+                                    color: "#2c3e50"
+                                    verticalAlignment: Text.AlignVCenter
+                                    horizontalAlignment: Text.AlignHCenter
+                                    elide: Text.ElideRight
+                                }
+                            }
+
+                            KeyNavigation.tab: saveButton
+                            Keys.onReturnPressed: navigateToNextField(teacherComboBox)
+                            Keys.onEnterPressed: navigateToNextField(teacherComboBox)
+                            Keys.onUpPressed: navigateToPreviousField(teacherComboBox)
+                            Keys.onDownPressed: saveButton.forceActiveFocus()
+
+                            onCurrentIndexChanged: {
+                                if (currentIndex >= 0) {
+                                    var selected = teacherDisplayModel.get(currentIndex)
+                                    console.log("🔄 Выбран преподаватель:", selected.displayName, "ID:", selected.teacherId)
+                                }
+                            }
+                        }
+
+                        // Сообщение если нет преподавателей
+                        Text {
+                            visible: teacherDisplayModel.count === 0
+                            text: teachers.length === 0 ? "❌ Нет доступных преподавателей" : "🔄 Загрузка преподавателей..."
+                            color: "#e74c3c"
+                            font.pixelSize: 12
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+
+                        // Информация о количестве
+                        Text {
+                            visible: teacherDisplayModel.count > 0
+                            text: "Доступно преподавателей: " + teacherDisplayModel.count
+                            color: "#27ae60"
+                            font.pixelSize: 11
+                            anchors.horizontalCenter: parent.horizontalCenter
+                        }
+                    }
+
+                    // Информация
+                    Rectangle {
+                        width: parent.width - 40
+                        height: 70
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        color: "#e8f4fd"
+                        radius: 10
+                        border.color: "#3498db"
+                        border.width: 1
+
+                        Row {
+                            anchors.centerIn: parent
+                            spacing: 12
+                            width: parent.width - 24
+
+                            Text {
+                                text: "💡"
+                                font.pixelSize: 20
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+
+                            Column {
+                                width: parent.width - 36
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: 4
+
+                                Text {
+                                    text: "Информация о группе"
+                                    color: "#2c3e50"
+                                    font.bold: true
+                                    font.pixelSize: 12
+                                }
+
+                                Text {
+                                    width: parent.width
+                                    text: "Количество студентов автоматически рассчитывается при добавлении студентов в группу"
+                                    color: "#34495e"
+                                    font.pixelSize: 10
+                                    wrapMode: Text.WordWrap
                                 }
                             }
                         }
@@ -334,12 +470,26 @@ ApplicationWindow {
                         text: isSaving ? "⏳ Сохранение..." : "💾 Сохранить"
                         implicitWidth: 140
                         implicitHeight: 40
-                        enabled: !isSaving && nameField.text.trim() !== "" && teacherComboBox.currentIndex >= 0
+                        enabled: !isSaving &&
+                                nameField.text.trim() !== "" &&
+                                teacherComboBox.currentIndex >= 0
                         font.pixelSize: 14
                         KeyNavigation.tab: cancelButton
                         Keys.onReturnPressed: if (enabled && !isSaving) saveButton.clicked()
                         Keys.onEnterPressed: if (enabled && !isSaving) saveButton.clicked()
                         Keys.onUpPressed: teacherComboBox.forceActiveFocus()
+
+                        background: Rectangle {
+                            radius: 8
+                            color: saveButton.enabled ? "#4CAF50" : "#cccccc"
+                        }
+                        contentItem: Text {
+                            text: saveButton.text
+                            color: "white"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            font: saveButton.font
+                        }
 
                         onClicked: {
                             if (nameField.text.trim() === "") {
@@ -366,6 +516,18 @@ ApplicationWindow {
                         Keys.onReturnPressed: if (enabled) cancelButton.clicked()
                         Keys.onEnterPressed: if (enabled) cancelButton.clicked()
                         Keys.onUpPressed: saveButton.forceActiveFocus()
+
+                        background: Rectangle {
+                            radius: 8
+                            color: "#f44336"
+                        }
+                        contentItem: Text {
+                            text: cancelButton.text
+                            color: "white"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            font: cancelButton.font
+                        }
 
                         onClicked: {
                             cancelled()
