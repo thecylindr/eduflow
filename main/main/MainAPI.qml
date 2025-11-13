@@ -8,7 +8,7 @@ QtObject {
     property bool isAuthenticated: authToken !== "" && baseUrl !== ""
     property bool tokenValid: false
     property string tokenStatus: "не проверен"
-    property string remoteApiBaseUrl: "https://deltablast.fun"
+    property string remoteApiBaseUrl: "http://deltablast.fun"
     property int remotePort: 5000
 
     // Кросс-платформенные настройки
@@ -406,7 +406,6 @@ QtObject {
     function getEvents(callback) {
             sendRequest("GET", "/events", null, function(response) {
                 if (response.success) {
-                    // ИСПРАВЛЕНИЕ: Правильно извлекаем массив событий из ответа
                     var eventsData = response.data || {};
                     var eventsArray = [];
 
@@ -416,9 +415,23 @@ QtObject {
                         eventsArray = eventsData;
                     }
 
+                    // Преобразуем поля для совместимости
+                    var formattedEvents = eventsArray.map(function(event) {
+                        return {
+                            id: event.id || 0,
+                            eventId: event.event_id || 0,
+                            eventType: event.event_type || "",
+                            eventCategory: event.category || "",
+                            startDate: event.start_date || "",
+                            endDate: event.end_date || "",
+                            location: event.location || "",
+                            lore: event.lore || ""
+                        };
+                    });
+
                     callback({
                         success: true,
-                        data: eventsArray,
+                        data: formattedEvents,
                         status: response.status
                     });
                 } else {
@@ -461,100 +474,57 @@ QtObject {
     function addEvent(eventData, callback) {
         console.log("➕ Добавление события:", JSON.stringify(eventData));
 
-        // Согласуем с серверными требованиями
         var cleanEventData = {
-            event_type: eventData.event_type,
-            event_category: eventData.event_category,
-            start_date: eventData.start_date,
-            end_date: eventData.end_date,
-            location: eventData.location,
-            lore: eventData.lore
+            event_id: parseInt(eventData.measureCode) || 0,
+            event_type: eventData.eventType || "",
+            start_date: eventData.startDate || "",
+            end_date: eventData.endDate || "",
+            location: eventData.location || "",
+            lore: eventData.lore || ""
         };
+
+        console.log("📤 Отправка события с measure_code:", cleanEventData.event_id);
 
         sendRequest("POST", "/events", cleanEventData, function(response) {
             console.log("📨 Ответ добавления события:", response);
-
-            if (callback) {
-                if (response.success) {
-                    callback({
-                        success: true,
-                        message: response.data?.message || "Событие успешно добавлено",
-                        data: response.data,
-                        status: response.status
-                    });
-                } else {
-                    callback({
-                        success: false,
-                        error: response.error || "Ошибка добавления события",
-                        status: response.status
-                    });
-                }
-            }
+            if (callback) callback(response);
         });
     }
-
 
     function updateEvent(eventId, eventData, callback) {
         console.log("🔄 Обновление события ID:", eventId, "Данные:", JSON.stringify(eventData));
 
-        // Согласуем с серверными требованиями
-        var cleanEventData = {
-            event_type: eventData.event_type,
-            event_category: eventData.event_category,
-            start_date: eventData.start_date,
-            end_date: eventData.end_date,
+        var endpoint = "/events/" + eventId;
+
+        // ИСПРАВЛЕНИЕ: преобразуем данные в формат сервера
+        var updateData = {
+            event_type: eventData.eventType,
+            event_id: eventData.measureCode || eventData.event_id,
+            start_date: eventData.startDate,
+            end_date: eventData.endDate,
             location: eventData.location,
             lore: eventData.lore
         };
 
-        var endpoint = "/events/" + eventId;
-        sendRequest("PUT", endpoint, cleanEventData, function(response) {
+        sendRequest("PUT", endpoint, updateData, function(response) {
             console.log("📨 Ответ обновления события:", response);
-
-            if (callback) {
-                if (response.success) {
-                    callback({
-                        success: true,
-                        message: response.data?.message || "Событие успешно обновлено",
-                        data: response.data,
-                        status: response.status
-                    });
-                } else {
-                    callback({
-                        success: false,
-                        error: response.error || "Ошибка обновления события",
-                        status: response.status
-                    });
-                }
-            }
+            if (callback) callback(response);
         });
     }
 
     function deleteEvent(eventId, callback) {
+        console.log("🗑️ Удаление события ID:", eventId);
+
         var endpoint = "/events/" + eventId;
         sendRequest("DELETE", endpoint, null, function(response) {
-            if (callback) {
-                if (response.success) {
-                    callback({
-                        success: true,
-                        message: response.data?.message || "Событие успешно удалено",
-                        status: response.status
-                    });
-                } else {
-                    callback({
-                        success: false,
-                        error: response.error || "Ошибка удаления события",
-                        status: response.status
-                    });
-                }
-            }
+            console.log("📨 Ответ удаления события:", response);
+            if (callback) callback(response);
         });
     }
 
     function getEventCategories(callback) {
             sendRequest("GET", "/event-categories", null, function(response) {
                 if (response.success) {
-                    // ИСПРАВЛЕНИЕ: Правильно извлекаем массив категорий из ответа
                     var categoriesData = response.data || {};
                     var categoriesArray = [];
 
@@ -565,13 +535,6 @@ QtObject {
                     }
 
                     console.log("📊 Получено категорий событий:", categoriesArray.length);
-
-                    // Логируем структуру данных для отладки
-                    if (categoriesArray.length > 0) {
-                        console.log("📊 Первая категория:",
-                            "event_type:", categoriesArray[0].event_type,
-                            "category:", categoriesArray[0].category);
-                    }
 
                     callback({
                         success: true,
@@ -591,107 +554,212 @@ QtObject {
         }
 
     function addEventCategory(categoryData, callback) {
-        console.log("➕ Добавление категории события:", JSON.stringify(categoryData));
+            console.log("➕ Добавление категории события:", JSON.stringify(categoryData));
 
-        // Валидация длины полей
-        if (categoryData.event_type && categoryData.event_type.length > 24) {
-            console.log("❌ Слишком длинное короткое наименование (макс. 24 символа)");
-            if (callback) callback({
-                success: false,
-                error: "Короткое наименование (event_type) не должно превышать 24 символа"
-            });
-            return;
-        }
-
-        if (categoryData.category && categoryData.category.length > 64) {
-            console.log("❌ Слишком длинное полное наименование (макс. 64 символа)");
-            if (callback) callback({
-                success: false,
-                error: "Полное наименование (category) не должно превышать 64 символа"
-            });
-            return;
-        }
-
-        sendRequest("POST", "/event-categories", categoryData, function(response) {
-            console.log("📨 Ответ добавления категории события:", response);
-
-            if (callback) {
-                if (response.success) {
-                    callback({
-                        success: true,
-                        message: response.data?.message || "Категория события успешно добавлена",
-                        data: response.data,
-                        status: response.status
-                    });
-                } else {
-                    callback({
-                        success: false,
-                        error: response.error || "Ошибка добавления категории события",
-                        status: response.status
-                    });
-                }
+            // Валидация длины полей согласно серверной схеме
+            if (categoryData.event_type && categoryData.event_type.length > 24) {
+                console.log("❌ Слишком длинное короткое наименование (макс. 24 символа)");
+                if (callback) callback({
+                    success: false,
+                    error: "Короткое наименование (event_type) не должно превышать 24 символа"
+                });
+                return;
             }
-        });
-    }
+
+            if (categoryData.category && categoryData.category.length > 64) {
+                console.log("❌ Слишком длинное полное наименование (макс. 64 символа)");
+                if (callback) callback({
+                    success: false,
+                    error: "Полное наименование (category) не должно превышать 64 символа"
+                });
+                return;
+            }
+
+            sendRequest("POST", "/event-categories", categoryData, function(response) {
+                console.log("📨 Ответ добавления категории события:", response);
+
+                if (callback) {
+                    if (response.success) {
+                        callback({
+                            success: true,
+                            message: response.data?.message || "Категория события успешно добавлена",
+                            data: response.data,
+                            status: response.status
+                        });
+                    } else {
+                        callback({
+                            success: false,
+                            error: response.error || "Ошибка добавления категории события",
+                            status: response.status
+                        });
+                    }
+                }
+            });
+        }
 
     function updateEventCategory(categoryId, categoryData, callback) {
-        console.log("🔄 Обновление категории события ID:", categoryId, "Данные:", JSON.stringify(categoryData));
+            console.log("🔄 Обновление категории события ID:", categoryId, "Данные:", JSON.stringify(categoryData));
 
-        // Валидация длины полей
-        if (categoryData.category && categoryData.category.length > 64) {
-            console.log("❌ Слишком длинное полное наименование (макс. 64 символа)");
-            if (callback) callback({
-                success: false,
-                error: "Полное наименование (category) не должно превышать 64 символа"
+            // Валидация длины полей
+            if (categoryData.category && categoryData.category.length > 64) {
+                console.log("❌ Слишком длинное полное наименование (макс. 64 символа)");
+                if (callback) callback({
+                    success: false,
+                    error: "Полное наименование (category) не должно превышать 64 символа"
+                });
+                return;
+            }
+
+            var endpoint = "/event-categories/" + categoryId;
+            sendRequest("PUT", endpoint, categoryData, function(response) {
+                console.log("📨 Ответ обновления категории события:", response);
+
+                if (callback) {
+                    if (response.success) {
+                        callback({
+                            success: true,
+                            message: response.data?.message || "Категория события успешно обновлена",
+                            data: response.data,
+                            status: response.status
+                        });
+                    } else {
+                        callback({
+                            success: false,
+                            error: response.error || "Ошибка обновления категории события",
+                            status: response.status
+                        });
+                    }
+                }
             });
-            return;
         }
 
-        var endpoint = "/event-categories/" + encodeURIComponent(categoryId);
-        sendRequest("PUT", endpoint, categoryData, function(response) {
-            console.log("📨 Ответ обновления категории события:", response);
+    function deleteEventCategory(categoryId, callback) {
+            console.log("🗑️ Удаление категории события ID:", categoryId);
 
-            if (callback) {
-                if (response.success) {
-                    callback({
-                        success: true,
-                        message: response.data?.message || "Категория события успешно обновлена",
-                        data: response.data,
-                        status: response.status
+            var endpoint = "/event-categories/" + categoryId;
+            sendRequest("DELETE", endpoint, null, function(response) {
+                console.log("📨 Ответ удаления категории события:", response);
+
+                if (callback) {
+                    if (response.success) {
+                        callback({
+                            success: true,
+                            message: response.data?.message || "Категория события успешно удалена",
+                            status: response.status
+                        });
+                    } else {
+                        callback({
+                            success: false,
+                            error: response.error || "Ошибка удаления категории события",
+                            status: response.status
+                        });
+                    }
+                }
+            });
+        }
+
+    function getPortfolioForEvents(callback) {
+        console.log("📚 Загрузка списка портфолио для событий...");
+
+        sendRequest("GET", "/portfolio", null, function(response) {
+            console.log("📦 Получен ответ портфолио для событий:", JSON.stringify(response));
+
+            if (response.success) {
+                var portfolioData = [];
+
+                // Анализируем структуру ответа - она вложенная
+                if (response.data && response.data.data && Array.isArray(response.data.data)) {
+                    console.log("✅ Формат 1: response.data.data - массив");
+                    portfolioData = response.data.data;
+                } else if (response.data && Array.isArray(response.data)) {
+                    console.log("✅ Формат 2: response.data - массив");
+                    portfolioData = response.data;
+                } else if (response.data && typeof response.data === 'object') {
+                    console.log("✅ Формат 3: response.data - объект, преобразуем в массив");
+                    portfolioData = Object.keys(response.data).map(function(key) {
+                        return response.data[key];
                     });
                 } else {
-                    callback({
-                        success: false,
-                        error: response.error || "Ошибка обновления категории события",
-                        status: response.status
-                    });
+                    console.log("❌ Неизвестный формат данных:", typeof response.data);
+                    portfolioData = [];
                 }
+
+                console.log("📊 Извлечено записей портфолио:", portfolioData.length);
+
+                // Фильтруем и форматируем данные
+                var validPortfolios = portfolioData.filter(function(portfolio) {
+                    // Проверяем, что есть portfolio_id (будем использовать как measure_code)
+                    var isValid = portfolio && portfolio.portfolio_id && portfolio.portfolio_id > 0;
+                    if (!isValid) {
+                        console.log("⚠️ Отфильтровано невалидное портфолио:", portfolio);
+                    }
+                    return isValid;
+                }).map(function(portfolio) {
+                    // Обеспечиваем наличие всех необходимых полей
+                    // Используем portfolio_id как measure_code, так как measure_code не приходит в ответе
+                    return {
+                        measure_code: portfolio.portfolio_id, // Используем portfolio_id как measure_code
+                        decree: portfolio.decree || 0,
+                        student_code: portfolio.student_code || 0,
+                        student_name: portfolio.student_name || "Студент #" + (portfolio.student_code || "?"),
+                        date: portfolio.date || "",
+                        portfolio_id: portfolio.portfolio_id // Сохраняем оригинальный portfolio_id
+                    };
+                });
+
+                console.log("✅ Валидных портфолио после фильтрации:", validPortfolios.length);
+
+                if (validPortfolios.length > 0) {
+                    console.log("📋 Примеры валидных портфолио:");
+                    for (var i = 0; i < Math.min(3, validPortfolios.length); i++) {
+                        var p = validPortfolios[i];
+                        console.log("   " + p.measure_code + " - Приказ №" + p.decree + " - " + p.student_name);
+                    }
+                } else {
+                    console.log("⚠️ Нет валидных портфолио для отображения");
+                }
+
+                callback({
+                    success: true,
+                    data: validPortfolios,
+                    status: response.status
+                });
+            } else {
+                console.log("❌ Ошибка загрузки портфолио:", response.error);
+                callback({
+                    success: false,
+                    error: response.error || "Неизвестная ошибка при загрузке портфолио",
+                    data: [],
+                    status: response.status
+                });
             }
         });
     }
 
-    function deleteEventCategory(categoryId, callback) {
-        console.log("🗑️ Удаление категории события ID:", categoryId);
+    function debugGetPortfolio(callback) {
+        console.log("🔍 Дебаг: Запрос портфолио...");
+        sendRequest("GET", "/portfolio", null, function(response) {
+            console.log("🔍 Дебаг: Полный ответ портфолио:", JSON.stringify(response, null, 2));
 
-        var endpoint = "/event-categories/" + categoryId;
-        sendRequest("DELETE", endpoint, null, function(response) {
-            console.log("📨 Ответ удаления категории события:", response);
+            if (response.success) {
+                console.log("🔍 Дебаг: Успешный ответ, анализируем структуру...");
+                console.log("🔍 Дебаг: Тип response.data:", typeof response.data);
+                console.log("🔍 Дебаг: response.data keys:", response.data ? Object.keys(response.data) : "null");
 
-            if (callback) {
-                if (response.success) {
-                    callback({
-                        success: true,
-                        message: response.data?.message || "Категория события успешно удалена",
-                        status: response.status
-                    });
-                } else {
-                    callback({
-                        success: false,
-                        error: response.error || "Ошибка удаления категории события",
-                        status: response.status
-                    });
+                if (Array.isArray(response.data)) {
+                    console.log("🔍 Дебаг: response.data - массив, длина:", response.data.length);
+                    if (response.data.length > 0) {
+                        console.log("🔍 Дебаг: Первый элемент:", JSON.stringify(response.data[0], null, 2));
+                    }
+                } else if (response.data && response.data.data) {
+                    console.log("🔍 Дебаг: response.data.data - массив, длина:", response.data.data.length);
+                    if (response.data.data.length > 0) {
+                        console.log("🔍 Дебаг: Первый элемент data:", JSON.stringify(response.data.data[0], null, 2));
+                    }
                 }
             }
+
+            if (callback) callback(response);
         });
     }
 

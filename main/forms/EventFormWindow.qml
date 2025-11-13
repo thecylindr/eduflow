@@ -6,8 +6,8 @@ import "../../common" as Common
 
 ApplicationWindow {
     id: eventFormWindow
-    width: 450
-    height: 600
+    width: 500
+    height: 550
     flags: Qt.Dialog | Qt.FramelessWindowHint
     modality: Qt.ApplicationModal
     color: "transparent"
@@ -16,43 +16,62 @@ ApplicationWindow {
     property var currentEvent: null
     property bool isEditMode: false
     property bool isSaving: false
-    property bool manualEntryMode: false
-    property var eventCategories: [] // Сохраняем свойство для обратной совместимости
+    property var eventCategories: []
+    property var portfolioList: []
+    property bool portfoliosLoaded: false
+    property bool portfoliosLoading: false
+    property string portfolioStatus: "⏳ Загрузка портфолио..."
 
     signal saved(var eventData)
     signal cancelled()
     signal saveCompleted(bool success, string message)
 
-    // Порядок навигации между полями
     property var fieldNavigation: [
-        categoryModeSwitch, eventCategoryField, eventTypeField,
-        startDateField, endDateField, locationField, loreField
+        portfolioComboBox, eventTypeField, startDateField, endDateField, locationField, loreField
     ]
 
     function openForAdd() {
         currentEvent = null
         isEditMode = false
         isSaving = false
-        manualEntryMode = false
+        portfoliosLoaded = false
+        portfoliosLoading = false
+        portfolioStatus = "⏳ Загрузка портфолио..."
         clearForm()
+        loadPortfolios()
         eventFormWindow.show()
         eventFormWindow.requestActivate()
         eventFormWindow.x = (Screen.width - eventFormWindow.width) / 2
         eventFormWindow.y = (Screen.height - eventFormWindow.height) / 2
-        Qt.callLater(function() { categoryModeSwitch.forceActiveFocus() })
+        Qt.callLater(function() {
+            if (portfolioList.length > 0) {
+                portfolioComboBox.forceActiveFocus()
+            } else {
+                eventTypeField.forceActiveFocus()
+            }
+        })
     }
 
     function openForEdit(eventData) {
+        console.log("✏️ Открытие формы для редактирования:", JSON.stringify(eventData))
         currentEvent = eventData
         isEditMode = true
         isSaving = false
-        manualEntryMode = true // В режиме редактирования всегда ручной ввод
-        fillForm(eventData)
+        portfoliosLoaded = false
+        portfoliosLoading = false
+        portfolioStatus = "⏳ Загрузка портфолио..."
+        loadPortfolios()
         eventFormWindow.show()
         eventFormWindow.requestActivate()
         eventFormWindow.x = (Screen.width - eventFormWindow.width) / 2
         eventFormWindow.y = (Screen.height - eventFormWindow.height) / 2
-        Qt.callLater(function() { categoryModeSwitch.forceActiveFocus() })
+        Qt.callLater(function() {
+            if (portfolioList.length > 0) {
+                portfolioComboBox.forceActiveFocus()
+            } else {
+                eventTypeField.forceActiveFocus()
+            }
+        })
     }
 
     function closeWindow() {
@@ -60,8 +79,7 @@ ApplicationWindow {
     }
 
     function clearForm() {
-        manualEntryMode = false
-        eventCategoryField.text = ""
+        portfolioComboBox.currentIndex = -1
         eventTypeField.text = ""
         startDateField.text = ""
         endDateField.text = ""
@@ -72,8 +90,32 @@ ApplicationWindow {
     function fillForm(eventData) {
         console.log("📝 Заполнение формы события:", JSON.stringify(eventData))
 
-        // Заполняем поля вручную
-        eventCategoryField.text = eventData.eventCategory || eventData.event_category || ""
+        if (!portfoliosLoaded) {
+            console.log("⏳ Портфолио еще не загружены, отложим заполнение формы")
+            return
+        }
+
+        // ИСПРАВЛЕНИЕ: Сохраняем оригинальный ID события
+        var measureCode = eventData.measureCode || eventData.event_id || 0
+        console.log("🔍 Ищем портфолио с measure_code:", measureCode)
+
+        if (measureCode > 0) {
+            var foundIndex = -1
+            for (var i = 0; i < portfolioList.length; i++) {
+                if (portfolioList[i].measure_code === measureCode) {
+                    foundIndex = i
+                    console.log("✅ Найдено портфолио, индекс:", i)
+                    break
+                }
+            }
+
+            if (foundIndex >= 0) {
+                portfolioComboBox.currentIndex = foundIndex
+            } else {
+                console.log("⚠️ Портфолио с measure_code", measureCode, "не найдено в списке")
+            }
+        }
+
         eventTypeField.text = eventData.eventType || eventData.event_type || ""
         startDateField.text = eventData.startDate || eventData.start_date || ""
         endDateField.text = eventData.endDate || eventData.end_date || ""
@@ -82,19 +124,31 @@ ApplicationWindow {
     }
 
     function getEventData() {
-        var eventId = 0
-        if (isEditMode && currentEvent) {
-            eventId = currentEvent.eventId || currentEvent.event_id || 0
+        if (portfolioComboBox.currentIndex < 0) {
+            console.log("❌ Портфолио не выбрано")
+            return null
+        }
+
+        var selectedPortfolio = portfolioList[portfolioComboBox.currentIndex]
+
+        if (!selectedPortfolio || !selectedPortfolio.measure_code) {
+            console.log("❌ Выбранное портфолио невалидно")
+            return null
         }
 
         var eventData = {
-            event_id: eventId,
-            event_type: eventTypeField.text.trim(),  // сокращенное наименование
-            event_category: eventCategoryField.text.trim(),  // полное наименование
-            start_date: startDateField.text.trim(),
-            end_date: endDateField.text.trim(),
+            eventType: eventTypeField.text.trim(),
+            measureCode: selectedPortfolio.measure_code,
+            startDate: startDateField.text.trim(),
+            endDate: endDateField.text.trim(),
             location: locationField.text.trim(),
             lore: loreField.text.trim()
+        }
+
+        // ИСПРАВЛЕНИЕ: передаем уникальный id при редактировании
+        if (isEditMode && currentEvent) {
+            eventData.id = currentEvent.id; // Используем уникальный id
+            console.log("🔧 Добавлен уникальный ID события для редактирования:", eventData.id)
         }
 
         console.log("📦 Сформированные данные события:", JSON.stringify(eventData))
@@ -154,7 +208,59 @@ ApplicationWindow {
         }
     }
 
-    // Основной контейнер с градиентом
+    function loadPortfolios() {
+        if (portfoliosLoading) {
+            console.log("⚠️ Загрузка портфолио уже выполняется")
+            return
+        }
+
+        console.log("📚 Начинаем загрузку списка портфолио...")
+        portfoliosLoading = true
+        portfolioStatus = "⏳ Загрузка портфолио..."
+
+        // Сначала используем отладочную функцию для понимания структуры данных
+        mainApi.debugGetPortfolio(function(debugResponse) {
+            console.log("🔍 Отладочная информация получена")
+
+            // Затем загружаем данные для формы
+            mainApi.getPortfolioForEvents(function(response) {
+                portfoliosLoading = false
+
+                if (response.success) {
+                    eventFormWindow.portfolioList = response.data
+                    eventFormWindow.portfoliosLoaded = true
+                    portfolioStatus = "✅ Загружено: " + response.data.length + " портфолио"
+
+                    console.log("✅ Портфолио загружены:", response.data.length)
+
+                    if (response.data.length > 0) {
+                        console.log("📋 Примеры портфолио:")
+                        for (var i = 0; i < Math.min(3, response.data.length); i++) {
+                            var p = response.data[i]
+                            console.log("   " + p.measure_code + " - Приказ №" + p.decree + " - " + p.student_name)
+                        }
+
+                        // Если это режим редактирования, заполняем форму
+                        if (isEditMode && currentEvent) {
+                            console.log("🔄 Заполняем форму после загрузки портфолио")
+                            fillForm(currentEvent)
+                        }
+                    } else {
+                        console.log("⚠️ Список портфолио пуст")
+                        portfolioStatus = "⚠️ Нет доступных портфолио"
+                        showMessage("❌ Нет доступных портфолио для привязки событий", "error")
+                    }
+                } else {
+                    console.log("❌ Ошибка загрузки портфолио:", response.error)
+                    portfolioStatus = "❌ Ошибка загрузки"
+                    showMessage("❌ Ошибка загрузки портфолио: " + response.error, "error")
+                }
+            })
+        })
+    }
+
+
+    // Основной контейнер
     Rectangle {
         id: windowContainer
         anchors.fill: parent
@@ -162,7 +268,6 @@ ApplicationWindow {
         color: "transparent"
         clip: true
 
-        // Градиентный фон
         Rectangle {
             anchors.fill: parent
             gradient: Gradient {
@@ -172,12 +277,10 @@ ApplicationWindow {
             radius: 15
         }
 
-        // Полигоны
         Common.PolygonBackground {
             anchors.fill: parent
         }
 
-        // TitleBar за белой формой
         Common.DialogTitleBar {
             id: titleBar
             anchors {
@@ -195,11 +298,10 @@ ApplicationWindow {
             }
         }
 
-        // Белая форма
         Rectangle {
             id: whiteForm
-            width: 430
-            height: 470
+            width: 480
+            height: 500
             anchors {
                 top: titleBar.bottom
                 topMargin: 20
@@ -214,276 +316,254 @@ ApplicationWindow {
                 anchors.margins: 15
                 spacing: 12
 
-                // Контент без прокрутки
-                Column {
+                ScrollView {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    spacing: 12
+                    clip: true
 
-                    // Переключатель режима ввода
                     Column {
                         width: parent.width
-                        spacing: 6
+                        spacing: 12
 
-                        Text {
-                            text: "Режим ввода категории:"
-                            color: "#2c3e50"
-                            font.bold: true
-                            font.pixelSize: 13
-                        }
-
-                        Row {
+                        // Выбор портфолио
+                        Column {
                             width: parent.width
-                            spacing: 10
+                            spacing: 6
 
-                            Button {
-                                id: categoryModeSwitch
-                                text: manualEntryMode ? "📝 Ручной ввод" : "📝 Перейти в ручной ввод"
-                                implicitHeight: 30
-                                font.pixelSize: 12
+                            Text {
+                                text: "Портфолио студента:"
+                                color: "#2c3e50"
+                                font.bold: true
+                                font.pixelSize: 13
+                            }
+
+                            ComboBox {
+                                id: portfolioComboBox
+                                width: parent.width
+                                height: 36
+                                enabled: !isSaving && portfolioList.length > 0
+                                font.pixelSize: 13
+
                                 background: Rectangle {
-                                    radius: 6
-                                    color: manualEntryMode ? "#4CAF50" : "#FF9800"
+                                    radius: 8
+                                    color: "#ffffff"
+                                    border.color: portfolioComboBox.enabled ? "#e0e0e0" : "#f0f0f0"
+                                    border.width: 1
                                 }
-                                contentItem: Text {
-                                    text: categoryModeSwitch.text
-                                    color: "white"
-                                    horizontalAlignment: Text.AlignHCenter
-                                    verticalAlignment: Text.AlignVCenter
-                                    font: categoryModeSwitch.font
-                                }
-                                KeyNavigation.tab: eventCategoryField
 
-                                onClicked: {
-                                    manualEntryMode = true
-                                    showMessage("✅ Включен режим ручного ввода. Теперь можно вводить полное и сокращенное наименование вручную.", "success")
+                                textRole: "displayText"
+
+                                model: portfolioList.map(function(portfolio) {
+                                    return {
+                                        measure_code: portfolio.measure_code,
+                                        displayText: "Приказ №" + portfolio.decree + " - " + portfolio.student_name
+                                    }
+                                })
+
+                                displayText: {
+                                    if (portfoliosLoading) return "⏳ Загрузка..."
+                                    if (portfolioList.length === 0) return "❌ Нет портфолио"
+                                    return currentIndex >= 0 ? currentText : "Выберите портфолио..."
+                                }
+
+                                KeyNavigation.tab: eventTypeField
+                                Keys.onReturnPressed: navigateToNextField(portfolioComboBox)
+
+                                ToolTip.text: "Выберите портфолио студента для привязки события"
+                                ToolTip.visible: hovered
+
+                                onActivated: {
+                                    console.log("📚 Выбрано портфолио:", currentIndex,
+                                                "measure_code:", portfolioList[currentIndex].measure_code)
                                 }
                             }
 
                             Text {
-                                text: manualEntryMode ? "✓ Режим ручного ввода" : "Выберите режим"
-                                color: manualEntryMode ? "#4CAF50" : "#666666"
+                                text: portfolioStatus
+                                color: {
+                                    if (portfoliosLoading) return "#ff9800"
+                                    if (portfolioList.length === 0) return "#f44336"
+                                    if (portfolioComboBox.currentIndex < 0) return "#ff9800"
+                                    return "#4CAF50"
+                                }
                                 font.pixelSize: 11
-                                verticalAlignment: Text.AlignVCenter
-                                height: 30
                             }
                         }
-                    }
 
-                    // Полное наименование мероприятия (ручной ввод)
-                    Column {
-                        width: parent.width
-                        spacing: 6
-
-                        Text {
-                            text: "Полное наименование мероприятия:"
-                            color: "#2c3e50"
-                            font.bold: true
-                            font.pixelSize: 13
-                        }
-
-                        TextField {
-                            id: eventCategoryField
+                        // Остальные поля формы остаются без изменений
+                        // ... (тип мероприятия, даты, местоположение, описание)
+                        Column {
                             width: parent.width
-                            height: 32
-                            placeholderText: "Введите полное наименование мероприятия"
-                            horizontalAlignment: Text.AlignLeft
-                            enabled: !isSaving
-                            font.pixelSize: 13
-                            background: Rectangle {
-                                radius: 8
-                                color: "#ffffff"
-                                border.color: "#e0e0e0"
-                                border.width: 1
+                            spacing: 6
+
+                            Text {
+                                text: "Тип мероприятия:"
+                                color: "#2c3e50"
+                                font.bold: true
+                                font.pixelSize: 13
                             }
-                            color: "#000000"
-                            KeyNavigation.tab: eventTypeField
-                            Keys.onReturnPressed: navigateToNextField(eventCategoryField)
 
-                            ToolTip.text: "Введите полное наименование мероприятия (например: 'Всероссийская олимпиада по программированию')"
-                            ToolTip.visible: hovered
-                        }
-                    }
-
-                    // Сокращенное наименование мероприятия (ручной ввод)
-                    Column {
-                        width: parent.width
-                        spacing: 6
-
-                        Text {
-                            text: "Сокращенное наименование:"
-                            color: "#2c3e50"
-                            font.bold: true
-                            font.pixelSize: 13
-                        }
-
-                        TextField {
-                            id: eventTypeField
-                            width: parent.width
-                            height: 32
-                            placeholderText: "Введите сокращенное наименование"
-                            horizontalAlignment: Text.AlignLeft
-                            enabled: !isSaving
-                            font.pixelSize: 13
-                            background: Rectangle {
-                                radius: 8
-                                color: "#ffffff"
-                                border.color: "#e0e0e0"
-                                border.width: 1
-                            }
-                            color: "#000000"
-                            KeyNavigation.tab: startDateField
-                            Keys.onReturnPressed: navigateToNextField(eventTypeField)
-
-                            ToolTip.text: "Введите сокращенное наименование (например: 'ВОП')"
-                            ToolTip.visible: hovered
-                        }
-                    }
-
-                    // Даты начала и окончания
-                    Column {
-                        width: parent.width
-                        spacing: 6
-
-                        Text {
-                            text: "Даты проведения:"
-                            color: "#2c3e50"
-                            font.bold: true
-                            font.pixelSize: 13
-                        }
-
-                        Row {
-                            width: parent.width
-                            spacing: 8
-
-                            Column {
-                                width: (parent.width - 8) / 2
-                                spacing: 4
-
-                                Text {
-                                    text: "Начало:"
-                                    color: "#2c3e50"
-                                    font.pixelSize: 11
+                            TextField {
+                                id: eventTypeField
+                                width: parent.width
+                                height: 32
+                                placeholderText: "Введите тип мероприятия"
+                                horizontalAlignment: Text.AlignLeft
+                                enabled: !isSaving
+                                font.pixelSize: 13
+                                background: Rectangle {
+                                    radius: 8
+                                    color: "#ffffff"
+                                    border.color: "#e0e0e0"
+                                    border.width: 1
                                 }
+                                color: "#000000"
+                                KeyNavigation.tab: startDateField
+                                Keys.onReturnPressed: navigateToNextField(eventTypeField)
+                            }
+                        }
 
-                                TextField {
-                                    id: startDateField
-                                    width: parent.width
-                                    height: 30
-                                    placeholderText: "ГГГГ-ММ-ДД"
-                                    horizontalAlignment: Text.AlignLeft
-                                    enabled: !isSaving
-                                    font.pixelSize: 12
-                                    background: Rectangle {
-                                        radius: 6
-                                        color: "#ffffff"
-                                        border.color: "#e0e0e0"
-                                        border.width: 1
+                        Column {
+                            width: parent.width
+                            spacing: 6
+
+                            Text {
+                                text: "Даты проведения:"
+                                color: "#2c3e50"
+                                font.bold: true
+                                font.pixelSize: 13
+                            }
+
+                            Row {
+                                width: parent.width
+                                spacing: 8
+
+                                Column {
+                                    width: (parent.width - 8) / 2
+                                    spacing: 4
+
+                                    Text {
+                                        text: "Начало:"
+                                        color: "#2c3e50"
+                                        font.pixelSize: 11
                                     }
-                                    color: "#000000"
-                                    KeyNavigation.tab: endDateField
-                                    Keys.onReturnPressed: navigateToNextField(startDateField)
-                                }
-                            }
 
-                            Column {
-                                width: (parent.width - 8) / 2
-                                spacing: 4
-
-                                Text {
-                                    text: "Окончание:"
-                                    color: "#2c3e50"
-                                    font.pixelSize: 11
-                                }
-
-                                TextField {
-                                    id: endDateField
-                                    width: parent.width
-                                    height: 30
-                                    placeholderText: "ГГГГ-ММ-ДД"
-                                    horizontalAlignment: Text.AlignLeft
-                                    enabled: !isSaving
-                                    font.pixelSize: 12
-                                    background: Rectangle {
-                                        radius: 6
-                                        color: "#ffffff"
-                                        border.color: "#e0e0e0"
-                                        border.width: 1
+                                    TextField {
+                                        id: startDateField
+                                        width: parent.width
+                                        height: 30
+                                        placeholderText: "ГГГГ-ММ-ДД"
+                                        horizontalAlignment: Text.AlignLeft
+                                        enabled: !isSaving
+                                        font.pixelSize: 12
+                                        background: Rectangle {
+                                            radius: 6
+                                            color: "#ffffff"
+                                            border.color: "#e0e0e0"
+                                            border.width: 1
+                                        }
+                                        color: "#000000"
+                                        KeyNavigation.tab: endDateField
+                                        Keys.onReturnPressed: navigateToNextField(startDateField)
                                     }
-                                    color: "#000000"
-                                    KeyNavigation.tab: locationField
-                                    Keys.onReturnPressed: navigateToNextField(endDateField)
+                                }
+
+                                Column {
+                                    width: (parent.width - 8) / 2
+                                    spacing: 4
+
+                                    Text {
+                                        text: "Окончание:"
+                                        color: "#2c3e50"
+                                        font.pixelSize: 11
+                                    }
+
+                                    TextField {
+                                        id: endDateField
+                                        width: parent.width
+                                        height: 30
+                                        placeholderText: "ГГГГ-ММ-ДД"
+                                        horizontalAlignment: Text.AlignLeft
+                                        enabled: !isSaving
+                                        font.pixelSize: 12
+                                        background: Rectangle {
+                                            radius: 6
+                                            color: "#ffffff"
+                                            border.color: "#e0e0e0"
+                                            border.width: 1
+                                        }
+                                        color: "#000000"
+                                        KeyNavigation.tab: locationField
+                                        Keys.onReturnPressed: navigateToNextField(endDateField)
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    // Местоположение
-                    Column {
-                        width: parent.width
-                        spacing: 6
-
-                        Text {
-                            text: "Местоположение:"
-                            color: "#2c3e50"
-                            font.bold: true
-                            font.pixelSize: 13
-                        }
-
-                        TextField {
-                            id: locationField
+                        Column {
                             width: parent.width
-                            height: 32
-                            placeholderText: "Введите местоположение"
-                            horizontalAlignment: Text.AlignLeft
-                            enabled: !isSaving
-                            font.pixelSize: 13
-                            background: Rectangle {
-                                radius: 8
-                                color: "#ffffff"
-                                border.color: "#e0e0e0"
-                                border.width: 1
+                            spacing: 6
+
+                            Text {
+                                text: "Местоположение:"
+                                color: "#2c3e50"
+                                font.bold: true
+                                font.pixelSize: 13
                             }
-                            color: "#000000"
-                            KeyNavigation.tab: loreField
-                            Keys.onReturnPressed: navigateToNextField(locationField)
+
+                            TextField {
+                                id: locationField
+                                width: parent.width
+                                height: 32
+                                placeholderText: "Введите местоположение"
+                                horizontalAlignment: Text.AlignLeft
+                                enabled: !isSaving
+                                font.pixelSize: 13
+                                background: Rectangle {
+                                    radius: 8
+                                    color: "#ffffff"
+                                    border.color: "#e0e0e0"
+                                    border.width: 1
+                                }
+                                color: "#000000"
+                                KeyNavigation.tab: loreField
+                                Keys.onReturnPressed: navigateToNextField(locationField)
+                            }
                         }
-                    }
 
-                    // Описание (лора)
-                    Column {
-                        width: parent.width
-                        spacing: 6
-
-                        Text {
-                            text: "Описание события:"
-                            color: "#2c3e50"
-                            font.bold: true
-                            font.pixelSize: 13
-                        }
-
-                        TextArea {
-                            id: loreField
+                        Column {
                             width: parent.width
-                            height: 60
-                            placeholderText: "Введите описание события..."
-                            wrapMode: Text.WordWrap
-                            enabled: !isSaving
-                            font.pixelSize: 12
-                            background: Rectangle {
-                                radius: 8
-                                color: "#ffffff"
-                                border.color: "#e0e0e0"
-                                border.width: 1
+                            spacing: 6
+
+                            Text {
+                                text: "Описание события:"
+                                color: "#2c3e50"
+                                font.bold: true
+                                font.pixelSize: 13
                             }
-                            color: "#000000"
-                            KeyNavigation.tab: saveButton
-                            Keys.onReturnPressed: navigateToNextField(loreField)
+
+                            TextArea {
+                                id: loreField
+                                width: parent.width
+                                height: 80
+                                placeholderText: "Введите описание события..."
+                                wrapMode: Text.WordWrap
+                                enabled: !isSaving
+                                font.pixelSize: 12
+                                background: Rectangle {
+                                    radius: 8
+                                    color: "#ffffff"
+                                    border.color: "#e0e0e0"
+                                    border.width: 1
+                                }
+                                color: "#000000"
+                                KeyNavigation.tab: saveButton
+                                Keys.onReturnPressed: navigateToNextField(loreField)
+                            }
                         }
                     }
                 }
 
-                // Кнопки действий
                 RowLayout {
                     Layout.alignment: Qt.AlignHCenter
                     spacing: 15
@@ -494,7 +574,8 @@ ApplicationWindow {
                         implicitWidth: 130
                         implicitHeight: 36
                         enabled: !isSaving &&
-                                eventCategoryField.text.trim() !== "" &&
+                                portfolioComboBox.currentIndex >= 0 &&
+                                portfolioList.length > 0 &&
                                 eventTypeField.text.trim() !== "" &&
                                 startDateField.text.trim() !== "" &&
                                 endDateField.text.trim() !== ""
@@ -514,8 +595,19 @@ ApplicationWindow {
                         Keys.onReturnPressed: if (enabled && !isSaving) saveButton.clicked()
 
                         onClicked: {
-                            if (eventCategoryField.text.trim() === "" || eventTypeField.text.trim() === "") {
-                                showMessage("❌ Заполните полное и сокращенное наименование", "error")
+                            if (portfolioComboBox.currentIndex < 0) {
+                                showMessage("❌ Выберите портфолио студента", "error")
+                                return
+                            }
+
+                            var selectedPortfolio = portfolioList[portfolioComboBox.currentIndex]
+                            if (!selectedPortfolio || !selectedPortfolio.measure_code) {
+                                showMessage("❌ Выберите валидное портфолио", "error")
+                                return
+                            }
+
+                            if (eventTypeField.text.trim() === "") {
+                                showMessage("❌ Введите тип мероприятия", "error")
                                 return
                             }
                             if (startDateField.text.trim() === "" || endDateField.text.trim() === "") {
@@ -526,7 +618,12 @@ ApplicationWindow {
                             isSaving = true
                             console.log("💾 Сохранение события...")
                             var eventData = getEventData()
-                            saved(eventData)
+                            if (eventData) {
+                                saved(eventData)
+                            } else {
+                                isSaving = false
+                                showMessage("❌ Ошибка формирования данных события", "error")
+                            }
                         }
                     }
 
@@ -548,7 +645,7 @@ ApplicationWindow {
                             verticalAlignment: Text.AlignVCenter
                             font: cancelButton.font
                         }
-                        KeyNavigation.tab: categoryModeSwitch
+                        KeyNavigation.tab: portfolioComboBox
                         Keys.onReturnPressed: if (enabled) cancelButton.clicked()
 
                         onClicked: {

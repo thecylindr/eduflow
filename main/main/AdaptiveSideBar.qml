@@ -1,4 +1,4 @@
-// main/AdaptiveSideBar.qml
+// AdaptiveSideBar.qml
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 
@@ -6,14 +6,17 @@ Rectangle {
     id: adaptiveSideBar
     width: currentWidth
     height: parent.height
-    color: "#f8f8f8"
-    radius: 12
-    opacity: 0.95
+    color: "#ffffff"
+    radius: 16
+    opacity: 0.925
+    border.color: "#e0e0e0"
+    border.width: 1
     z: 1
 
     property int currentWidth: 280
     property int compactWidth: 70
     property int fullWidth: 280
+    property bool canToggle: true
 
     // Автоматическое определение режима по ширине
     readonly property string currentMode: currentWidth === compactWidth ? "compact" : "full"
@@ -34,100 +37,115 @@ Rectangle {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 10
+        anchors.margins: 12
         spacing: 8
 
-        // Кнопка переключения режимов с тремя полосками
-        Rectangle {
+        // Заголовок и кнопка переключения
+        RowLayout {
             Layout.fillWidth: true
-            height: 40
-            radius: 8
-            color: toggleMouseArea.containsMouse ? "#e3f2fd" : "transparent"
-            border.color: "#3498db"
-            border.width: 1
+            spacing: 10
 
+            // Логотип и название - скрываются в компактном режиме
             Row {
-                anchors.centerIn: parent
-                spacing: 8
+                Layout.fillWidth: true
+                spacing: 10
+                visible: textVisible
 
-                // Иконка из трех полосок
-                Item {
-                    width: 20
-                    height: 14
+                Rectangle {
+                    width: 36
+                    height: 36
+                    radius: 10
+                    color: "#3498db"
+                    anchors.verticalCenter: parent.verticalCenter
 
-                    // Три горизонтальные полоски
-                    Column {
+                    Text {
                         anchors.centerIn: parent
-                        spacing: 2
-
-                        Rectangle {
-                            width: 16
-                            height: 2
-                            radius: 1
-                            color: toggleMouseArea.containsMouse ? "#2980b9" : "#3498db"
-                        }
-                        Rectangle {
-                            width: 16
-                            height: 2
-                            radius: 1
-                            color: toggleMouseArea.containsMouse ? "#2980b9" : "#3498db"
-                        }
-                        Rectangle {
-                            width: 16
-                            height: 2
-                            radius: 1
-                            color: toggleMouseArea.containsMouse ? "#2980b9" : "#3498db"
-                        }
-                    }
-
-                    // Вращение иконки в зависимости от режима
-                    rotation: textVisible ? 0 : -90
-                    Behavior on rotation {
-                        NumberAnimation { duration: 200 }
+                        text: "🎯"
+                        font.pixelSize: 18
                     }
                 }
 
-                Text {
-                    text: textVisible ? "Свернуть" : "Развернуть"
-                    font.pixelSize: 12
-                    color: "#2c3e50"
-                    visible: textVisible
-                }
-            }
+                Column {
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 0
 
-            MouseArea {
-                id: toggleMouseArea
-                anchors.fill: parent
-                hoverEnabled: true
-                cursorShape: Qt.PointingHandCursor
-                onClicked: {
-                    textVisible = !textVisible;
+                    Text {
+                        text: "EduFlow"
+                        font.pixelSize: 16
+                        font.bold: true
+                        color: "#2c3e50"
+                    }
 
-                    if (currentMode === "full") {
-                        currentWidth = compactWidth;
-                    } else {
-                        currentWidth = fullWidth;
+                    Text {
+                        text: "Панель управления"
+                        font.pixelSize: 10
+                        color: "#7f8c8d"
                     }
                 }
             }
+
+            // Кнопка переключения режимов - всегда видна
+            Item {
+                    Layout.fillWidth: !textVisible // В компактном режиме занимает всю ширину для центрирования
+                    Layout.preferredWidth: textVisible ? 32 : parent.width // В полном режиме - фиксированная ширина
+                    Layout.preferredHeight: 32
+                    Layout.alignment: textVisible ? Qt.AlignRight : Qt.AlignHCenter // Центрируем в компактном режиме
+
+                    Rectangle {
+                        width: 32
+                        height: 32
+                        radius: 8
+                        color: toggleMouseArea.containsMouse ? "#f1f3f4" : "transparent"
+                        border.color: toggleMouseArea.containsMouse ? "#3498db" : "transparent"
+                        border.width: 1
+                        anchors.centerIn: parent // Центрируем внутри Item
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: textVisible ? "◀" : "▶"
+                            font.pixelSize: 12
+                            color: "#5f6368"
+                            font.bold: true
+                        }
+
+                        MouseArea {
+                            id: toggleMouseArea
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                if (canToggle) {
+                                    canToggle = false
+                                    toggleCooldown.start()
+
+                                    textVisible = !textVisible
+                                    if (currentMode === "full") {
+                                        currentWidth = compactWidth
+                                    } else {
+                                        currentWidth = fullWidth
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
         }
 
-        // Заголовок окон
-        Text {
-            text: textVisible ? "🎯 Панель управления" : "🎯"
-            font.pixelSize: textVisible ? 18 : 20
-            font.bold: true
-            color: "#2c3e50"
-            Layout.alignment: Qt.AlignHCenter
-            Layout.bottomMargin: 10
-            visible: true
+        // Разделитель
+        Rectangle {
+            Layout.fillWidth: true
+            height: 2
+            color: "#3498db"
+            opacity: 0.3
+            Layout.topMargin: 5
+            Layout.bottomMargin: 5
         }
 
         // Основное меню
         ColumnLayout {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            spacing: 5
+            spacing: 4
 
             Repeater {
                 model: menuItems
@@ -135,102 +153,68 @@ Rectangle {
                 delegate: Rectangle {
                     id: menuItem
                     Layout.fillWidth: true
-                    height: 50
+                    height: 44
                     radius: 8
-
-                    // Градиент для активного элемента
-                    gradient: adaptiveSideBar.currentView === modelData.view ? activeGradient : null
-                    color: adaptiveSideBar.currentView === modelData.view ? "transparent" :
-                          (navMouseArea.containsMouse ? "transparent" : "transparent")
-
-                    // Градиентная обводка при наведении
-                    Rectangle {
-                        anchors.fill: parent
-                        radius: parent.radius
-                        color: "transparent"
-                        border.color: "transparent"
-                        border.width: 0
-
-                        gradient: navMouseArea.containsMouse && adaptiveSideBar.currentView !== modelData.view ? hoverGradient : null
-
-                        // Внутренняя заливка для непрозрачности
-                        Rectangle {
-                            anchors.fill: parent
-                            anchors.margins: 2
-                            radius: parent.radius - 1
-                            color: adaptiveSideBar.currentView === modelData.view ? "transparent" :
-                                  (navMouseArea.containsMouse ? "#f8f8f8" : "transparent")
-                        }
-                    }
+                    color: adaptiveSideBar.currentView === modelData.view ? "#e3f2fd" :
+                          (navMouseArea.containsMouse ? "#f8f9fa" : "transparent")
+                    border.color: adaptiveSideBar.currentView === modelData.view ? "#3498db" : "transparent"
+                    border.width: 1
 
                     Row {
                         anchors.fill: parent
-                        anchors.margins: 10
+                        anchors.margins: 12
                         spacing: 12
 
                         Text {
                             text: modelData.icon
                             font.pixelSize: 16
                             anchors.verticalCenter: parent.verticalCenter
-                            color: adaptiveSideBar.currentView === modelData.view ? "white" :
-                                  (navMouseArea.containsMouse ? "#2575fc" : "#2c3e50")
+                            color: adaptiveSideBar.currentView === modelData.view ? "#1976d2" : "#5f6368"
                         }
 
                         Text {
                             text: modelData.name
-                            color: adaptiveSideBar.currentView === modelData.view ? "#808080" : "#2c3e50"
+                            color: adaptiveSideBar.currentView === modelData.view ? "#1976d2" : "#5f6368"
                             font.pixelSize: 13
-                            font.bold: true
+                            font.bold: adaptiveSideBar.currentView === modelData.view
                             anchors.verticalCenter: parent.verticalCenter
                             visible: textVisible
                         }
                     }
 
-                    // Дополнительный индикатор активного элемента (полоска слева)
+                    // Индикатор активного элемента
                     Rectangle {
                         anchors {
-                            left: parent.left
+                            right: parent.right
                             verticalCenter: parent.verticalCenter
+                            rightMargin: 8
                         }
-                        width: 4
-                        height: parent.height - 16
+                        width: 3
+                        height: 20
                         radius: 2
-                        color: adaptiveSideBar.currentView === modelData.view ? "#808080" : "#2575fc"
-                        visible: adaptiveSideBar.currentView === modelData.view || navMouseArea.containsMouse
+                        color: "#1976d2"
+                        visible: adaptiveSideBar.currentView === modelData.view
                     }
 
-                    // Подсказка в компактном режиме при наведении
+                    // Упрощенная подсказка в компактном режиме
                     Rectangle {
                         id: compactTooltip
                         visible: !textVisible && navMouseArea.containsMouse
                         x: menuItem.width + 5
                         y: (menuItem.height - height) / 2
-                        width: compactTooltipText.contentWidth + 20
+                        width: compactTooltipText.contentWidth + 16
                         height: 30
-                        color: "#3498db"
+                        color: "#34495e"
                         radius: 6
                         z: 1000
-
-                        // Альтернатива тени - светлая обводка
-                        Rectangle {
-                            anchors.fill: parent
-                            color: "transparent"
-                            border.color: "#ffffff"
-                            border.width: 2
-                            radius: 6
-                        }
 
                         Text {
                             id: compactTooltipText
                             anchors.centerIn: parent
                             text: modelData.name
                             color: "white"
-                            font.pixelSize: 12
+                            font.pixelSize: 11
                             font.bold: true
-                        }
-
-                        Behavior on opacity {
-                            NumberAnimation { duration: 150 }
                         }
                     }
 
@@ -241,7 +225,7 @@ Rectangle {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: {
                             if (mainWindow) {
-                                mainWindow.navigateTo(modelData.view);
+                                mainWindow.navigateTo(modelData.view)
                             }
                         }
                     }
@@ -254,10 +238,10 @@ Rectangle {
         // Статистика (только в полном режиме)
         Rectangle {
             Layout.fillWidth: true
-            height: textVisible ? 100 : 0
-            radius: 8
-            color: "#e8f4f8"
-            border.color: "#bde0fe"
+            height: textVisible ? 70 : 0
+            radius: 10
+            color: "#f8f9fa"
+            border.color: "#e9ecef"
             border.width: 1
             visible: height > 0
             opacity: textVisible ? 1 : 0
@@ -271,97 +255,92 @@ Rectangle {
 
             Column {
                 anchors.centerIn: parent
-                spacing: 3
+                spacing: 4
 
                 Text {
-                    text: "📈 Статистика системы"
-                    font.pixelSize: 12
+                    text: "📊 Статистика"
+                    font.pixelSize: 11
                     font.bold: true
                     color: "#2c3e50"
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
 
-                Text {
-                    text: "👨‍🏫 " + (mainWindow.teachers ? mainWindow.teachers.length : 0)
-                    font.pixelSize: 10
-                    color: "#7f8c8d"
-                }
+                Row {
+                    spacing: 12
+                    anchors.horizontalCenter: parent.horizontalCenter
 
-                Text {
-                    text: "👨‍🎓 " + (mainWindow.students ? mainWindow.students.length : 0)
-                    font.pixelSize: 10
-                    color: "#7f8c8d"
-                }
+                    Text {
+                        text: "👨‍🏫" + (mainWindow.teachers ? mainWindow.teachers.length : 0)
+                        font.pixelSize: 10
+                        color: "#6c757d"
+                    }
 
-                Text {
-                    text: "👥 " + (mainWindow.groups ? mainWindow.groups.length : 0)
-                    font.pixelSize: 10
-                    color: "#7f8c8d"
+                    Text {
+                        text: "👨‍🎓" + (mainWindow.students ? mainWindow.students.length : 0)
+                        font.pixelSize: 10
+                        color: "#6c757d"
+                    }
+
+                    Text {
+                        text: "👥" + (mainWindow.groups ? mainWindow.groups.length : 0)
+                        font.pixelSize: 10
+                        color: "#6c757d"
+                    }
                 }
             }
         }
 
-        // Кнопка настроек учетной записи (ОДНА внизу)
+        // Кнопка настроек
         Rectangle {
             Layout.fillWidth: true
-            height: 40
+            height: 44
             radius: 8
-            color: adaptiveSideBar.currentView === "settings" ? "#2575fc" :
-                  (settingsMouseArea.containsMouse ? "#34495e" : "#2c3e50")
+            color: adaptiveSideBar.currentView === "settings" ? "#e3f2fd" :
+                  (settingsMouseArea.containsMouse ? "#f8f9fa" : "transparent")
+            border.color: adaptiveSideBar.currentView === "settings" ? "#3498db" : "transparent"
+            border.width: 1
 
             Row {
-                anchors.centerIn: parent
-                spacing: 8
+                anchors.fill: parent
+                anchors.margins: 12
+                spacing: 12
 
                 Text {
                     text: "⚙️"
-                    font.pixelSize: 14
+                    font.pixelSize: 16
                     anchors.verticalCenter: parent.verticalCenter
-                    color: "white"
+                    color: adaptiveSideBar.currentView === "settings" ? "#1976d2" : "#5f6368"
                 }
 
                 Text {
                     text: "Настройки"
-                    color: "white"
-                    font.pixelSize: 12
-                    font.bold: true
+                    color: adaptiveSideBar.currentView === "settings" ? "#1976d2" : "#5f6368"
+                    font.pixelSize: 13
+                    font.bold: adaptiveSideBar.currentView === "settings"
                     anchors.verticalCenter: parent.verticalCenter
                     visible: textVisible
                 }
             }
 
-            // Подсказка для кнопки настроек в компактном режиме
+            // Упрощенная подсказка для настроек в компактном режиме
             Rectangle {
                 id: settingsTooltip
                 visible: !textVisible && settingsMouseArea.containsMouse
                 x: parent.width + 5
                 y: (parent.height - height) / 2
-                width: settingsTooltipText.contentWidth + 20
+                width: settingsTooltipText.contentWidth + 16
                 height: 30
-                color: "#2c3e50"
+                color: "#34495e"
                 radius: 6
                 z: 1000
-
-                // Альтернатива тени - светлая обводка
-                Rectangle {
-                    anchors.fill: parent
-                    color: "transparent"
-                    border.color: "#ffffff"
-                    border.width: 2
-                    radius: 6
-                }
 
                 Text {
                     id: settingsTooltipText
                     anchors.centerIn: parent
                     text: "Настройки"
                     color: "white"
-                    font.pixelSize: 12
+                    font.pixelSize: 11
                     font.bold: true
-                }
-
-                Behavior on opacity {
-                    NumberAnimation { duration: 150 }
                 }
             }
 
@@ -372,24 +351,18 @@ Rectangle {
                 cursorShape: Qt.PointingHandCursor
                 onClicked: {
                     if (mainWindow) {
-                        mainWindow.navigateTo("settings");
+                        mainWindow.navigateTo("settings")
                     }
                 }
             }
         }
     }
 
-    // Градиенты для разных состояний
-    Gradient {
-        id: activeGradient
-        GradientStop { position: 0.0; color: "#6a11cb" }
-        GradientStop { position: 1.0; color: "#2575fc" }
-    }
-
-    Gradient {
-        id: hoverGradient
-        GradientStop { position: 0.0; color: "#6a11cb" }
-        GradientStop { position: 1.0; color: "#2575fc" }
+    // Таймер для ограничения частоты переключения
+    Timer {
+        id: toggleCooldown
+        interval: 1000
+        onTriggered: canToggle = true
     }
 
     Behavior on currentWidth {

@@ -1,4 +1,3 @@
-// enhanced/EnhancedGridItem.qml
 import QtQuick 2.15
 
 Rectangle {
@@ -8,7 +7,7 @@ Rectangle {
     radius: 12
     color: itemMouseArea.containsMouse ? "#f8f9fa" : "#ffffff"
     border.color: itemMouseArea.containsMouse ? "#3498db" : "#e0e0e0"
-    border.width: 2
+    border.width: 1
 
     scale: itemMouseArea.containsMouse ? 1.01 : 1.0
 

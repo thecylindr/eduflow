@@ -25,7 +25,9 @@ Item {
                     console.log("📋 Обработка события:", JSON.stringify(event));
 
                     var processedEvent = {
-                        eventId: event.eventId || event.event_id || 0,
+                        // СОХРАНЯЕМ ОБА ID: уникальный и event_id
+                        id: event.id || 0, // Уникальный ID для удаления
+                        eventId: event.eventId || event.event_id || 0, // measure_code
                         eventCategory: event.eventCategory || event.event_category || 0,
                         eventCategoryName: getCategoryName(event.eventCategory || event.event_category),
                         eventType: event.eventType || event.event_type || "",
@@ -106,14 +108,16 @@ Item {
 
         mainWindow.mainApi.addEvent(eventData, function(response) {
             isLoading = false;
+            console.log("📨 Ответ добавления события:", response);
+
             if (response && response.success) {
-                showMessage("✅ " + ((response.message || response.data && response.data.message) || "Событие успешно добавлено"), "success");
+                showMessage("✅ " + ((response.message || response.data?.message) || "Событие успешно добавлено"), "success");
                 if (eventFormWindow.item) {
                     eventFormWindow.close();
                 }
                 refreshEvents();
             } else {
-                var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
+                var errorMsg = response?.error || "Неизвестная ошибка";
                 showMessage("❌ Ошибка добавления события: " + errorMsg, "error");
                 if (eventFormWindow.item) {
                     eventFormWindow.item.isSaving = false;
@@ -124,35 +128,53 @@ Item {
 
     function updateEvent(eventData) {
         if (!eventData) {
-            showMessage("❌ Данные события не указаны", "error");
-            return;
+            showMessage("❌ Данные события не указаны", "error")
+            return
         }
 
-        var eventId = eventData.event_id || eventData.eventId;
-        if (!eventId) {
-            showMessage("❌ ID события не указан", "error");
-            return;
+        // ИСПРАВЛЕНИЕ: используем уникальный id события вместо event_id
+        var uniqueEventId = eventData.id
+        if (!uniqueEventId) {
+            showMessage("❌ ID события не указан", "error")
+            return
         }
 
-        isLoading = true;
-        console.log("🔄 Обновление события ID:", eventId, "Данные:", JSON.stringify(eventData));
+        isLoading = true
+        console.log("🔄 ОБНОВЛЕНИЕ События - ДЕТАЛИ:")
+        console.log("   Уникальный ID события:", uniqueEventId)
+        console.log("   Данные для обновления:", JSON.stringify(eventData))
 
-        mainWindow.mainApi.updateEvent(eventId, eventData, function(response) {
-            isLoading = false;
+        var updateData = {
+            eventType: eventData.eventType,
+            measureCode: eventData.measureCode,
+            startDate: eventData.startDate,
+            endDate: eventData.endDate,
+            location: eventData.location,
+            lore: eventData.lore
+        }
+
+        console.log("   Данные для отправки:", JSON.stringify(updateData))
+
+        // ИСПРАВЛЕНИЕ: передаем уникальный id
+        mainWindow.mainApi.updateEvent(uniqueEventId, updateData, function(response) {
+            isLoading = false
+            console.log("📨 ОТВЕТ ОБНОВЛЕНИЯ:", JSON.stringify(response))
+
             if (response && response.success) {
-                showMessage("✅ " + ((response.message || response.data && response.data.message) || "Событие успешно обновлено"), "success");
+                showMessage("✅ " + ((response.message || response.data && response.data.message) || "Событие успешно обновлено"), "success")
                 if (eventFormWindow.item) {
-                    eventFormWindow.close();
+                    eventFormWindow.close()
                 }
-                refreshEvents();
+                refreshEvents()
             } else {
-                var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
-                showMessage("❌ Ошибка обновления события: " + errorMsg, "error");
+                var errorMsg = response && response.error ? response.error : "Неизвестная ошибка"
+                console.log("❌ ОШИБКА ОБНОВЛЕНИЯ:", errorMsg)
+                showMessage("❌ Ошибка обновления события: " + errorMsg, "error")
                 if (eventFormWindow.item) {
-                    eventFormWindow.item.isSaving = false;
+                    eventFormWindow.item.isSaving = false
                 }
             }
-        });
+        })
     }
 
     function deleteEvent(eventId, eventName) {
@@ -161,15 +183,21 @@ Item {
             return;
         }
 
+        var uniqueEventId = eventId;
+
+        console.log("🗑️ Удаление события:", "Уникальный ID:", uniqueEventId, "Название:", eventName);
+
         if (confirm("Вы уверены, что хотите удалить событие:\n" + (eventName || "Без названия") + "?")) {
             isLoading = true;
-            mainWindow.mainApi.deleteEvent(eventId, function(response) {
+
+            mainWindow.mainApi.deleteEvent(uniqueEventId, function(response) {
                 isLoading = false;
                 if (response && response.success) {
                     showMessage("✅ " + ((response.message || response.data && response.data.message) || "Событие успешно удалено"), "success");
                     refreshEvents();
                 } else {
                     var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
+                    console.log("❌ Ошибка удаления события:", errorMsg);
                     showMessage("❌ Ошибка удаления события: " + errorMsg, "error");
                 }
             });
@@ -362,10 +390,10 @@ Item {
 
             onItemDeleteRequested: function(itemData) {
                 if (!itemData) return;
-                var eventId = itemData.eventId;
+                var uniqueEventId = itemData.id;
                 var eventName = itemData.eventType || "Без названия";
-                console.log("🗑️ EventsView: удаление запрошено для", eventName, "ID:", eventId);
-                deleteEvent(eventId, eventName);
+                console.log("🗑️ EventsView: удаление запрошено для", eventName, "Уникальный ID:", uniqueEventId);
+                deleteEvent(uniqueEventId, eventName);
             }
         }
     }
@@ -377,16 +405,19 @@ Item {
         active: true
 
         onLoaded: {
-            console.log("✅ EventFormWindow загружен");
+            console.log("✅ EventFormWindow загружен")
 
             if (item) {
                 item.saved.connect(function(eventData) {
                     console.log("💾 Сохранение события:", JSON.stringify(eventData));
                     if (!eventData) return;
 
-                    if (eventData.event_id && eventData.event_id !== 0) {
+                    // ИСПРАВЛЕНИЕ: Правильное определение режима по наличию ID
+                    if (eventData.id && eventData.id !== 0) {
+                        console.log("🔧 Режим редактирования, ID:", eventData.id);
                         updateEvent(eventData);
                     } else {
+                        console.log("➕ Режим добавления нового события");
                         addEvent(eventData);
                     }
                 });

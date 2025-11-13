@@ -83,6 +83,8 @@ qt_add_qml_module(EduFlow
                 QML_FILES main/view/settings/AboutPage.qml
                 QML_FILES main/forms/PortfolioFormWindow.qml
                 QML_FILES main/forms/EventFormWindow.qml
+                QML_FILES
+                QML_FILES
 )
 
 qt_add_resources(EduFlow "resources"

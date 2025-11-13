@@ -1,4 +1,3 @@
-// main/InteractionsList.qml
 import QtQuick 2.15
 
 Item {
