@@ -47,11 +47,13 @@ Rectangle {
                         color: profileMouseArea.containsMouse ? "#2196f3" : "#f8f9fa"
                         anchors.verticalCenter: parent.verticalCenter
 
-                        Text {
+                        Image {
                             anchors.centerIn: parent
-                            text: "👤"
-                            font.pixelSize: 14
-                            color: profileMouseArea.containsMouse ? "white" : "#2196f3"
+                            source: "qrc:/icons/profile.png"
+                            sourceSize: Qt.size(28, 28)
+                            fillMode: Image.PreserveAspectFit
+                            mipmap: true
+                            antialiasing: true
                         }
                     }
 
@@ -99,9 +101,9 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 height: 60
-                color: securityMouseArea.containsMouse ? "#fff3e0" : "#ffffff"
+                color: securityMouseArea.containsMouse ? "#e8f5e8" : "#ffffff"
                 radius: 6
-                border.color: securityMouseArea.containsMouse ? "#ff9800" : "#e0e0e0"
+                border.color: securityMouseArea.containsMouse ? "#4caf50" : "#e0e0e0"
                 border.width: 1
 
                 Row {
@@ -113,14 +115,18 @@ Rectangle {
                         width: 36
                         height: 36
                         radius: 6
-                        color: securityMouseArea.containsMouse ? "#ff9800" : "#f8f9fa"
+                        color: securityMouseArea.containsMouse ? "#4caf50" : "#f8f9fa"
                         anchors.verticalCenter: parent.verticalCenter
 
-                        Text {
+                        AnimatedImage {
+                            id: securityAnimatedIcon
                             anchors.centerIn: parent
-                            text: "🔐"
-                            font.pixelSize: 14
-                            color: securityMouseArea.containsMouse ? "white" : "#ff9800"
+                            source: securityMouseArea.containsMouse ? "qrc:/icons/security.gif" : "qrc:/icons/security.png"
+                            sourceSize: Qt.size(28, 28)
+                            fillMode: Image.PreserveAspectFit
+                            mipmap: true
+                            antialiasing: true
+                            playing: securityMouseArea.containsMouse
                         }
                     }
 
@@ -133,7 +139,7 @@ Rectangle {
                             text: "Безопасность"
                             font.pixelSize: 13
                             font.bold: true
-                            color: securityMouseArea.containsMouse ? "#ff9800" : "#2c3e50"
+                            color: securityMouseArea.containsMouse ? "#4caf50" : "#2c3e50"
                             elide: Text.ElideRight
                             width: parent.width
                         }
@@ -141,7 +147,7 @@ Rectangle {
                         Text {
                             text: "Смена пароля и настройки безопасности"
                             font.pixelSize: 11
-                            color: securityMouseArea.containsMouse ? "#ff9800" : "#6c757d"
+                            color: securityMouseArea.containsMouse ? "#4caf50" : "#6c757d"
                             elide: Text.ElideRight
                             width: parent.width
                         }
@@ -150,7 +156,7 @@ Rectangle {
                     Text {
                         text: "›"
                         font.pixelSize: 16
-                        color: securityMouseArea.containsMouse ? "#ff9800" : "#6c757d"
+                        color: securityMouseArea.containsMouse ? "#4caf50" : "#6c757d"
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }
@@ -168,9 +174,9 @@ Rectangle {
             Rectangle {
                 Layout.fillWidth: true
                 height: 60
-                color: sessionsMouseArea.containsMouse ? "#e8f5e8" : "#ffffff"
+                color: sessionsMouseArea.containsMouse ? "#fff3e0" : "#ffffff"
                 radius: 6
-                border.color: sessionsMouseArea.containsMouse ? "#4caf50" : "#e0e0e0"
+                border.color: sessionsMouseArea.containsMouse ? "#ff9800" : "#e0e0e0"
                 border.width: 1
 
                 Row {
@@ -182,14 +188,16 @@ Rectangle {
                         width: 36
                         height: 36
                         radius: 6
-                        color: sessionsMouseArea.containsMouse ? "#4caf50" : "#f8f9fa"
+                        color: sessionsMouseArea.containsMouse ? "#ff9800" : "#f8f9fa"
                         anchors.verticalCenter: parent.verticalCenter
 
-                        Text {
+                        Image {
                             anchors.centerIn: parent
-                            text: "📱"
-                            font.pixelSize: 14
-                            color: sessionsMouseArea.containsMouse ? "white" : "#4caf50"
+                            source: "qrc:/icons/sessions.png"
+                            sourceSize: Qt.size(28, 28)
+                            fillMode: Image.PreserveAspectFit
+                            mipmap: true
+                            antialiasing: true
                         }
                     }
 
@@ -202,7 +210,7 @@ Rectangle {
                             text: "Активные сессии"
                             font.pixelSize: 13
                             font.bold: true
-                            color: sessionsMouseArea.containsMouse ? "#4caf50" : "#2c3e50"
+                            color: sessionsMouseArea.containsMouse ? "#ff9800" : "#2c3e50"
                             elide: Text.ElideRight
                             width: parent.width
                         }
@@ -210,7 +218,7 @@ Rectangle {
                         Text {
                             text: "Управление устройствами и сессиями"
                             font.pixelSize: 11
-                            color: sessionsMouseArea.containsMouse ? "#4caf50" : "#6c757d"
+                            color: sessionsMouseArea.containsMouse ? "#ff9800" : "#6c757d"
                             elide: Text.ElideRight
                             width: parent.width
                         }
@@ -219,7 +227,7 @@ Rectangle {
                     Text {
                         text: "›"
                         font.pixelSize: 16
-                        color: sessionsMouseArea.containsMouse ? "#4caf50" : "#6c757d"
+                        color: sessionsMouseArea.containsMouse ? "#ff9800" : "#6c757d"
                         anchors.verticalCenter: parent.verticalCenter
                     }
                 }
@@ -254,11 +262,13 @@ Rectangle {
                         color: serverMouseArea.containsMouse ? "#9c27b0" : "#f8f9fa"
                         anchors.verticalCenter: parent.verticalCenter
 
-                        Text {
+                        Image {
                             anchors.centerIn: parent
-                            text: "🌐"
-                            font.pixelSize: 14
-                            color: serverMouseArea.containsMouse ? "white" : "#9c27b0"
+                            source: "qrc:/icons/server.png"
+                            sourceSize: Qt.size(28, 28)
+                            fillMode: Image.PreserveAspectFit
+                            mipmap: true
+                            antialiasing: true
                         }
                     }
 
@@ -323,11 +333,13 @@ Rectangle {
                         color: aboutMouseArea.containsMouse ? "#03a9f4" : "#f8f9fa"
                         anchors.verticalCenter: parent.verticalCenter
 
-                        Text {
+                        Image {
                             anchors.centerIn: parent
-                            text: "ℹ️"
-                            font.pixelSize: 14
-                            color: aboutMouseArea.containsMouse ? "white" : "#03a9f4"
+                            source: "qrc:/icons/about.png"
+                            sourceSize: Qt.size(36, 36)
+                            fillMode: Image.PreserveAspectFit
+                            mipmap: true
+                            antialiasing: true
                         }
                     }
 
@@ -385,10 +397,13 @@ Rectangle {
                 anchors.centerIn: parent
                 spacing: 8
 
-                Text {
-                    text: "🚪"
-                    font.pixelSize: 14
-                    color: "white"
+                Image {
+                    source: "qrc:/icons/logout.png"
+                    sourceSize: Qt.size(48, 48)
+                    fillMode: Image.PreserveAspectFit
+                    mipmap: true
+                    antialiasing: true
+                    anchors.verticalCenter: parent.verticalCenter
                 }
 
                 Text {
@@ -396,6 +411,7 @@ Rectangle {
                     color: "white"
                     font.pixelSize: 13
                     font.bold: true
+                    anchors.verticalCenter: parent.verticalCenter
                 }
             }
 

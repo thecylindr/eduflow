@@ -44,12 +44,23 @@ Item {
                 Layout.fillWidth: true
                 spacing: 8
 
-                Text {
-                    text: "🏠 Панель управления"
-                    font.pixelSize: 24
-                    font.bold: true
-                    color: "#2c3e50"
+                Row {
                     anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 10
+
+                    Image {
+                        source: "qrc:/icons/home.png"
+                        sourceSize: Qt.size(24, 24)
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Text {
+                        text: "Панель управления"
+                        font.pixelSize: 24
+                        font.bold: true
+                        color: "#2c3e50"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
                 }
 
                 Text {
@@ -96,10 +107,11 @@ Item {
                             color: "#3498db"
                             anchors.verticalCenter: parent.verticalCenter
 
-                            Text {
+                            Image {
                                 anchors.centerIn: parent
-                                text: "👨‍🏫"
-                                font.pixelSize: 16
+                                source: "qrc:/icons/teachers.png"
+                                sourceSize: Qt.size(20, 20)
+                                fillMode: Image.PreserveAspectFit
                             }
                         }
 
@@ -150,10 +162,11 @@ Item {
                             color: "#2ecc71"
                             anchors.verticalCenter: parent.verticalCenter
 
-                            Text {
+                            Image {
                                 anchors.centerIn: parent
-                                text: "👨‍🎓"
-                                font.pixelSize: 16
+                                source: "qrc:/icons/students.png"
+                                sourceSize: Qt.size(20, 20)
+                                fillMode: Image.PreserveAspectFit
                             }
                         }
 
@@ -204,10 +217,11 @@ Item {
                             color: "#e74c3c"
                             anchors.verticalCenter: parent.verticalCenter
 
-                            Text {
+                            Image {
                                 anchors.centerIn: parent
-                                text: "👥"
-                                font.pixelSize: 16
+                                source: "qrc:/icons/groups.png"
+                                sourceSize: Qt.size(20, 20)
+                                fillMode: Image.PreserveAspectFit
                             }
                         }
 
@@ -258,10 +272,11 @@ Item {
                             color: "#9b59b6"
                             anchors.verticalCenter: parent.verticalCenter
 
-                            Text {
+                            Image {
                                 anchors.centerIn: parent
-                                text: "📁"
-                                font.pixelSize: 16
+                                source: "qrc:/icons/portfolio.png"
+                                sourceSize: Qt.size(20, 20)
+                                fillMode: Image.PreserveAspectFit
                             }
                         }
 
@@ -312,10 +327,11 @@ Item {
                             color: "#e67e22"
                             anchors.verticalCenter: parent.verticalCenter
 
-                            Text {
+                            Image {
                                 anchors.centerIn: parent
-                                text: "📅"
-                                font.pixelSize: 16
+                                source: "qrc:/icons/events.png"
+                                sourceSize: Qt.size(20, 20)
+                                fillMode: Image.PreserveAspectFit
                             }
                         }
 
@@ -366,10 +382,11 @@ Item {
                             color: "#95a5a6"
                             anchors.verticalCenter: parent.verticalCenter
 
-                            Text {
+                            Image {
                                 anchors.centerIn: parent
-                                text: "⚙️"
-                                font.pixelSize: 16
+                                source: "qrc:/icons/settings.png"
+                                sourceSize: Qt.size(20, 20)
+                                fillMode: Image.PreserveAspectFit
                             }
                         }
 
@@ -400,7 +417,7 @@ Item {
                 }
             }
 
-            // Быстрые действия (исправленные)
+            // Быстрые действия
             Rectangle {
                 Layout.fillWidth: true
                 height: quickActionsColumn.height + 30
@@ -415,12 +432,23 @@ Item {
                     anchors.centerIn: parent
                     spacing: 12
 
-                    Text {
-                        text: "🚀 Быстрые действия"
-                        font.pixelSize: 16
-                        font.bold: true
-                        color: "#2c3e50"
+                    Row {
                         anchors.horizontalCenter: parent.horizontalCenter
+                        spacing: 8
+
+                        Image {
+                            source: "qrc:/icons/statistics.png"
+                            sourceSize: Qt.size(20, 20)
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Text {
+                            text: "Быстрые действия"
+                            font.pixelSize: 16
+                            font.bold: true
+                            color: "#2c3e50"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
                     }
 
                     Grid {
@@ -439,9 +467,9 @@ Item {
                                 anchors.centerIn: parent
                                 spacing: 4
 
-                                Text {
-                                    text: "👨‍🎓"
-                                    font.pixelSize: 16
+                                Image {
+                                    source: "qrc:/icons/students.png"
+                                    sourceSize: Qt.size(20, 20)
                                     anchors.horizontalCenter: parent.horizontalCenter
                                 }
 
@@ -466,7 +494,6 @@ Item {
                                     }
                                 }
                             }
-
                         }
 
                         // Добавить преподавателя
@@ -480,9 +507,9 @@ Item {
                                 anchors.centerIn: parent
                                 spacing: 4
 
-                                Text {
-                                    text: "👨‍🏫"
-                                    font.pixelSize: 16
+                                Image {
+                                    source: "qrc:/icons/teachers.png"
+                                    sourceSize: Qt.size(20, 20)
                                     anchors.horizontalCenter: parent.horizontalCenter
                                 }
 
@@ -520,9 +547,9 @@ Item {
                                 anchors.centerIn: parent
                                 spacing: 4
 
-                                Text {
-                                    text: "👥"
-                                    font.pixelSize: 16
+                                Image {
+                                    source: "qrc:/icons/groups.png"
+                                    sourceSize: Qt.size(20, 20)
                                     anchors.horizontalCenter: parent.horizontalCenter
                                 }
 
@@ -560,9 +587,9 @@ Item {
                                 anchors.centerIn: parent
                                 spacing: 4
 
-                                Text {
-                                    text: "📁"
-                                    font.pixelSize: 16
+                                Image {
+                                    source: "qrc:/icons/portfolio.png"
+                                    sourceSize: Qt.size(20, 20)
                                     anchors.horizontalCenter: parent.horizontalCenter
                                 }
 
@@ -600,9 +627,9 @@ Item {
                                 anchors.centerIn: parent
                                 spacing: 4
 
-                                Text {
-                                    text: "📅"
-                                    font.pixelSize: 16
+                                Image {
+                                    source: "qrc:/icons/events.png"
+                                    sourceSize: Qt.size(20, 20)
                                     anchors.horizontalCenter: parent.horizontalCenter
                                 }
 
@@ -640,9 +667,9 @@ Item {
                                 anchors.centerIn: parent
                                 spacing: 4
 
-                                Text {
-                                    text: "⚙️"
-                                    font.pixelSize: 16
+                                Image {
+                                    source: "qrc:/icons/settings.png"
+                                    sourceSize: Qt.size(20, 20)
                                     anchors.horizontalCenter: parent.horizontalCenter
                                 }
 
@@ -691,10 +718,10 @@ Item {
                         color: "#2ecc71"
                         anchors.verticalCenter: parent.verticalCenter
 
-                        Text {
+                        Image {
                             anchors.centerIn: parent
-                            text: "✅"
-                            font.pixelSize: 20
+                            source: "qrc:/icons/check.png"
+                            sourceSize: Qt.size(24, 24)
                         }
                     }
 

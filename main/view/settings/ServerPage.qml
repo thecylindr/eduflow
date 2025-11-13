@@ -34,12 +34,26 @@ Rectangle {
                     anchors.margins: 24
                     spacing: 16
 
-                    Text {
-                        text: "🌐 Настройки сервера"
-                        font.pixelSize: 18
-                        font.bold: true
-                        color: "#2c3e50"
+                    Row {
                         Layout.alignment: Qt.AlignHCenter
+                        spacing: 8
+
+                        Image {
+                            source: "qrc:/icons/server.png"
+                            sourceSize: Qt.size(18, 18)
+                            fillMode: Image.PreserveAspectFit
+                            mipmap: true
+                            antialiasing: true
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Text {
+                            text: "Настройки сервера"
+                            font.pixelSize: 18
+                            font.bold: true
+                            color: "#2c3e50"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
                     }
 
                     ColumnLayout {
@@ -119,10 +133,13 @@ Rectangle {
                             anchors.centerIn: parent
                             spacing: 8
 
-                            Text {
-                                text: pingStatus === "checking" ? "⏳" : "📡"
-                                font.pixelSize: 14
-                                color: "white"
+                            Image {
+                                source: pingStatus === "checking" ? "qrc:/icons/loading.png" : "qrc:/icons/ping.png"
+                                sourceSize: Qt.size(16, 16)
+                                fillMode: Image.PreserveAspectFit
+                                mipmap: true
+                                antialiasing: true
+                                anchors.verticalCenter: parent.verticalCenter
                             }
 
                             Text {
@@ -130,6 +147,7 @@ Rectangle {
                                 color: "white"
                                 font.pixelSize: 14
                                 font.bold: true
+                                anchors.verticalCenter: parent.verticalCenter
                             }
                         }
 
@@ -157,11 +175,23 @@ Rectangle {
                     anchors.margins: 20
                     spacing: 8
 
-                    Text {
-                        text: "💡 Информация о подключении"
-                        font.pixelSize: 14
-                        font.bold: true
-                        color: "#0277bd"
+                    Row {
+                        spacing: 6
+                        Image {
+                            source: "qrc:/icons/info.png"
+                            sourceSize: Qt.size(14, 14)
+                            fillMode: Image.PreserveAspectFit
+                            mipmap: true
+                            antialiasing: true
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: "Информация о подключении"
+                            font.pixelSize: 14
+                            font.bold: true
+                            color: "#0277bd"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
                     }
 
                     Text {

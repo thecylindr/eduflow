@@ -37,12 +37,26 @@ Page {
             Layout.fillWidth: true
             spacing: 5
 
-            Text {
-                text: "💻 Активные сессии"
-                font.pixelSize: 24
-                font.bold: true
-                color: "#2c3e50"
+            Row {
                 Layout.alignment: Qt.AlignHCenter
+                spacing: 8
+
+                Image {
+                    source: "qrc:/icons/sessions.png"
+                    sourceSize: Qt.size(24, 24)
+                    fillMode: Image.PreserveAspectFit
+                    mipmap: true
+                    antialiasing: true
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Text {
+                    text: "Активные сессии"
+                    font.pixelSize: 24
+                    font.bold: true
+                    color: "#2c3e50"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
             }
 
             Text {
@@ -91,16 +105,19 @@ Page {
 
                                 Row {
                                     spacing: 6
-                                    Text {
-                                        text: {
-                                            if (modelData.isCurrent) return "🟢";
+                                    Image {
+                                        source: {
+                                            if (modelData.isCurrent) return "qrc:/icons/status-connection.png";
                                             var minutes = parseInt(modelData.inactiveMinutes || "0");
-                                            if (minutes <= 5) return "🔵";
+                                            if (minutes <= 5) return "qrc:/icons/status-active.png";
                                             var hours = parseInt(modelData.ageHours || "0");
-                                            if (hours >= 72) return "🔴";
-                                            return "🟡";
+                                            if (hours >= 72) return "qrc:/icons/status-inactive.png";
+                                            return "qrc:/icons/status-warning.png";
                                         }
-                                        font.pixelSize: 14
+                                        sourceSize: Qt.size(14, 14)
+                                        fillMode: Image.PreserveAspectFit
+                                        mipmap: true
+                                        antialiasing: true
                                     }
                                     Text {
                                         text: {
@@ -142,11 +159,21 @@ Page {
                                 rowSpacing: 4
 
                                 // ОС
-                                Text {
-                                    text: "💻 ОС:"
-                                    font.pixelSize: 11
-                                    color: "#7f8c8d"
-                                    font.bold: true
+                                Row {
+                                    spacing: 4
+                                    Image {
+                                        source: "qrc:/icons/os.png"
+                                        sourceSize: Qt.size(11, 11)
+                                        fillMode: Image.PreserveAspectFit
+                                        mipmap: true
+                                        antialiasing: true
+                                    }
+                                    Text {
+                                        text: "ОС:"
+                                        font.pixelSize: 11
+                                        color: "#7f8c8d"
+                                        font.bold: true
+                                    }
                                 }
                                 Text {
                                     text: modelData.userOS && modelData.userOS !== "unknown" ? modelData.userOS : "Неизвестно"
@@ -157,11 +184,21 @@ Page {
                                 }
 
                                 // IP
-                                Text {
-                                    text: "🌐 IP:"
-                                    font.pixelSize: 11
-                                    color: "#7f8c8d"
-                                    font.bold: true
+                                Row {
+                                    spacing: 4
+                                    Image {
+                                        source: "qrc:/icons/ip.png"
+                                        sourceSize: Qt.size(11, 11)
+                                        fillMode: Image.PreserveAspectFit
+                                        mipmap: true
+                                        antialiasing: true
+                                    }
+                                    Text {
+                                        text: "IP:"
+                                        font.pixelSize: 11
+                                        color: "#7f8c8d"
+                                        font.bold: true
+                                    }
                                 }
                                 Text {
                                     text: modelData.ipAddress && modelData.ipAddress !== "unknown" ? modelData.ipAddress : "Неизвестно"
@@ -172,11 +209,21 @@ Page {
                                 }
 
                                 // Время существования
-                                Text {
-                                    text: "🕒 Возраст:"
-                                    font.pixelSize: 11
-                                    color: "#7f8c8d"
-                                    font.bold: true
+                                Row {
+                                    spacing: 4
+                                    Image {
+                                        source: "qrc:/icons/time.png"
+                                        sourceSize: Qt.size(11, 11)
+                                        fillMode: Image.PreserveAspectFit
+                                        mipmap: true
+                                        antialiasing: true
+                                    }
+                                    Text {
+                                        text: "Возраст:"
+                                        font.pixelSize: 11
+                                        color: "#7f8c8d"
+                                        font.bold: true
+                                    }
                                 }
                                 Text {
                                     text: (modelData.ageHours || "0") + " ч."
@@ -185,11 +232,21 @@ Page {
                                 }
 
                                 // Время неактивности
-                                Text {
-                                    text: "⏱️ Активность:"
-                                    font.pixelSize: 11
-                                    color: "#7f8c8d"
-                                    font.bold: true
+                                Row {
+                                    spacing: 4
+                                    Image {
+                                        source: "qrc:/icons/activity.png"
+                                        sourceSize: Qt.size(11, 11)
+                                        fillMode: Image.PreserveAspectFit
+                                        mipmap: true
+                                        antialiasing: true
+                                    }
+                                    Text {
+                                        text: "Активность:"
+                                        font.pixelSize: 11
+                                        color: "#7f8c8d"
+                                        font.bold: true
+                                    }
                                 }
                                 Text {
                                     text: {
@@ -240,12 +297,22 @@ Page {
                                     border.color: revokeMouseArea.containsMouse ? "#a93226" : "#c0392b"
                                     border.width: 1
 
-                                    Text {
+                                    Row {
                                         anchors.centerIn: parent
-                                        text: "Отозвать"
-                                        font.pixelSize: 10
-                                        color: "white"
-                                        font.bold: true
+                                        spacing: 4
+                                        Image {
+                                            source: "qrc:/icons/revoke.png"
+                                            sourceSize: Qt.size(24, 24)
+                                            fillMode: Image.PreserveAspectFit
+                                            mipmap: true
+                                            antialiasing: true
+                                        }
+                                        Text {
+                                            text: "Отозвать"
+                                            font.pixelSize: 10
+                                            color: "white"
+                                            font.bold: true
+                                        }
                                     }
 
                                     MouseArea {
@@ -295,9 +362,12 @@ Page {
                         anchors.centerIn: parent
                         spacing: 8
 
-                        Text {
-                            text: "📱"
-                            font.pixelSize: 28
+                        Image {
+                            source: "qrc:/icons/sessions.png"
+                            sourceSize: Qt.size(28, 28)
+                            fillMode: Image.PreserveAspectFit
+                            mipmap: true
+                            antialiasing: true
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
 
@@ -313,17 +383,27 @@ Page {
         }
 
         // Подсказка
-        Text {
-            text: sessions.length === 0 ?
-                "" :
-                "💡 Сессии, неактивные более 5 минут, отмечены красным цветом"
-            font.pixelSize: 11
-            color: "#7f8c8d"
-            font.italic: true
+        Row {
             Layout.alignment: Qt.AlignHCenter
-            Layout.fillWidth: true
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.WordWrap
+            spacing: 4
+            visible: sessions.length > 0
+
+            Image {
+                source: "qrc:/icons/info.png"
+                sourceSize: Qt.size(11, 11)
+                fillMode: Image.PreserveAspectFit
+                mipmap: true
+                antialiasing: true
+                anchors.verticalCenter: parent.verticalCenter
+            }
+
+            Text {
+                text: "Сессии, неактивные более 5 минут, отмечены красным цветом"
+                font.pixelSize: 11
+                color: "#7f8c8d"
+                font.italic: true
+                anchors.verticalCenter: parent.verticalCenter
+            }
         }
     }
 

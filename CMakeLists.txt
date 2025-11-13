@@ -83,14 +83,60 @@ qt_add_qml_module(EduFlow
                 QML_FILES main/view/settings/AboutPage.qml
                 QML_FILES main/forms/PortfolioFormWindow.qml
                 QML_FILES main/forms/EventFormWindow.qml
-                QML_FILES
-                QML_FILES
 )
 
 qt_add_resources(EduFlow "resources"
     PREFIX "/"
     FILES
+        # Основные иконки
         icons/app-icon.png
+        icons/check.png
+        icons/events.png
+        icons/groups.png
+        icons/home.png
+        icons/portfolio.png
+        icons/settings.png
+        icons/statistics.png
+        icons/students.png
+        icons/teachers.png
+        icons/loading.png
+
+        # Иконки для настроек
+        icons/about.png
+        icons/activity.png
+        icons/calendar.png
+        icons/cross.png
+        icons/edit.png
+        icons/email.png
+        icons/eye.png
+        icons/eye-off.png
+        icons/info.png
+        icons/ip.png
+        icons/language.png
+        icons/link.png
+        icons/logout.png
+        icons/os.png
+        icons/organization.png
+        icons/phone.png
+        icons/ping.png
+        icons/platform.png
+        icons/profile.png
+        icons/refresh.png
+        icons/revoke.png
+        icons/save.png
+        icons/security.png
+        icons/server.png
+        icons/sessions.png
+
+        # Статусы сессий
+        icons/status-active.png
+        icons/status-connection.png  # используем как status-current
+        icons/status-inactive.png
+        icons/status-warning.png
+        icons/time.png
+
+        icons/user.png
+        icons/version.png
 )
 
 set_target_properties(EduFlow PROPERTIES

@@ -34,12 +34,26 @@ Rectangle {
                     anchors.margins: 24
                     spacing: 20
 
-                    Text {
-                        text: "🔐 Безопасность"
-                        font.pixelSize: 18
-                        font.bold: true
-                        color: "#2c3e50"
+                    Row {
                         Layout.alignment: Qt.AlignHCenter
+                        spacing: 8
+
+                        Image {
+                            source: "qrc:/icons/security.png"
+                            sourceSize: Qt.size(18, 18)
+                            fillMode: Image.PreserveAspectFit
+                            mipmap: true
+                            antialiasing: true
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Text {
+                            text: "Безопасность"
+                            font.pixelSize: 18
+                            font.bold: true
+                            color: "#2c3e50"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
                     }
 
                     ColumnLayout {
@@ -104,20 +118,13 @@ Rectangle {
 
                                     property bool checked: false
 
-                                    Text {
+                                    Image {
                                         anchors.centerIn: parent
-                                        text: "👁"
-                                        font.pixelSize: 16
-                                        color: showCurrentPasswordButton.checked ? "white" : "#7f8c8d"
-                                    }
-
-                                    Rectangle {
-                                        visible: !showCurrentPasswordButton.checked
-                                        anchors.centerIn: parent
-                                        width: 20
-                                        height: 2
-                                        rotation: 45
-                                        color: "#7f8c8d"
+                                        source: showCurrentPasswordButton.checked ? "qrc:/icons/eye-off.png" : "qrc:/icons/eye.png"
+                                        sourceSize: Qt.size(16, 16)
+                                        fillMode: Image.PreserveAspectFit
+                                        mipmap: true
+                                        antialiasing: true
                                     }
 
                                     MouseArea {
@@ -187,20 +194,13 @@ Rectangle {
 
                                     property bool checked: false
 
-                                    Text {
+                                    Image {
                                         anchors.centerIn: parent
-                                        text: "👁"
-                                        font.pixelSize: 16
-                                        color: showNewPasswordButton.checked ? "white" : "#7f8c8d"
-                                    }
-
-                                    Rectangle {
-                                        visible: !showNewPasswordButton.checked
-                                        anchors.centerIn: parent
-                                        width: 20
-                                        height: 2
-                                        rotation: 45
-                                        color: "#7f8c8d"
+                                        source: showNewPasswordButton.checked ? "qrc:/icons/eye-off.png" : "qrc:/icons/eye.png"
+                                        sourceSize: Qt.size(16, 16)
+                                        fillMode: Image.PreserveAspectFit
+                                        mipmap: true
+                                        antialiasing: true
                                     }
 
                                     MouseArea {
@@ -270,20 +270,13 @@ Rectangle {
 
                                     property bool checked: false
 
-                                    Text {
+                                    Image {
                                         anchors.centerIn: parent
-                                        text: "👁"
-                                        font.pixelSize: 16
-                                        color: showConfirmPasswordButton.checked ? "white" : "#7f8c8d"
-                                    }
-
-                                    Rectangle {
-                                        visible: !showConfirmPasswordButton.checked
-                                        anchors.centerIn: parent
-                                        width: 20
-                                        height: 2
-                                        rotation: 45
-                                        color: "#7f8c8d"
+                                        source: showConfirmPasswordButton.checked ? "qrc:/icons/eye-off.png" : "qrc:/icons/eye.png"
+                                        sourceSize: Qt.size(16, 16)
+                                        fillMode: Image.PreserveAspectFit
+                                        mipmap: true
+                                        antialiasing: true
                                     }
 
                                     MouseArea {
@@ -319,9 +312,12 @@ Rectangle {
                             Row {
                                 spacing: 8
 
-                                Text {
-                                    text: securityPage.newPassword.length >= 6 ? "✅" : "❌"
-                                    font.pixelSize: 10
+                                Image {
+                                    source: securityPage.newPassword.length >= 6 ? "qrc:/icons/check.png" : "qrc:/icons/cross.png"
+                                    sourceSize: Qt.size(10, 10)
+                                    fillMode: Image.PreserveAspectFit
+                                    mipmap: true
+                                    antialiasing: true
                                 }
 
                                 Text {
@@ -334,9 +330,12 @@ Rectangle {
                             Row {
                                 spacing: 8
 
-                                Text {
-                                    text: (securityPage.newPassword === securityPage.confirmPassword && securityPage.newPassword.length > 0) ? "✅" : "❌"
-                                    font.pixelSize: 10
+                                Image {
+                                    source: (securityPage.newPassword === securityPage.confirmPassword && securityPage.newPassword.length > 0) ? "qrc:/icons/check.png" : "qrc:/icons/cross.png"
+                                    sourceSize: Qt.size(10, 10)
+                                    fillMode: Image.PreserveAspectFit
+                                    mipmap: true
+                                    antialiasing: true
                                 }
 
                                 Text {
@@ -364,10 +363,12 @@ Rectangle {
                                 anchors.centerIn: parent
                                 spacing: 8
 
-                                Text {
-                                    text: "🔄"
-                                    font.pixelSize: 16
-                                    color: "white"
+                                Image {
+                                    source: "qrc:/icons/refresh.png"
+                                    sourceSize: Qt.size(16, 16)
+                                    fillMode: Image.PreserveAspectFit
+                                    mipmap: true
+                                    antialiasing: true
                                 }
 
                                 Text {

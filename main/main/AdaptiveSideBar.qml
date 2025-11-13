@@ -27,12 +27,12 @@ Rectangle {
     property string currentView: "dashboard"
 
     property var menuItems: [
-        {icon: "🏠", name: "Главная панель", view: "dashboard"},
-        {icon: "👨‍🏫", name: "Преподаватели", view: "teachers"},
-        {icon: "👨‍🎓", name: "Студенты", view: "students"},
-        {icon: "👥", name: "Группы", view: "groups"},
-        {icon: "📁", name: "Портфолио", view: "portfolio"},
-        {icon: "📅", name: "События", view: "events"}
+        {icon: "qrc:/icons/home.png", name: "Главная панель", view: "dashboard"},
+        {icon: "qrc:/icons/teachers.png", name: "Преподаватели", view: "teachers"},
+        {icon: "qrc:/icons/students.png", name: "Студенты", view: "students"},
+        {icon: "qrc:/icons/groups.png", name: "Группы", view: "groups"},
+        {icon: "qrc:/icons/portfolio.png", name: "Портфолио", view: "portfolio"},
+        {icon: "qrc:/icons/events.png", name: "События", view: "events"}
     ]
 
     ColumnLayout {
@@ -58,10 +58,13 @@ Rectangle {
                     color: "#3498db"
                     anchors.verticalCenter: parent.verticalCenter
 
-                    Text {
+                    Image {
                         anchors.centerIn: parent
-                        text: "🎯"
-                        font.pixelSize: 18
+                        source: "qrc:/icons/home.png"
+                        sourceSize: Qt.size(20, 20)
+                        fillMode: Image.PreserveAspectFit
+                        mipmap: true
+                        antialiasing: true
                     }
                 }
 
@@ -86,49 +89,49 @@ Rectangle {
 
             // Кнопка переключения режимов - всегда видна
             Item {
-                    Layout.fillWidth: !textVisible // В компактном режиме занимает всю ширину для центрирования
-                    Layout.preferredWidth: textVisible ? 32 : parent.width // В полном режиме - фиксированная ширина
-                    Layout.preferredHeight: 32
-                    Layout.alignment: textVisible ? Qt.AlignRight : Qt.AlignHCenter // Центрируем в компактном режиме
+                Layout.fillWidth: !textVisible
+                Layout.preferredWidth: textVisible ? 32 : parent.width
+                Layout.preferredHeight: 32
+                Layout.alignment: textVisible ? Qt.AlignRight : Qt.AlignHCenter
 
-                    Rectangle {
-                        width: 32
-                        height: 32
-                        radius: 8
-                        color: toggleMouseArea.containsMouse ? "#f1f3f4" : "transparent"
-                        border.color: toggleMouseArea.containsMouse ? "#3498db" : "transparent"
-                        border.width: 1
-                        anchors.centerIn: parent // Центрируем внутри Item
+                Rectangle {
+                    width: 32
+                    height: 32
+                    radius: 8
+                    color: toggleMouseArea.containsMouse ? "#f1f3f4" : "transparent"
+                    border.color: toggleMouseArea.containsMouse ? "#3498db" : "transparent"
+                    border.width: 1
+                    anchors.centerIn: parent
 
-                        Text {
-                            anchors.centerIn: parent
-                            text: textVisible ? "◀" : "▶"
-                            font.pixelSize: 12
-                            color: "#5f6368"
-                            font.bold: true
-                        }
+                    Text {
+                        anchors.centerIn: parent
+                        text: textVisible ? "◀" : "▶"
+                        font.pixelSize: 12
+                        color: "#5f6368"
+                        font.bold: true
+                    }
 
-                        MouseArea {
-                            id: toggleMouseArea
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                if (canToggle) {
-                                    canToggle = false
-                                    toggleCooldown.start()
+                    MouseArea {
+                        id: toggleMouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                            if (canToggle) {
+                                canToggle = false
+                                toggleCooldown.start()
 
-                                    textVisible = !textVisible
-                                    if (currentMode === "full") {
-                                        currentWidth = compactWidth
-                                    } else {
-                                        currentWidth = fullWidth
-                                    }
+                                textVisible = !textVisible
+                                if (currentMode === "full") {
+                                    currentWidth = compactWidth
+                                } else {
+                                    currentWidth = fullWidth
                                 }
                             }
                         }
                     }
                 }
+            }
         }
 
         // Разделитель
@@ -165,11 +168,13 @@ Rectangle {
                         anchors.margins: 12
                         spacing: 12
 
-                        Text {
-                            text: modelData.icon
-                            font.pixelSize: 16
+                        Image {
+                            source: modelData.icon
+                            sourceSize: Qt.size(16, 16)
                             anchors.verticalCenter: parent.verticalCenter
-                            color: adaptiveSideBar.currentView === modelData.view ? "#1976d2" : "#5f6368"
+                            fillMode: Image.PreserveAspectFit
+                            mipmap: true
+                            antialiasing: true
                         }
 
                         Text {
@@ -257,34 +262,84 @@ Rectangle {
                 anchors.centerIn: parent
                 spacing: 4
 
-                Text {
-                    text: "📊 Статистика"
-                    font.pixelSize: 11
-                    font.bold: true
-                    color: "#2c3e50"
+                Row {
+                    spacing: 6
                     anchors.horizontalCenter: parent.horizontalCenter
+
+                    Image {
+                        source: "qrc:/icons/statistics.png"
+                        sourceSize: Qt.size(14, 14)
+                        anchors.verticalCenter: parent.verticalCenter
+                        fillMode: Image.PreserveAspectFit
+                        mipmap: true
+                        antialiasing: true
+                    }
+
+                    Text {
+                        text: "Статистика"
+                        font.pixelSize: 11
+                        font.bold: true
+                        color: "#2c3e50"
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
                 }
 
                 Row {
                     spacing: 12
                     anchors.horizontalCenter: parent.horizontalCenter
 
-                    Text {
-                        text: "👨‍🏫" + (mainWindow.teachers ? mainWindow.teachers.length : 0)
-                        font.pixelSize: 10
-                        color: "#6c757d"
+                    Row {
+                        spacing: 4
+                        Image {
+                            source: "qrc:/icons/teachers.png"
+                            sourceSize: Qt.size(12, 12)
+                            anchors.verticalCenter: parent.verticalCenter
+                            fillMode: Image.PreserveAspectFit
+                            mipmap: true
+                            antialiasing: true
+                        }
+                        Text {
+                            text: mainWindow.teachers ? mainWindow.teachers.length : 0
+                            font.pixelSize: 10
+                            color: "#6c757d"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
                     }
 
-                    Text {
-                        text: "👨‍🎓" + (mainWindow.students ? mainWindow.students.length : 0)
-                        font.pixelSize: 10
-                        color: "#6c757d"
+                    Row {
+                        spacing: 4
+                        Image {
+                            source: "qrc:/icons/students.png"
+                            sourceSize: Qt.size(12, 12)
+                            anchors.verticalCenter: parent.verticalCenter
+                            fillMode: Image.PreserveAspectFit
+                            mipmap: true
+                            antialiasing: true
+                        }
+                        Text {
+                            text: mainWindow.students ? mainWindow.students.length : 0
+                            font.pixelSize: 10
+                            color: "#6c757d"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
                     }
 
-                    Text {
-                        text: "👥" + (mainWindow.groups ? mainWindow.groups.length : 0)
-                        font.pixelSize: 10
-                        color: "#6c757d"
+                    Row {
+                        spacing: 4
+                        Image {
+                            source: "qrc:/icons/groups.png"
+                            sourceSize: Qt.size(12, 12)
+                            anchors.verticalCenter: parent.verticalCenter
+                            fillMode: Image.PreserveAspectFit
+                            mipmap: true
+                            antialiasing: true
+                        }
+                        Text {
+                            text: mainWindow.groups ? mainWindow.groups.length : 0
+                            font.pixelSize: 10
+                            color: "#6c757d"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
                     }
                 }
             }
@@ -305,11 +360,13 @@ Rectangle {
                 anchors.margins: 12
                 spacing: 12
 
-                Text {
-                    text: "⚙️"
-                    font.pixelSize: 16
+                Image {
+                    source: "qrc:/icons/settings.png"
+                    sourceSize: Qt.size(16, 16)
                     anchors.verticalCenter: parent.verticalCenter
-                    color: adaptiveSideBar.currentView === "settings" ? "#1976d2" : "#5f6368"
+                    fillMode: Image.PreserveAspectFit
+                    mipmap: true
+                    antialiasing: true
                 }
 
                 Text {

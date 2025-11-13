@@ -34,12 +34,26 @@ Rectangle {
                     anchors.margins: 24
                     spacing: 10
 
-                    Text {
-                        text: "ℹ️ О программе"
-                        font.pixelSize: 18
-                        font.bold: true
-                        color: "#2c3e50"
+                    Row {
                         Layout.alignment: Qt.AlignHCenter
+                        spacing: 8
+
+                        Image {
+                            source: "qrc:/icons/about.png"
+                            sourceSize: Qt.size(18, 18)
+                            fillMode: Image.PreserveAspectFit
+                            mipmap: true
+                            antialiasing: true
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Text {
+                            text: "О программе"
+                            font.pixelSize: 18
+                            font.bold: true
+                            color: "#2c3e50"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
                     }
 
                     ColumnLayout {
@@ -66,10 +80,13 @@ Rectangle {
                                     color: "#3498db"
                                     anchors.verticalCenter: parent.verticalCenter
 
-                                    Text {
+                                    Image {
                                         anchors.centerIn: parent
-                                        text: "🎓"
-                                        font.pixelSize: 20
+                                        source: "qrc:/icons/app-icon.png"
+                                        sourceSize: Qt.size(20, 20)
+                                        fillMode: Image.PreserveAspectFit
+                                        mipmap: true
+                                        antialiasing: true
                                     }
                                 }
 
@@ -101,10 +118,12 @@ Rectangle {
                                 Layout.fillWidth: true
                                 spacing: 10
 
-                                Text {
-                                    text: "📱"
-                                    font.pixelSize: 14
-                                    color: "#6c757d"
+                                Image {
+                                    source: "qrc:/icons/version.png"
+                                    sourceSize: Qt.size(14, 14)
+                                    fillMode: Image.PreserveAspectFit
+                                    mipmap: true
+                                    antialiasing: true
                                     Layout.preferredWidth: 20
                                 }
 
@@ -128,10 +147,12 @@ Rectangle {
                                 Layout.fillWidth: true
                                 spacing: 10
 
-                                Text {
-                                    text: "🏢"
-                                    font.pixelSize: 14
-                                    color: "#6c757d"
+                                Image {
+                                    source: "qrc:/icons/organization.png"
+                                    sourceSize: Qt.size(14, 14)
+                                    fillMode: Image.PreserveAspectFit
+                                    mipmap: true
+                                    antialiasing: true
                                     Layout.preferredWidth: 20
                                 }
 
@@ -155,10 +176,12 @@ Rectangle {
                                 Layout.fillWidth: true
                                 spacing: 10
 
-                                Text {
-                                    text: "📅"
-                                    font.pixelSize: 14
-                                    color: "#6c757d"
+                                Image {
+                                    source: "qrc:/icons/calendar.png"
+                                    sourceSize: Qt.size(14, 14)
+                                    fillMode: Image.PreserveAspectFit
+                                    mipmap: true
+                                    antialiasing: true
                                     Layout.preferredWidth: 20
                                 }
 
@@ -182,10 +205,12 @@ Rectangle {
                                 Layout.fillWidth: true
                                 spacing: 10
 
-                                Text {
-                                    text: "⚙️"
-                                    font.pixelSize: 14
-                                    color: "#6c757d"
+                                Image {
+                                    source: "qrc:/icons/platform.png"
+                                    sourceSize: Qt.size(14, 14)
+                                    fillMode: Image.PreserveAspectFit
+                                    mipmap: true
+                                    antialiasing: true
                                     Layout.preferredWidth: 20
                                 }
 
@@ -209,10 +234,12 @@ Rectangle {
                                 Layout.fillWidth: true
                                 spacing: 10
 
-                                Text {
-                                    text: "🀄"
-                                    font.pixelSize: 14
-                                    color: "#6c757d"
+                                Image {
+                                    source: "qrc:/icons/language.png"
+                                    sourceSize: Qt.size(14, 14)
+                                    fillMode: Image.PreserveAspectFit
+                                    mipmap: true
+                                    antialiasing: true
                                     Layout.preferredWidth: 20
                                 }
 
@@ -247,7 +274,7 @@ Rectangle {
                                 spacing: 8
 
                                 Text {
-                                    text: "🔗 Ссылки на проект:"
+                                    text: "Ссылки на проект:"
                                     font.pixelSize: 12
                                     font.bold: true
                                     color: "#6c757d"
@@ -268,9 +295,12 @@ Rectangle {
                                             anchors.centerIn: parent
                                             spacing: 6
 
-                                            Text {
-                                                text: "🌐"
-                                                font.pixelSize: 12
+                                            Image {
+                                                source: "qrc:/icons/link.png"
+                                                sourceSize: Qt.size(12, 12)
+                                                fillMode: Image.PreserveAspectFit
+                                                mipmap: true
+                                                antialiasing: true
                                                 anchors.verticalCenter: parent.verticalCenter
                                             }
 
@@ -304,9 +334,12 @@ Rectangle {
                                             anchors.centerIn: parent
                                             spacing: 6
 
-                                            Text {
-                                                text: "🔧"
-                                                font.pixelSize: 12
+                                            Image {
+                                                source: "qrc:/icons/server.png"
+                                                sourceSize: Qt.size(12, 12)
+                                                fillMode: Image.PreserveAspectFit
+                                                mipmap: true
+                                                antialiasing: true
                                                 anchors.verticalCenter: parent.verticalCenter
                                             }
 
@@ -329,11 +362,23 @@ Rectangle {
                                     }
                                 }
 
-                                Text {
-                                    text: "💡 Исходный код доступен на Gitflic"
-                                    font.pixelSize: 10
-                                    color: "#6c757d"
-                                    font.italic: true
+                                Row {
+                                    spacing: 4
+                                    Image {
+                                        source: "qrc:/icons/info.png"
+                                        sourceSize: Qt.size(10, 10)
+                                        fillMode: Image.PreserveAspectFit
+                                        mipmap: true
+                                        antialiasing: true
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                    Text {
+                                        text: "Исходный код доступен на Gitflic"
+                                        font.pixelSize: 10
+                                        color: "#6c757d"
+                                        font.italic: true
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
                                 }
                             }
                         }
@@ -354,11 +399,23 @@ Rectangle {
                     anchors.margins: 20
                     spacing: 8
 
-                    Text {
-                        text: "💡 О проекте EduFlow"
-                        font.pixelSize: 14
-                        font.bold: true
-                        color: "#0277bd"
+                    Row {
+                        spacing: 6
+                        Image {
+                            source: "qrc:/icons/info.png"
+                            sourceSize: Qt.size(14, 14)
+                            fillMode: Image.PreserveAspectFit
+                            mipmap: true
+                            antialiasing: true
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: "О проекте EduFlow"
+                            font.pixelSize: 14
+                            font.bold: true
+                            color: "#0277bd"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
                     }
 
                     Text {

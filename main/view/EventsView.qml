@@ -222,12 +222,23 @@ Item {
             Layout.fillWidth: true
             spacing: 8
 
-            Text {
-                text: "📅 Управление событиями"
-                font.pixelSize: 20
-                font.bold: true
-                color: "#2c3e50"
+            Row {
                 anchors.horizontalCenter: parent.horizontalCenter
+                spacing: 10
+
+                Image {
+                    source: "qrc:/icons/events.png"
+                    sourceSize: Qt.size(24, 24)
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                Text {
+                    text: "Управление событиями"
+                    font.pixelSize: 20
+                    font.bold: true
+                    color: "#2c3e50"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
             }
 
             Rectangle {
@@ -273,9 +284,9 @@ Item {
                         anchors.centerIn: parent
                         spacing: 5
 
-                        Text {
-                            text: "🔄"
-                            font.pixelSize: 12
+                        Image {
+                            source: "qrc:/icons/check.png"
+                            sourceSize: Qt.size(12, 12)
                             anchors.verticalCenter: parent.verticalCenter
                         }
 
@@ -310,9 +321,9 @@ Item {
                         anchors.centerIn: parent
                         spacing: 5
 
-                        Text {
-                            text: "➕"
-                            font.pixelSize: 12
+                        Image {
+                            source: "qrc:/icons/events.png"
+                            sourceSize: Qt.size(12, 12)
                             anchors.verticalCenter: parent.verticalCenter
                         }
 
@@ -354,9 +365,9 @@ Item {
                 anchors.centerIn: parent
                 spacing: 10
 
-                Text {
-                    text: "⏳"
-                    font.pixelSize: 14
+                Image {
+                    source: "qrc:/icons/loading.png"
+                    sourceSize: Qt.size(14, 14)
                 }
 
                 Text {

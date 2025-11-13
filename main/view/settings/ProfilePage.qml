@@ -76,10 +76,13 @@ Rectangle {
                                 anchors.centerIn: parent
                                 color: "#e3f2fd"
 
-                                Text {
+                                Image {
                                     anchors.centerIn: parent
-                                    text: "👤"
-                                    font.pixelSize: 32
+                                    source: "qrc:/icons/profile.png"
+                                    sourceSize: Qt.size(32, 32)
+                                    fillMode: Image.PreserveAspectFit
+                                    mipmap: true
+                                    antialiasing: true
                                 }
                             }
                         }
@@ -107,12 +110,24 @@ Rectangle {
                                 radius: 12
                                 color: "#e3f2fd"
 
-                                Text {
+                                Row {
                                     anchors.centerIn: parent
-                                    text: "👤 Аккаунт пользователя"
-                                    font.pixelSize: 10
-                                    color: "#3498db"
-                                    font.bold: true
+                                    spacing: 4
+                                    Image {
+                                        source: "qrc:/icons/user.png"
+                                        sourceSize: Qt.size(10, 10)
+                                        fillMode: Image.PreserveAspectFit
+                                        mipmap: true
+                                        antialiasing: true
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                    Text {
+                                        text: "Аккаунт пользователя"
+                                        font.pixelSize: 10
+                                        color: "#3498db"
+                                        font.bold: true
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
                                 }
                             }
                         }
@@ -134,10 +149,13 @@ Rectangle {
                                 radius: 15
                                 color: "#e3f2fd"
 
-                                Text {
+                                Image {
                                     anchors.centerIn: parent
-                                    text: "📧"
-                                    font.pixelSize: 14
+                                    source: "qrc:/icons/email.png"
+                                    sourceSize: Qt.size(14, 14)
+                                    fillMode: Image.PreserveAspectFit
+                                    mipmap: true
+                                    antialiasing: true
                                 }
                             }
 
@@ -172,10 +190,13 @@ Rectangle {
                                 radius: 15
                                 color: "#e8f5e8"
 
-                                Text {
+                                Image {
                                     anchors.centerIn: parent
-                                    text: "📱"
-                                    font.pixelSize: 14
+                                    source: "qrc:/icons/phone.png"
+                                    sourceSize: Qt.size(14, 14)
+                                    fillMode: Image.PreserveAspectFit
+                                    mipmap: true
+                                    antialiasing: true
                                 }
                             }
 
@@ -216,12 +237,26 @@ Rectangle {
                     anchors.margins: 24
                     spacing: 20
 
-                    Text {
-                        text: "✏️ Редактирование профиля"
-                        font.pixelSize: 18
-                        font.bold: true
-                        color: "#2c3e50"
+                    Row {
                         Layout.alignment: Qt.AlignHCenter
+                        spacing: 8
+
+                        Image {
+                            source: "qrc:/icons/edit.png"
+                            sourceSize: Qt.size(18, 18)
+                            fillMode: Image.PreserveAspectFit
+                            mipmap: true
+                            antialiasing: true
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+
+                        Text {
+                            text: "Редактирование профиля"
+                            font.pixelSize: 18
+                            font.bold: true
+                            color: "#2c3e50"
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
                     }
 
                     ColumnLayout {
@@ -474,10 +509,12 @@ Rectangle {
                                 anchors.centerIn: parent
                                 spacing: 8
 
-                                Text {
-                                    text: "💾"
-                                    font.pixelSize: 16
-                                    color: "white"
+                                Image {
+                                    source: "qrc:/icons/save.png"
+                                    sourceSize: Qt.size(16, 16)
+                                    fillMode: Image.PreserveAspectFit
+                                    mipmap: true
+                                    antialiasing: true
                                 }
 
                                 Text {
