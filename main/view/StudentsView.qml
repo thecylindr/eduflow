@@ -226,8 +226,8 @@ Item {
                         spacing: 5
 
                         Image {
-                            source: "qrc:/icons/check.png"
-                            sourceSize: Qt.size(12, 12)
+                            source: "qrc:/icons/refresh.png"
+                            sourceSize: Qt.size(20, 20)
                             anchors.verticalCenter: parent.verticalCenter
                         }
 

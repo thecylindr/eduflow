@@ -1,3 +1,4 @@
+// EnhancedSearchBox.qml
 import QtQuick 2.15
 import QtQuick.Controls 2.15
 
@@ -25,12 +26,13 @@ Rectangle {
             height: parent.height
             color: "transparent"
 
-            Text {
+            Image {
                 id: searchIcon
                 anchors.centerIn: parent
-                text: "🔍"
-                font.pixelSize: 16
-                color: "#666"
+                source: (searchField.activeFocus || searchField.text) ? "qrc:icons/search.gif" : "qrc:icons/search.png"
+                width: 16
+                height: 16
+                fillMode: Image.PreserveAspectFit
             }
         }
 
@@ -76,12 +78,12 @@ Rectangle {
             color: clearMouseArea.containsMouse ? "#e0e0e0" : "transparent"
             visible: searchField.text.length > 0
 
-            Text {
+            Image {
                 anchors.centerIn: parent
-                text: "×"
-                font.pixelSize: 18
-                font.bold: true
-                color: "#666"
+                source: "qrc:icons/cross.png"
+                width: 12
+                height: 12
+                fillMode: Image.PreserveAspectFit
             }
 
             MouseArea {

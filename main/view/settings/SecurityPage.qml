@@ -40,7 +40,7 @@ Rectangle {
 
                         Image {
                             source: "qrc:/icons/security.png"
-                            sourceSize: Qt.size(18, 18)
+                            sourceSize: Qt.size(32, 32)
                             fillMode: Image.PreserveAspectFit
                             mipmap: true
                             antialiasing: true
@@ -120,7 +120,7 @@ Rectangle {
 
                                     Image {
                                         anchors.centerIn: parent
-                                        source: showCurrentPasswordButton.checked ? "qrc:/icons/eye-off.png" : "qrc:/icons/eye.png"
+                                        source: showCurrentPasswordButton.checked ? "qrc:/icons/eye.png" : "qrc:/icons/eye-off.png"
                                         sourceSize: Qt.size(16, 16)
                                         fillMode: Image.PreserveAspectFit
                                         mipmap: true
@@ -136,6 +136,7 @@ Rectangle {
                             }
                         }
 
+                        // Общий переключатель видимости для нового пароля и подтверждения
                         ColumnLayout {
                             spacing: 6
                             Layout.fillWidth: true
@@ -164,7 +165,7 @@ Rectangle {
                                         anchors.fill: parent
                                         anchors.margins: 8
                                         verticalAlignment: TextInput.AlignVCenter
-                                        echoMode: showNewPasswordButton.checked ? TextInput.Normal : TextInput.Password
+                                        echoMode: showNewAndConfirmPasswordButton.checked ? TextInput.Normal : TextInput.Password
                                         text: securityPage.newPassword
                                         font.pixelSize: 14
                                         selectByMouse: true
@@ -183,20 +184,21 @@ Rectangle {
                                     }
                                 }
 
+                                // Общий переключатель для двух полей
                                 Rectangle {
-                                    id: showNewPasswordButton
+                                    id: showNewAndConfirmPasswordButton
                                     width: 36
                                     height: 36
                                     radius: 8
-                                    border.color: showNewPasswordMouseArea.containsPress ? "#3498db" : "#d0d0d0"
+                                    border.color: showNewAndConfirmPasswordMouseArea.containsPress ? "#3498db" : "#d0d0d0"
                                     border.width: 1
-                                    color: showNewPasswordButton.checked ? "#3498db" : "transparent"
+                                    color: showNewAndConfirmPasswordButton.checked ? "#3498db" : "transparent"
 
                                     property bool checked: false
 
                                     Image {
                                         anchors.centerIn: parent
-                                        source: showNewPasswordButton.checked ? "qrc:/icons/eye-off.png" : "qrc:/icons/eye.png"
+                                        source: showNewAndConfirmPasswordButton.checked ? "qrc:/icons/eye.png" : "qrc:/icons/eye-off.png"
                                         sourceSize: Qt.size(16, 16)
                                         fillMode: Image.PreserveAspectFit
                                         mipmap: true
@@ -204,9 +206,9 @@ Rectangle {
                                     }
 
                                     MouseArea {
-                                        id: showNewPasswordMouseArea
+                                        id: showNewAndConfirmPasswordMouseArea
                                         anchors.fill: parent
-                                        onClicked: showNewPasswordButton.checked = !showNewPasswordButton.checked
+                                        onClicked: showNewAndConfirmPasswordButton.checked = !showNewAndConfirmPasswordButton.checked
                                     }
                                 }
                             }
@@ -223,67 +225,35 @@ Rectangle {
                                 font.bold: true
                             }
 
-                            RowLayout {
+                            Rectangle {
                                 Layout.fillWidth: true
-                                spacing: 6
+                                height: 44
+                                radius: 8
+                                border.color: confirmPasswordField.activeFocus ? "#3498db" : "#e0e0e0"
+                                border.width: confirmPasswordField.activeFocus ? 2 : 1
+                                color: "#ffffff"
 
-                                Rectangle {
-                                    Layout.fillWidth: true
-                                    height: 44
-                                    radius: 8
-                                    border.color: confirmPasswordField.activeFocus ? "#3498db" : "#e0e0e0"
-                                    border.width: confirmPasswordField.activeFocus ? 2 : 1
-                                    color: "#ffffff"
+                                TextInput {
+                                    id: confirmPasswordField
+                                    anchors.fill: parent
+                                    anchors.margins: 8
+                                    verticalAlignment: TextInput.AlignVCenter
+                                    echoMode: showNewAndConfirmPasswordButton.checked ? TextInput.Normal : TextInput.Password
+                                    text: securityPage.confirmPassword
+                                    font.pixelSize: 14
+                                    selectByMouse: true
 
-                                    TextInput {
-                                        id: confirmPasswordField
-                                        anchors.fill: parent
-                                        anchors.margins: 8
-                                        verticalAlignment: TextInput.AlignVCenter
-                                        echoMode: showConfirmPasswordButton.checked ? TextInput.Normal : TextInput.Password
-                                        text: securityPage.confirmPassword
-                                        font.pixelSize: 14
-                                        selectByMouse: true
-
-                                        onTextChanged: securityPage.confirmPassword = text
-                                    }
-
-                                    Text {
-                                        anchors.fill: parent
-                                        anchors.margins: 8
-                                        verticalAlignment: Text.AlignVCenter
-                                        text: "Повторите новый пароль"
-                                        color: "#a0a0a0"
-                                        visible: !confirmPasswordField.text && !confirmPasswordField.activeFocus
-                                        font.pixelSize: 14
-                                    }
+                                    onTextChanged: securityPage.confirmPassword = text
                                 }
 
-                                Rectangle {
-                                    id: showConfirmPasswordButton
-                                    width: 36
-                                    height: 36
-                                    radius: 8
-                                    border.color: showConfirmPasswordMouseArea.containsPress ? "#3498db" : "#d0d0d0"
-                                    border.width: 1
-                                    color: showConfirmPasswordButton.checked ? "#3498db" : "transparent"
-
-                                    property bool checked: false
-
-                                    Image {
-                                        anchors.centerIn: parent
-                                        source: showConfirmPasswordButton.checked ? "qrc:/icons/eye-off.png" : "qrc:/icons/eye.png"
-                                        sourceSize: Qt.size(16, 16)
-                                        fillMode: Image.PreserveAspectFit
-                                        mipmap: true
-                                        antialiasing: true
-                                    }
-
-                                    MouseArea {
-                                        id: showConfirmPasswordMouseArea
-                                        anchors.fill: parent
-                                        onClicked: showConfirmPasswordButton.checked = !showConfirmPasswordButton.checked
-                                    }
+                                Text {
+                                    anchors.fill: parent
+                                    anchors.margins: 8
+                                    verticalAlignment: Text.AlignVCenter
+                                    text: "Повторите новый пароль"
+                                    color: "#a0a0a0"
+                                    visible: !confirmPasswordField.text && !confirmPasswordField.activeFocus
+                                    font.pixelSize: 14
                                 }
                             }
                         }
@@ -365,7 +335,7 @@ Rectangle {
 
                                 Image {
                                     source: "qrc:/icons/refresh.png"
-                                    sourceSize: Qt.size(16, 16)
+                                    sourceSize: Qt.size(20, 20)
                                     fillMode: Image.PreserveAspectFit
                                     mipmap: true
                                     antialiasing: true

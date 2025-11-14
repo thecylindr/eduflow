@@ -34,7 +34,7 @@ qt_add_qml_module(EduFlow
 
                 # Формы главного меню
                 main/main/Main.qml
-                main/main/InteractionsList.qml
+                #main/main/InteractionsList.qml
                 main/main/MainAPI.qml
                 main/main/AdaptiveSideBar.qml
                 main/main/MainMessage.qml
@@ -57,6 +57,8 @@ qt_add_qml_module(EduFlow
                 main/forms/TeacherFormWindow.qml
                 main/forms/GroupFormWindow.qml
                 main/forms/StudentFormWindow.qml
+                main/forms/PortfolioFormWindow.qml
+                main/forms/EventFormWindow.qml
 
                 # Компонет отображения данных с таблиц
                 enhanced/EnhancedTableView.qml
@@ -66,23 +68,14 @@ qt_add_qml_module(EduFlow
                 enhanced/EnhancedListItem.qml
                 enhanced/EnhancedGridItem.qml
                 enhanced/EnhancedGroupBox.qml
-                enhanced/EnhancedTextField.qml
 
 
-
-
-
-
-                QML_FILES main/view/settings/ServerPage.qml
-                QML_FILES main/view/settings/SessionsPage.qml
-                QML_FILES main/view/settings/SecurityPage.qml
-                QML_FILES main/view/settings/ProfilePage.qml
-                QML_FILES main/view/settings/RequirementItem.qml
-                QML_FILES main/view/settings/PasswordField.qml
-                QML_FILES main/view/settings/SettingsMainPage.qml
-                QML_FILES main/view/settings/AboutPage.qml
-                QML_FILES main/forms/PortfolioFormWindow.qml
-                QML_FILES main/forms/EventFormWindow.qml
+                main/view/settings/ServerPage.qml
+                main/view/settings/SessionsPage.qml
+                main/view/settings/SecurityPage.qml
+                main/view/settings/ProfilePage.qml
+                main/view/settings/SettingsMainPage.qml
+                main/view/settings/AboutPage.qml
 )
 
 qt_add_resources(EduFlow "resources"
@@ -95,19 +88,27 @@ qt_add_resources(EduFlow "resources"
         icons/groups.png
         icons/home.png
         icons/portfolio.png
+        icons/expand.png
+
         icons/settings.png
+        icons/settings.gif
+
         icons/statistics.png
         icons/students.png
         icons/teachers.png
         icons/loading.png
 
-        # Иконки для настроек
         icons/about.png
         icons/activity.png
         icons/calendar.png
         icons/cross.png
         icons/edit.png
+
         icons/email.png
+        icons/email.gif
+
+        icons/git.png
+
         icons/eye.png
         icons/eye-off.png
         icons/info.png
@@ -117,26 +118,46 @@ qt_add_resources(EduFlow "resources"
         icons/logout.png
         icons/os.png
         icons/organization.png
+
         icons/phone.png
+        icons/phone.gif
+
         icons/ping.png
         icons/platform.png
+
         icons/profile.png
+        icons/profile.gif
+
         icons/refresh.png
         icons/revoke.png
         icons/save.png
         icons/security.png
-        icons/server.png
-        icons/sessions.png
+        icons/security.gif
 
-        # Статусы сессий
+        icons/server.png
+        icons/server.gif
+
+        icons/sessions.png
+        icons/sessions.gif
+
+        icons/pencil.gif
+        icons/pencil.png
+
         icons/status-active.png
-        icons/status-connection.png  # используем как status-current
+        icons/status-connection.png
         icons/status-inactive.png
         icons/status-warning.png
         icons/time.png
+        icons/earth.png
+
+        icons/test.gif
+        icons/warning.gif
 
         icons/user.png
         icons/version.png
+
+        icons/search.gif
+        icons/search.png
 )
 
 set_target_properties(EduFlow PROPERTIES

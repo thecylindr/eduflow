@@ -48,23 +48,47 @@ Rectangle {
         anchors.centerIn: parent
         spacing: 10
 
-        Text {
-            text: "🔐 ВХОД В СИСТЕМУ"
-            font.pixelSize: 16
-            font.bold: true
-            color: "#2c3e50"
+        Row {
             Layout.alignment: Qt.AlignHCenter
             Layout.bottomMargin: 4
+            spacing: 8
+
+            AnimatedImage {
+                source: "qrc:/icons/security.gif"
+                sourceSize: Qt.size(20, 20)
+                anchors.verticalCenter: parent.verticalCenter
+                playing: true
+                speed: 0.8
+            }
+
+            Text {
+                text: "ВХОД В СИСТЕМУ"
+                font.pixelSize: 16
+                font.bold: true
+                color: "#2c3e50"
+                anchors.verticalCenter: parent.verticalCenter
+            }
         }
 
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 3
 
-            Text {
-                text: "👤 Логин или E-mail"
-                font.pixelSize: 11
-                color: "#2c3e50"
+            Row {
+                spacing: 4
+                AnimatedImage {
+                    source: loginField.activeFocus ? "qrc:/icons/profile.gif" : "qrc:/icons/user.png"
+                    sourceSize: Qt.size(14, 14)
+                    anchors.verticalCenter: parent.verticalCenter
+                    playing: loginField.activeFocus
+                    speed: 0.7
+                }
+                Text {
+                    text: "Логин или E-mail"
+                    font.pixelSize: 11
+                    color: "#2c3e50"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
             }
 
             Rectangle {
@@ -115,10 +139,21 @@ Rectangle {
             Layout.fillWidth: true
             spacing: 3
 
-            Text {
-                text: "🔒 Пароль"
-                font.pixelSize: 11
-                color: "#2c3e50"
+            Row {
+                spacing: 4
+                AnimatedImage {
+                    source: passwordField.activeFocus ? "qrc:/icons/security.gif" : "qrc:/icons/security.png"
+                    sourceSize: Qt.size(14, 14)
+                    anchors.verticalCenter: parent.verticalCenter
+                    playing: passwordField.activeFocus
+                    speed: 0.7
+                }
+                Text {
+                    text: "Пароль"
+                    font.pixelSize: 11
+                    color: "#2c3e50"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
             }
 
             RowLayout {
@@ -179,25 +214,16 @@ Rectangle {
 
                     property bool checked: false
 
-                    Text {
+                    Image {
                         anchors.centerIn: parent
-                        text: "👁"
-                        font.pixelSize: 14
-                        color: showPasswordButton.checked ? "white" : "#7f8c8d"
-                    }
-
-                    Rectangle {
-                        visible: !showPasswordButton.checked
-                        anchors.centerIn: parent
-                        width: 16
-                        height: 2
-                        rotation: 45
-                        color: "#7f8c8d"
+                        source: showPasswordButton.checked ? "qrc:/icons/eye.png" : "qrc:/icons/eye-off.png"
+                        sourceSize: Qt.size(14, 14)
                     }
 
                     MouseArea {
                         id: showPasswordMouseArea
                         anchors.fill: parent
+                        hoverEnabled: true
                         onClicked: showPasswordButton.checked = !showPasswordButton.checked
                     }
                 }
@@ -213,17 +239,28 @@ Rectangle {
 
             property bool enabled: loginField.text.length > 0 && passwordField.text.length > 0 && !authWindow._isLoading
 
-            Text {
+            Row {
                 anchors.centerIn: parent
-                text: authWindow._isLoading ? "⏳ ЗАГРУЗКА..." : "🚀 ВОЙТИ"
-                font.pixelSize: 12
-                font.bold: true
-                color: "white"
+                spacing: 6
+                AnimatedImage {
+                    source: authWindow._isLoading ? "qrc:/icons/loading.png" : "qrc:/icons/check.png"
+                    sourceSize: Qt.size(16, 16)
+                    anchors.verticalCenter: parent.verticalCenter
+                    playing: authWindow._isLoading
+                }
+                Text {
+                    text: authWindow._isLoading ? "ЗАГРУЗКА..." : "ВОЙТИ"
+                    font.pixelSize: 12
+                    font.bold: true
+                    color: "white"
+                    anchors.verticalCenter: parent.verticalCenter
+                }
             }
 
             MouseArea {
                 id: loginButtonMouseArea
                 anchors.fill: parent
+                hoverEnabled: true
                 enabled: loginButton.enabled
                 onClicked: attemptLogin()
             }

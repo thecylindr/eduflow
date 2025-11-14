@@ -47,13 +47,16 @@ Rectangle {
                         color: profileMouseArea.containsMouse ? "#2196f3" : "#f8f9fa"
                         anchors.verticalCenter: parent.verticalCenter
 
-                        Image {
+                        AnimatedImage {
                             anchors.centerIn: parent
-                            source: "qrc:/icons/profile.png"
-                            sourceSize: Qt.size(28, 28)
+                            width: 24
+                            height: 24
+                            source: profileMouseArea.containsMouse ? "qrc:/icons/profile.gif" : "qrc:/icons/profile.png"
                             fillMode: Image.PreserveAspectFit
+                            speed: 0.7
                             mipmap: true
                             antialiasing: true
+                            playing: profileMouseArea.containsMouse
                         }
                     }
 
@@ -119,11 +122,12 @@ Rectangle {
                         anchors.verticalCenter: parent.verticalCenter
 
                         AnimatedImage {
-                            id: securityAnimatedIcon
                             anchors.centerIn: parent
+                            width: 24
+                            height: 24
                             source: securityMouseArea.containsMouse ? "qrc:/icons/security.gif" : "qrc:/icons/security.png"
-                            sourceSize: Qt.size(28, 28)
                             fillMode: Image.PreserveAspectFit
+                            speed: 0.7
                             mipmap: true
                             antialiasing: true
                             playing: securityMouseArea.containsMouse
@@ -191,13 +195,16 @@ Rectangle {
                         color: sessionsMouseArea.containsMouse ? "#ff9800" : "#f8f9fa"
                         anchors.verticalCenter: parent.verticalCenter
 
-                        Image {
+                        AnimatedImage {
                             anchors.centerIn: parent
-                            source: "qrc:/icons/sessions.png"
-                            sourceSize: Qt.size(28, 28)
+                            width: 24
+                            height: 24
+                            source: sessionsMouseArea.containsMouse ? "qrc:/icons/sessions.gif" : "qrc:/icons/sessions.png"
                             fillMode: Image.PreserveAspectFit
+                            speed: 0.7
                             mipmap: true
                             antialiasing: true
+                            playing: sessionsMouseArea.containsMouse
                         }
                     }
 
@@ -262,13 +269,16 @@ Rectangle {
                         color: serverMouseArea.containsMouse ? "#9c27b0" : "#f8f9fa"
                         anchors.verticalCenter: parent.verticalCenter
 
-                        Image {
+                        AnimatedImage {
                             anchors.centerIn: parent
-                            source: "qrc:/icons/server.png"
-                            sourceSize: Qt.size(28, 28)
+                            width: 24
+                            height: 24
+                            source: serverMouseArea.containsMouse ? "qrc:/icons/server.gif" : "qrc:/icons/server.png"
                             fillMode: Image.PreserveAspectFit
+                            speed: 0.7
                             mipmap: true
                             antialiasing: true
+                            playing: serverMouseArea.containsMouse
                         }
                     }
 

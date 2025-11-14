@@ -6,6 +6,8 @@ import "settings/"
 Rectangle {
     id: settingsView
     color: "#f8f9fa"
+    radius: 8
+    opacity: 0.925
 
     property var userProfile: ({})
     property var sessions: []
@@ -15,8 +17,9 @@ Rectangle {
     property string pingStatus: "not_checked"
     property string pingTime: "Не проверен"
     property string serverAddress: mainWindow.mainApi.baseUrl || ""
+    property real pingValue: 0
 
-    // User profile properties - ИСПРАВЛЕННЫЕ ИМЕНА
+    // User profile properties
     property string userLogin: userProfile.login || ""
     property string userFirstName: userProfile.firstName || ""
     property string userLastName: userProfile.lastName || ""
@@ -51,16 +54,12 @@ Rectangle {
 
         mainWindow.mainApi.getProfile(function(response) {
             isLoading = false
-            console.log("📨 Ответ профиля:", JSON.stringify(response))
 
             if (response.success && response.data) {
-                console.log("✅ Данные профиля загружены")
 
-                // ИСПРАВЛЕНИЕ: извлекаем данные из вложенного data
                 var profileData = response.data.data || response.data
                 userProfile = profileData
 
-                // ИСПРАВЛЕННЫЕ ПРИСВАИВАНИЯ - правильные имена полей
                 userLogin = profileData.login || ""
                 userFirstName = profileData.firstName || ""
                 userLastName = profileData.lastName || ""
@@ -77,8 +76,8 @@ Rectangle {
                 sessions = profileData.sessions || []
 
             } else {
-                console.log("❌ Ошибка загрузки профиля:", response.error)
-                mainWindow.showMessage("❌ Ошибка загрузки профиля: " + (response.error || "Неизвестная ошибка"), "error")
+                console.log("Ошибка загрузки профиля:", response.error)
+                mainWindow.showMessage("Ошибка загрузки профиля: " + (response.error || "Неизвестная ошибка"), "error")
             }
         })
     }
@@ -92,33 +91,31 @@ Rectangle {
             phoneNumber: editPhoneNumber
         }
 
-        console.log("📤 Отправка данных профиля:", JSON.stringify(profileData))
-
         isLoading = true
         mainWindow.mainApi.updateProfile(profileData, function(response) {
             isLoading = false
             if (response.success) {
-                mainWindow.showMessage("✅ Профиль успешно обновлен", "success")
+                mainWindow.showMessage("Профиль успешно обновлен!", "success")
                 loadProfile()
             } else {
-                mainWindow.showMessage("❌ Ошибка обновления профиля: " + (response.error || "Неизвестная ошибка"), "error")
+                mainWindow.showMessage("Ошибка обновления профиля: " + (response.error || "Неизвестная ошибка"), "error")
             }
         })
     }
 
     function changePassword() {
         if (newPassword !== confirmPassword) {
-            mainWindow.showMessage("❌ Пароли не совпадают", "error")
+            mainWindow.showMessage("Пароли не совпадают", "error")
             return
         }
 
         if (newPassword.length < 6) {
-            mainWindow.showMessage("❌ Пароль должен быть не менее 6 символов", "error")
+            mainWindow.showMessage("Пароль должен быть не менее 6 символов", "error")
             return
         }
 
         if (!currentPassword) {
-            mainWindow.showMessage("❌ Введите текущий пароль", "error")
+            mainWindow.showMessage("Введите текущий пароль", "error")
             return
         }
 
@@ -129,12 +126,12 @@ Rectangle {
             function(response) {
                 isLoading = false
                 if (response.success) {
-                    mainWindow.showMessage("✅ Пароль успешно изменен", "success")
+                    mainWindow.showMessage("Пароль успешно изменен", "success")
                     currentPassword = ""
                     newPassword = ""
                     confirmPassword = ""
                 } else {
-                    mainWindow.showMessage("❌ Ошибка смены пароля: " + (response.error || "Неизвестная ошибка"), "error")
+                    mainWindow.showMessage("Ошибка смены пароля: " + (response.error || "Неизвестная ошибка"), "error")
                 }
             }
         )
@@ -143,25 +140,29 @@ Rectangle {
     function pingServer() {
         pingStatus = "checking"
         pingTime = "Проверка..."
+        pingValue = 0
 
         var startTime = new Date().getTime()
 
         if (mainWindow && mainWindow.mainApi) {
-            mainWindow.mainApi.getProfile(function(response) {
+            mainWindow.mainApi.sendRequest("GET", "/status", null, function(response) {
                 var endTime = new Date().getTime()
                 var pingTimeMs = endTime - startTime
 
                 if (response.success) {
                     pingStatus = "success"
                     pingTime = pingTimeMs + " мс"
+                    pingValue = pingTimeMs
                 } else {
                     pingStatus = "error"
                     pingTime = "Ошибка соединения"
+                    pingValue = 0
                 }
             })
         } else {
             pingStatus = "error"
             pingTime = "API не доступен"
+            pingValue = 0
         }
     }
 
@@ -169,10 +170,10 @@ Rectangle {
         mainWindow.mainApi.revokeSession(token, function(response) {
             console.log("📨 Ответ отзыва сессии:", JSON.stringify(response))
             if (response.success) {
-                mainWindow.showMessage("✅ Сессия успешно отозвана", "success")
+                mainWindow.showMessage("Сессия успешно отозвана", "success")
                 loadProfile()
             } else {
-                mainWindow.showMessage("❌ Ошибка отзыва сессии: " + (response.error || "Неизвестная ошибка"), "error")
+                mainWindow.showMessage("Ошибка отзыва сессии: " + (response.error || "Неизвестная ошибка"), "error")
             }
         })
     }
@@ -180,20 +181,22 @@ Rectangle {
     function logout() {
         mainWindow.mainApi.clearAuth()
         mainWindow.visible = false
+
+        if (typeof mainWindow.showAuthWindow === "function") {
+            mainWindow.showAuthWindow()
+        }
     }
 
     Component.onCompleted: {
         loadProfile()
     }
 
-    // Заголовок как в TeachersView
     ColumnLayout {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
         spacing: 8
 
-        // Кнопка назад и заголовок
         RowLayout {
             Layout.fillWidth: true
             Layout.leftMargin: 10
@@ -334,6 +337,7 @@ Rectangle {
             serverAddress: settingsView.serverAddress
             pingStatus: settingsView.pingStatus
             pingTime: settingsView.pingTime
+            pingValue: settingsView.pingValue
             onPingRequested: settingsView.pingServer()
         }
 
@@ -386,13 +390,13 @@ Rectangle {
 
     function getPageTitle() {
         switch(currentPage) {
-            case "main": return "⚙️ Настройки системы @" + settingsView.userLogin
-            case "profile": return "👤 Профиль пользователя"
-            case "security": return "🔐 Безопасность и пароли"
-            case "sessions": return "📱 Активные сессии"
-            case "server": return "🌐 Настройки сервера"
-            case "about": return "ℹ️ О программе"
-            default: return "⚙️ Настройки"
+            case "main": return "Настройки системы @" + settingsView.userLogin
+            case "profile": return "Профиль пользователя"
+            case "security": return "Безопасность и пароли"
+            case "sessions": return "Активные сессии"
+            case "server": return "Настройки сервера"
+            case "about": return "О программе"
+            default: return "Настройки"
         }
     }
 

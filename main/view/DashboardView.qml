@@ -1,4 +1,3 @@
-// main/view/DashboardView.qml
 import QtQuick 2.15
 import QtQuick.Layouts 1.15
 import QtQuick.Controls 2.15
@@ -6,26 +5,70 @@ import QtQuick.Controls 2.15
 Item {
     id: dashboardView
 
-    property var statsData: ({
-        teachers: mainWindow.teachers ? mainWindow.teachers.length : 0,
-        students: mainWindow.students ? mainWindow.students.length : 0,
-        groups: mainWindow.groups ? mainWindow.groups.length : 0,
-        portfolios: mainWindow.portfolios ? mainWindow.portfolios.length : 0,
-        events: mainWindow.events ? mainWindow.events.length : 0
-    })
+    // Используем отдельные свойства для принудительного обновления
+    property int teachersCount: 0
+    property int studentsCount: 0
+    property int groupsCount: 0
+    property int portfoliosCount: 0
+    property int eventsCount: 0
+    property string userLogin: ""
 
-    function refreshStats() {
-        statsData = {
-            teachers: mainWindow.teachers ? mainWindow.teachers.length : 0,
-            students: mainWindow.students ? mainWindow.students.length : 0,
-            groups: mainWindow.groups ? mainWindow.groups.length : 0,
-            portfolios: mainWindow.portfolios ? mainWindow.portfolios.length : 0,
-            events: mainWindow.events ? mainWindow.events.length : 0
-        }
+    property bool loading: false
+
+    function refreshDashboard() {
+        if (loading) return;
+
+        console.log("🔄 Обновление данных дашборда...")
+        loading = true
+
+        mainApi.getDashboard(function(response) {
+            loading = false
+
+            if (response.success) {
+                var data = response.data
+                console.log("✅ Данные дашборда получены:", JSON.stringify(data))
+
+                // ИСПРАВЛЕНИЕ: Правильно извлекаем данные из вложенной структуры
+                var dashboardData = data.data || {}
+                var stats = dashboardData.stats || {}
+                var user = dashboardData.user || {}
+
+                // Принудительно обновляем каждое свойство
+                teachersCount = stats.teachers || 0
+                studentsCount = stats.students || 0
+                groupsCount = stats.groups || 0
+                portfoliosCount = stats.portfolios || 0
+                eventsCount = stats.events || 0
+                userLogin = user.login || ""
+
+                console.log("📊 Обновленные счетчики:",
+                    "Преподаватели:", teachersCount,
+                    "Студенты:", studentsCount,
+                    "Группы:", groupsCount,
+                    "Портфолио:", portfoliosCount,
+                    "События:", eventsCount,
+                    "Пользователь:", userLogin)
+
+            } else {
+                console.log("❌ Ошибка загрузки дашборда:", response.error)
+                // Fallback - используем старые данные если доступны
+                refreshStatsFallback()
+            }
+        })
+    }
+
+    function refreshStatsFallback() {
+        console.log("🔄 Резервное обновление статистики...")
+        teachersCount = mainWindow.teachers ? mainWindow.teachers.length : 0
+        studentsCount = mainWindow.students ? mainWindow.students.length : 0
+        groupsCount = mainWindow.groups ? mainWindow.groups.length : 0
+        portfoliosCount = mainWindow.portfolios ? mainWindow.portfolios.length : 0
+        eventsCount = mainWindow.events ? mainWindow.events.length : 0
+        userLogin = "Неизвестный"
     }
 
     Component.onCompleted: {
-        refreshStats()
+        refreshDashboard()
     }
 
     Flickable {
@@ -34,14 +77,14 @@ Item {
         clip: true
         boundsBehavior: Flickable.StopAtBounds
 
-        ColumnLayout {
+        Column {
             id: contentColumn
             width: parent.width
             spacing: 15
 
             // Заголовок
             Column {
-                Layout.fillWidth: true
+                width: parent.width
                 spacing: 8
 
                 Row {
@@ -61,10 +104,38 @@ Item {
                         color: "#2c3e50"
                         anchors.verticalCenter: parent.verticalCenter
                     }
+
+                    // Индикатор загрузки
+                    Rectangle {
+                        width: 20
+                        height: 20
+                        radius: 10
+                        color: "transparent"
+                        visible: loading
+
+                        RotationAnimator on rotation {
+                            from: 0
+                            to: 360
+                            duration: 1000
+                            running: loading
+                            loops: Animation.Infinite
+                        }
+
+                        Image {
+                            anchors.fill: parent
+                            source: "qrc:/icons/refresh.png"
+                            sourceSize: Qt.size(16, 16)
+                        }
+                    }
                 }
 
+                // ДОБАВЛЕНО: Отображение логина пользователя
                 Text {
-                    text: "Обзор системы и ключевые метрики"
+                    text: {
+                        if (loading) return "Загрузка данных..."
+                        if (userLogin) return "Вы вошли как: " + userLogin + " | Обзор системы и ключевые метрики"
+                        return "Обзор системы и ключевые метрики"
+                    }
                     font.pixelSize: 12
                     color: "#7f8c8d"
                     anchors.horizontalCenter: parent.horizontalCenter
@@ -80,20 +151,27 @@ Item {
             }
 
             // Компактная статистика
-            GridLayout {
+            Grid {
                 columns: 3
                 rowSpacing: 10
                 columnSpacing: 10
-                Layout.fillWidth: true
+                width: parent.width
 
                 // Преподаватели
                 Rectangle {
-                    Layout.fillWidth: true
+                    width: (parent.width - 20) / 3
                     height: 80
                     radius: 12
-                    color: "#ffffff"
-                    border.color: "#e0e0e0"
+                    color: teachersMouseArea.containsMouse ? "#e3f2fd" : "#ffffff"
+                    border.color: teachersMouseArea.containsMouse ? "#3498db" : "#e0e0e0"
                     border.width: 1
+
+                    Behavior on color {
+                        ColorAnimation { duration: 200 }
+                    }
+                    Behavior on border.color {
+                        ColorAnimation { duration: 200 }
+                    }
 
                     Row {
                         anchors.fill: parent
@@ -110,7 +188,7 @@ Item {
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/teachers.png"
-                                sourceSize: Qt.size(20, 20)
+                                sourceSize: Qt.size(26, 26)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -120,10 +198,10 @@ Item {
                             spacing: 2
 
                             Text {
-                                text: statsData.teachers
+                                text: loading ? "..." : teachersCount
                                 font.pixelSize: 20
                                 font.bold: true
-                                color: "#2c3e50"
+                                color: loading ? "#bdc3c7" : "#2c3e50"
                             }
 
                             Text {
@@ -135,7 +213,9 @@ Item {
                     }
 
                     MouseArea {
+                        id: teachersMouseArea
                         anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: mainWindow.navigateTo("teachers")
                     }
@@ -143,12 +223,19 @@ Item {
 
                 // Студенты
                 Rectangle {
-                    Layout.fillWidth: true
+                    width: (parent.width - 20) / 3
                     height: 80
                     radius: 12
-                    color: "#ffffff"
-                    border.color: "#e0e0e0"
+                    color: studentsMouseArea.containsMouse ? "#e8f5e8" : "#ffffff"
+                    border.color: studentsMouseArea.containsMouse ? "#2ecc71" : "#e0e0e0"
                     border.width: 1
+
+                    Behavior on color {
+                        ColorAnimation { duration: 200 }
+                    }
+                    Behavior on border.color {
+                        ColorAnimation { duration: 200 }
+                    }
 
                     Row {
                         anchors.fill: parent
@@ -165,7 +252,7 @@ Item {
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/students.png"
-                                sourceSize: Qt.size(20, 20)
+                                sourceSize: Qt.size(26, 26)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -175,10 +262,10 @@ Item {
                             spacing: 2
 
                             Text {
-                                text: statsData.students
+                                text: loading ? "..." : studentsCount
                                 font.pixelSize: 20
                                 font.bold: true
-                                color: "#2c3e50"
+                                color: loading ? "#bdc3c7" : "#2c3e50"
                             }
 
                             Text {
@@ -190,7 +277,9 @@ Item {
                     }
 
                     MouseArea {
+                        id: studentsMouseArea
                         anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: mainWindow.navigateTo("students")
                     }
@@ -198,12 +287,19 @@ Item {
 
                 // Группы
                 Rectangle {
-                    Layout.fillWidth: true
+                    width: (parent.width - 20) / 3
                     height: 80
                     radius: 12
-                    color: "#ffffff"
-                    border.color: "#e0e0e0"
+                    color: groupsMouseArea.containsMouse ? "#fdedec" : "#ffffff"
+                    border.color: groupsMouseArea.containsMouse ? "#e74c3c" : "#e0e0e0"
                     border.width: 1
+
+                    Behavior on color {
+                        ColorAnimation { duration: 200 }
+                    }
+                    Behavior on border.color {
+                        ColorAnimation { duration: 200 }
+                    }
 
                     Row {
                         anchors.fill: parent
@@ -220,7 +316,7 @@ Item {
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/groups.png"
-                                sourceSize: Qt.size(20, 20)
+                                sourceSize: Qt.size(26, 26)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -230,10 +326,10 @@ Item {
                             spacing: 2
 
                             Text {
-                                text: statsData.groups
+                                text: loading ? "..." : groupsCount
                                 font.pixelSize: 20
                                 font.bold: true
-                                color: "#2c3e50"
+                                color: loading ? "#bdc3c7" : "#2c3e50"
                             }
 
                             Text {
@@ -245,7 +341,9 @@ Item {
                     }
 
                     MouseArea {
+                        id: groupsMouseArea
                         anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: mainWindow.navigateTo("groups")
                     }
@@ -253,12 +351,19 @@ Item {
 
                 // Портфолио
                 Rectangle {
-                    Layout.fillWidth: true
+                    width: (parent.width - 20) / 3
                     height: 80
                     radius: 12
-                    color: "#ffffff"
-                    border.color: "#e0e0e0"
+                    color: portfolioMouseArea.containsMouse ? "#f3e8fd" : "#ffffff"
+                    border.color: portfolioMouseArea.containsMouse ? "#9b59b6" : "#e0e0e0"
                     border.width: 1
+
+                    Behavior on color {
+                        ColorAnimation { duration: 200 }
+                    }
+                    Behavior on border.color {
+                        ColorAnimation { duration: 200 }
+                    }
 
                     Row {
                         anchors.fill: parent
@@ -275,7 +380,7 @@ Item {
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/portfolio.png"
-                                sourceSize: Qt.size(20, 20)
+                                sourceSize: Qt.size(26, 26)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -285,10 +390,10 @@ Item {
                             spacing: 2
 
                             Text {
-                                text: statsData.portfolios
+                                text: loading ? "..." : portfoliosCount
                                 font.pixelSize: 20
                                 font.bold: true
-                                color: "#2c3e50"
+                                color: loading ? "#bdc3c7" : "#2c3e50"
                             }
 
                             Text {
@@ -300,7 +405,9 @@ Item {
                     }
 
                     MouseArea {
+                        id: portfolioMouseArea
                         anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: mainWindow.navigateTo("portfolio")
                     }
@@ -308,12 +415,19 @@ Item {
 
                 // События
                 Rectangle {
-                    Layout.fillWidth: true
+                    width: (parent.width - 20) / 3
                     height: 80
                     radius: 12
-                    color: "#ffffff"
-                    border.color: "#e0e0e0"
+                    color: eventsMouseArea.containsMouse ? "#fef5e7" : "#ffffff"
+                    border.color: eventsMouseArea.containsMouse ? "#e67e22" : "#e0e0e0"
                     border.width: 1
+
+                    Behavior on color {
+                        ColorAnimation { duration: 200 }
+                    }
+                    Behavior on border.color {
+                        ColorAnimation { duration: 200 }
+                    }
 
                     Row {
                         anchors.fill: parent
@@ -330,7 +444,7 @@ Item {
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/events.png"
-                                sourceSize: Qt.size(20, 20)
+                                sourceSize: Qt.size(26, 26)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -340,10 +454,10 @@ Item {
                             spacing: 2
 
                             Text {
-                                text: statsData.events
+                                text: loading ? "..." : eventsCount
                                 font.pixelSize: 20
                                 font.bold: true
-                                color: "#2c3e50"
+                                color: loading ? "#bdc3c7" : "#2c3e50"
                             }
 
                             Text {
@@ -355,7 +469,9 @@ Item {
                     }
 
                     MouseArea {
+                        id: eventsMouseArea
                         anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: mainWindow.navigateTo("events")
                     }
@@ -363,12 +479,19 @@ Item {
 
                 // Настройки системы
                 Rectangle {
-                    Layout.fillWidth: true
+                    width: (parent.width - 20) / 3
                     height: 80
                     radius: 12
-                    color: "#ffffff"
-                    border.color: "#e0e0e0"
+                    color: settingsMouseArea.containsMouse ? "#f2f3f4" : "#ffffff"
+                    border.color: settingsMouseArea.containsMouse ? "#95a5a6" : "#e0e0e0"
                     border.width: 1
+
+                    Behavior on color {
+                        ColorAnimation { duration: 200 }
+                    }
+                    Behavior on border.color {
+                        ColorAnimation { duration: 200 }
+                    }
 
                     Row {
                         anchors.fill: parent
@@ -382,11 +505,30 @@ Item {
                             color: "#95a5a6"
                             anchors.verticalCenter: parent.verticalCenter
 
-                            Image {
+                            Loader {
+                                id: settingsIconLoader
                                 anchors.centerIn: parent
-                                source: "qrc:/icons/settings.png"
-                                sourceSize: Qt.size(20, 20)
-                                fillMode: Image.PreserveAspectFit
+                                sourceComponent: settingsMouseArea.containsMouse ? animatedSettingsIcon : staticSettingsIcon
+                            }
+
+                            Component {
+                                id: staticSettingsIcon
+                                Image {
+                                    source: "qrc:/icons/settings.png"
+                                    sourceSize: Qt.size(26, 26)
+                                    fillMode: Image.PreserveAspectFit
+                                }
+                            }
+
+                            Component {
+                                id: animatedSettingsIcon
+                                AnimatedImage {
+                                    source: "qrc:/icons/settings.gif"
+                                    sourceSize: Qt.size(26, 26)
+                                    fillMode: Image.PreserveAspectFit
+                                    playing: true
+                                    speed: 1.0
+                                }
                             }
                         }
 
@@ -410,353 +552,133 @@ Item {
                     }
 
                     MouseArea {
+                        id: settingsMouseArea
                         anchors.fill: parent
+                        hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: mainWindow.navigateTo("settings")
                     }
                 }
             }
 
-            // Быстрые действия
-            Rectangle {
-                Layout.fillWidth: true
-                height: quickActionsColumn.height + 30
-                radius: 12
-                color: "#ffffff"
-                border.color: "#e0e0e0"
-                border.width: 1
+            // Системная информация и кнопка обновления
+            Row {
+                width: parent.width
+                spacing: 20
 
-                Column {
-                    id: quickActionsColumn
-                    width: parent.width - 30
-                    anchors.centerIn: parent
-                    spacing: 12
+                // Статус системы
+                Rectangle {
+                    width: (parent.width - 20) / 2
+                    height: 120
+                    radius: 12
+                    color: "#ffffff"
+                    border.color: "#e0e0e0"
+                    border.width: 1
+
+                    Column {
+                        anchors.fill: parent
+                        anchors.margins: 15
+                        spacing: 10
+
+                        Row {
+                            width: parent.width
+                            spacing: 15
+                            topPadding: 5
+
+                            AnimatedImage {
+                                width: 60
+                                height: 60
+                                source: "qrc:/icons/test.gif"
+                                playing: true
+                                speed: 0.85
+                                clip: true
+                            }
+
+                            Column {
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: 6
+
+                                Text {
+                                    text: "Система активна"
+                                    font.pixelSize: 16
+                                    font.bold: true
+                                    color: "#2c3e50"
+                                }
+
+                                Text {
+                                    text: {
+                                        if (loading) {
+                                            return "Обновление данных...";
+                                        } else {
+                                            return "Все службы работают стабильно";
+                                        }
+                                    }
+                                    font.pixelSize: 12
+                                    color: "#7f8c8d"
+                                }
+                            }
+                        }
+
+                        Text {
+                            text: {
+                                var now = new Date();
+                                return "Последняя проверка: " + now.toLocaleTimeString(Qt.locale(), "hh:mm:ss");
+                            }
+                            font.pixelSize: 10
+                            color: "#bdc3c7"
+                            width: parent.width
+                        }
+                    }
+                }
+
+                // Кнопка обновления
+                Rectangle {
+                    width: (parent.width - 20) / 2
+                    height: 50
+                    radius: 8
+                    color: refreshMouseArea.containsMouse ? "#2c81ba" : "#3498db"
+
+                    Behavior on color {
+                        ColorAnimation { duration: 200 }
+                    }
 
                     Row {
-                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.centerIn: parent
                         spacing: 8
 
                         Image {
-                            source: "qrc:/icons/statistics.png"
+                            source: "qrc:/icons/refresh.png"
                             sourceSize: Qt.size(20, 20)
                             anchors.verticalCenter: parent.verticalCenter
                         }
 
                         Text {
-                            text: "Быстрые действия"
-                            font.pixelSize: 16
+                            text: loading ? "Обновление..." : "Обновить данные"
+                            font.pixelSize: 14
+                            color: "white"
                             font.bold: true
-                            color: "#2c3e50"
                             anchors.verticalCenter: parent.verticalCenter
                         }
                     }
 
-                    Grid {
-                        columns: 3
-                        spacing: 8
-                        anchors.horizontalCenter: parent.horizontalCenter
-
-                        // Добавить студента
-                        Rectangle {
-                            width: 90
-                            height: 70
-                            radius: 8
-                            color: addStudentMouseArea.containsMouse ? "#27ae60" : "#2ecc71"
-
-                            Column {
-                                anchors.centerIn: parent
-                                spacing: 4
-
-                                Image {
-                                    source: "qrc:/icons/students.png"
-                                    sourceSize: Qt.size(20, 20)
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                }
-
-                                Text {
-                                    text: "Студент"
-                                    font.pixelSize: 10
-                                    color: "white"
-                                    font.bold: true
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                }
-                            }
-
-                            MouseArea {
-                                id: addStudentMouseArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    console.log("Быстрое действие: Добавить студента")
-                                    if (mainWindow && mainWindow.studentFormWindow) {
-                                        mainWindow.studentFormWindow.openForAdd()
-                                    }
-                                }
-                            }
-                        }
-
-                        // Добавить преподавателя
-                        Rectangle {
-                            width: 90
-                            height: 70
-                            radius: 8
-                            color: addTeacherMouseArea.containsMouse ? "#2980b9" : "#3498db"
-
-                            Column {
-                                anchors.centerIn: parent
-                                spacing: 4
-
-                                Image {
-                                    source: "qrc:/icons/teachers.png"
-                                    sourceSize: Qt.size(20, 20)
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                }
-
-                                Text {
-                                    text: "Преподаватель"
-                                    font.pixelSize: 10
-                                    color: "white"
-                                    font.bold: true
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                }
-                            }
-
-                            MouseArea {
-                                id: addTeacherMouseArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    console.log("Быстрое действие: Добавить преподавателя")
-                                    if (mainWindow && mainWindow.teacherFormWindow) {
-                                        mainWindow.teacherFormWindow.openForAdd()
-                                    }
-                                }
-                            }
-                        }
-
-                        // Добавить группу
-                        Rectangle {
-                            width: 90
-                            height: 70
-                            radius: 8
-                            color: addGroupMouseArea.containsMouse ? "#c0392b" : "#e74c3c"
-
-                            Column {
-                                anchors.centerIn: parent
-                                spacing: 4
-
-                                Image {
-                                    source: "qrc:/icons/groups.png"
-                                    sourceSize: Qt.size(20, 20)
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                }
-
-                                Text {
-                                    text: "Группа"
-                                    font.pixelSize: 10
-                                    color: "white"
-                                    font.bold: true
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                }
-                            }
-
-                            MouseArea {
-                                id: addGroupMouseArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    console.log("Быстрое действие: Добавить группу")
-                                    if (mainWindow && mainWindow.groupFormWindow) {
-                                        mainWindow.groupFormWindow.openForAdd()
-                                    }
-                                }
-                            }
-                        }
-
-                        // Добавить портфолио
-                        Rectangle {
-                            width: 90
-                            height: 70
-                            radius: 8
-                            color: addPortfolioMouseArea.containsMouse ? "#8e44ad" : "#9b59b6"
-
-                            Column {
-                                anchors.centerIn: parent
-                                spacing: 4
-
-                                Image {
-                                    source: "qrc:/icons/portfolio.png"
-                                    sourceSize: Qt.size(20, 20)
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                }
-
-                                Text {
-                                    text: "Портфолио"
-                                    font.pixelSize: 10
-                                    color: "white"
-                                    font.bold: true
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                }
-                            }
-
-                            MouseArea {
-                                id: addPortfolioMouseArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    console.log("Быстрое действие: Добавить портфолио")
-                                    if (mainWindow && mainWindow.portfolioFormWindow) {
-                                        mainWindow.portfolioFormWindow.openForAdd()
-                                    }
-                                }
-                            }
-                        }
-
-                        // Добавить событие
-                        Rectangle {
-                            width: 90
-                            height: 70
-                            radius: 8
-                            color: addEventMouseArea.containsMouse ? "#d35400" : "#e67e22"
-
-                            Column {
-                                anchors.centerIn: parent
-                                spacing: 4
-
-                                Image {
-                                    source: "qrc:/icons/events.png"
-                                    sourceSize: Qt.size(20, 20)
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                }
-
-                                Text {
-                                    text: "Событие"
-                                    font.pixelSize: 10
-                                    color: "white"
-                                    font.bold: true
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                }
-                            }
-
-                            MouseArea {
-                                id: addEventMouseArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    console.log("Быстрое действие: Добавить событие")
-                                    if (mainWindow && mainWindow.eventFormWindow) {
-                                        mainWindow.eventFormWindow.openForAdd()
-                                    }
-                                }
-                            }
-                        }
-
-                        // Настройки
-                        Rectangle {
-                            width: 90
-                            height: 70
-                            radius: 8
-                            color: settingsMouseArea.containsMouse ? "#2c3e50" : "#34495e"
-
-                            Column {
-                                anchors.centerIn: parent
-                                spacing: 4
-
-                                Image {
-                                    source: "qrc:/icons/settings.png"
-                                    sourceSize: Qt.size(20, 20)
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                }
-
-                                Text {
-                                    text: "Настройки"
-                                    font.pixelSize: 10
-                                    color: "white"
-                                    font.bold: true
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                }
-                            }
-
-                            MouseArea {
-                                id: settingsMouseArea
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                cursorShape: Qt.PointingHandCursor
-                                onClicked: {
-                                    console.log("Быстрое действие: Настройки")
-                                    mainWindow.navigateTo("settings")
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Статус системы
-            Rectangle {
-                Layout.fillWidth: true
-                height: 80
-                radius: 12
-                color: "#ffffff"
-                border.color: "#e0e0e0"
-                border.width: 1
-
-                Row {
-                    anchors.fill: parent
-                    anchors.margins: 15
-                    spacing: 15
-
-                    Rectangle {
-                        width: 50
-                        height: 50
-                        radius: 10
-                        color: "#2ecc71"
-                        anchors.verticalCenter: parent.verticalCenter
-
-                        Image {
-                            anchors.centerIn: parent
-                            source: "qrc:/icons/check.png"
-                            sourceSize: Qt.size(24, 24)
-                        }
-                    }
-
-                    Column {
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: 4
-
-                        Text {
-                            text: "Система активна"
-                            font.pixelSize: 14
-                            font.bold: true
-                            color: "#2c3e50"
-                        }
-
-                        Text {
-                            text: "Все службы работают стабильно. Последняя проверка: " +
-                                  new Date().toLocaleTimeString(Qt.locale(), "hh:mm")
-                            font.pixelSize: 11
-                            color: "#7f8c8d"
-                            width: parent.width
-                            wrapMode: Text.WordWrap
-                        }
+                    MouseArea {
+                        id: refreshMouseArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: refreshDashboard()
                     }
                 }
             }
         }
     }
 
-    // Обновляем статистику при изменении данных
-    Connections {
-        target: mainWindow
-        onTeachersChanged: refreshStats()
-        onStudentsChanged: refreshStats()
-        onGroupsChanged: refreshStats()
-        onPortfoliosChanged: refreshStats()
-        onEventsChanged: refreshStats()
+    // Автоматическое обновление каждые 1 минуту 30 секунд
+    Timer {
+        id: autoRefreshTimer
+        interval: 90000
+        running: true
+        repeat: true
+        onTriggered: refreshDashboard()
     }
 }

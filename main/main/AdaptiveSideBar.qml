@@ -60,8 +60,8 @@ Rectangle {
 
                     Image {
                         anchors.centerIn: parent
-                        source: "qrc:/icons/home.png"
-                        sourceSize: Qt.size(20, 20)
+                        source: "qrc:/icons/earth.png"
+                        sourceSize: Qt.size(24, 24)
                         fillMode: Image.PreserveAspectFit
                         mipmap: true
                         antialiasing: true
@@ -73,7 +73,7 @@ Rectangle {
                     spacing: 0
 
                     Text {
-                        text: "EduFlow"
+                        text: appName
                         font.pixelSize: 16
                         font.bold: true
                         color: "#2c3e50"
@@ -81,7 +81,7 @@ Rectangle {
 
                     Text {
                         text: "Панель управления"
-                        font.pixelSize: 10
+                        font.pixelSize: 12
                         color: "#7f8c8d"
                     }
                 }
@@ -106,7 +106,7 @@ Rectangle {
                     Text {
                         anchors.centerIn: parent
                         text: textVisible ? "◀" : "▶"
-                        font.pixelSize: 12
+                        font.pixelSize: 14
                         color: "#5f6368"
                         font.bold: true
                     }
@@ -170,7 +170,7 @@ Rectangle {
 
                         Image {
                             source: modelData.icon
-                            sourceSize: Qt.size(16, 16)
+                            sourceSize: Qt.size(24, 24)
                             anchors.verticalCenter: parent.verticalCenter
                             fillMode: Image.PreserveAspectFit
                             mipmap: true
@@ -264,12 +264,10 @@ Rectangle {
 
                 Row {
                     spacing: 6
-                    anchors.horizontalCenter: parent.horizontalCenter
 
                     Image {
                         source: "qrc:/icons/statistics.png"
-                        sourceSize: Qt.size(14, 14)
-                        anchors.verticalCenter: parent.verticalCenter
+                        sourceSize: Qt.size(16, 16)
                         fillMode: Image.PreserveAspectFit
                         mipmap: true
                         antialiasing: true
@@ -277,23 +275,20 @@ Rectangle {
 
                     Text {
                         text: "Статистика"
-                        font.pixelSize: 11
+                        font.pixelSize: 12
                         font.bold: true
                         color: "#2c3e50"
-                        anchors.verticalCenter: parent.verticalCenter
                     }
                 }
 
                 Row {
                     spacing: 12
-                    anchors.horizontalCenter: parent.horizontalCenter
 
                     Row {
                         spacing: 4
                         Image {
                             source: "qrc:/icons/teachers.png"
-                            sourceSize: Qt.size(12, 12)
-                            anchors.verticalCenter: parent.verticalCenter
+                            sourceSize: Qt.size(18, 18)
                             fillMode: Image.PreserveAspectFit
                             mipmap: true
                             antialiasing: true
@@ -302,7 +297,6 @@ Rectangle {
                             text: mainWindow.teachers ? mainWindow.teachers.length : 0
                             font.pixelSize: 10
                             color: "#6c757d"
-                            anchors.verticalCenter: parent.verticalCenter
                         }
                     }
 
@@ -310,8 +304,7 @@ Rectangle {
                         spacing: 4
                         Image {
                             source: "qrc:/icons/students.png"
-                            sourceSize: Qt.size(12, 12)
-                            anchors.verticalCenter: parent.verticalCenter
+                            sourceSize: Qt.size(18, 18)
                             fillMode: Image.PreserveAspectFit
                             mipmap: true
                             antialiasing: true
@@ -320,7 +313,6 @@ Rectangle {
                             text: mainWindow.students ? mainWindow.students.length : 0
                             font.pixelSize: 10
                             color: "#6c757d"
-                            anchors.verticalCenter: parent.verticalCenter
                         }
                     }
 
@@ -328,8 +320,7 @@ Rectangle {
                         spacing: 4
                         Image {
                             source: "qrc:/icons/groups.png"
-                            sourceSize: Qt.size(12, 12)
-                            anchors.verticalCenter: parent.verticalCenter
+                            sourceSize: Qt.size(18, 18)
                             fillMode: Image.PreserveAspectFit
                             mipmap: true
                             antialiasing: true
@@ -338,7 +329,6 @@ Rectangle {
                             text: mainWindow.groups ? mainWindow.groups.length : 0
                             font.pixelSize: 10
                             color: "#6c757d"
-                            anchors.verticalCenter: parent.verticalCenter
                         }
                     }
                 }
@@ -360,13 +350,14 @@ Rectangle {
                 anchors.margins: 12
                 spacing: 12
 
-                Image {
-                    source: "qrc:/icons/settings.png"
-                    sourceSize: Qt.size(16, 16)
-                    anchors.verticalCenter: parent.verticalCenter
+                AnimatedImage {
+                    sourceSize: Qt.size(18,18)
+                    source: settingsMouseArea.containsMouse ? "qrc:/icons/settings.gif" : "qrc:/icons/settings.png"
                     fillMode: Image.PreserveAspectFit
+                    speed: 0.7
                     mipmap: true
                     antialiasing: true
+                    playing: settingsMouseArea.containsMouse
                 }
 
                 Text {
@@ -415,7 +406,6 @@ Rectangle {
         }
     }
 
-    // Таймер для ограничения частоты переключения
     Timer {
         id: toggleCooldown
         interval: 1000

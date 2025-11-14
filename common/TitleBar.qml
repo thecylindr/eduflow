@@ -29,9 +29,9 @@ Rectangle {
     // Кнопка Gitflic (опциональная)
     Rectangle {
         id: gitflicButton
-        width: 16
-        height: 16
-        radius: 8
+        width: 28  // Увеличил размер
+        height: 28
+        radius: 14
         color: gitflicMouseArea.containsMouse ? "#4CAF50" : "transparent"
         anchors {
             left: parent.left
@@ -40,11 +40,10 @@ Rectangle {
         }
         visible: showGitflicButton
 
-        Text {
+        Image {
             anchors.centerIn: parent
-            text: "🌐"
-            font.pixelSize: 10
-            color: gitflicMouseArea.containsMouse ? "white" : "#2c3e50"
+            source: "qrc:/icons/git.png"
+            sourceSize: Qt.size(18, 18)  // Увеличил размер иконки
         }
 
         MouseArea {

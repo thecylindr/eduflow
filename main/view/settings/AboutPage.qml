@@ -40,7 +40,7 @@ Rectangle {
 
                         Image {
                             source: "qrc:/icons/about.png"
-                            sourceSize: Qt.size(18, 18)
+                            sourceSize: Qt.size(48, 48)
                             fillMode: Image.PreserveAspectFit
                             mipmap: true
                             antialiasing: true
@@ -83,7 +83,7 @@ Rectangle {
                                     Image {
                                         anchors.centerIn: parent
                                         source: "qrc:/icons/app-icon.png"
-                                        sourceSize: Qt.size(20, 20)
+                                        sourceSize: Qt.size(36, 36)
                                         fillMode: Image.PreserveAspectFit
                                         mipmap: true
                                         antialiasing: true
@@ -120,7 +120,7 @@ Rectangle {
 
                                 Image {
                                     source: "qrc:/icons/version.png"
-                                    sourceSize: Qt.size(14, 14)
+                                    sourceSize: Qt.size(18, 18)
                                     fillMode: Image.PreserveAspectFit
                                     mipmap: true
                                     antialiasing: true
@@ -149,7 +149,7 @@ Rectangle {
 
                                 Image {
                                     source: "qrc:/icons/organization.png"
-                                    sourceSize: Qt.size(14, 14)
+                                    sourceSize: Qt.size(18, 18)
                                     fillMode: Image.PreserveAspectFit
                                     mipmap: true
                                     antialiasing: true
@@ -178,7 +178,7 @@ Rectangle {
 
                                 Image {
                                     source: "qrc:/icons/calendar.png"
-                                    sourceSize: Qt.size(14, 14)
+                                    sourceSize: Qt.size(18, 18)
                                     fillMode: Image.PreserveAspectFit
                                     mipmap: true
                                     antialiasing: true
@@ -207,7 +207,7 @@ Rectangle {
 
                                 Image {
                                     source: "qrc:/icons/platform.png"
-                                    sourceSize: Qt.size(14, 14)
+                                    sourceSize: Qt.size(18, 18)
                                     fillMode: Image.PreserveAspectFit
                                     mipmap: true
                                     antialiasing: true
@@ -236,7 +236,7 @@ Rectangle {
 
                                 Image {
                                     source: "qrc:/icons/language.png"
-                                    sourceSize: Qt.size(14, 14)
+                                    sourceSize: Qt.size(18, 18)
                                     fillMode: Image.PreserveAspectFit
                                     mipmap: true
                                     antialiasing: true
@@ -297,7 +297,7 @@ Rectangle {
 
                                             Image {
                                                 source: "qrc:/icons/link.png"
-                                                sourceSize: Qt.size(12, 12)
+                                                sourceSize: Qt.size(18, 18)
                                                 fillMode: Image.PreserveAspectFit
                                                 mipmap: true
                                                 antialiasing: true
@@ -336,7 +336,7 @@ Rectangle {
 
                                             Image {
                                                 source: "qrc:/icons/server.png"
-                                                sourceSize: Qt.size(12, 12)
+                                                sourceSize: Qt.size(18, 18)
                                                 fillMode: Image.PreserveAspectFit
                                                 mipmap: true
                                                 antialiasing: true
@@ -366,7 +366,7 @@ Rectangle {
                                     spacing: 4
                                     Image {
                                         source: "qrc:/icons/info.png"
-                                        sourceSize: Qt.size(10, 10)
+                                        sourceSize: Qt.size(18, 18)
                                         fillMode: Image.PreserveAspectFit
                                         mipmap: true
                                         antialiasing: true

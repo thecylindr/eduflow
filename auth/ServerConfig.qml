@@ -57,16 +57,28 @@ Rectangle {
                 border.color: !settingsManager.useLocalServer ? "#2196f3" : "#e0e0e0"
                 border.width: 2
 
-                Text {
+                Row {
                     anchors.centerIn: parent
-                    text: "🌐 Официальный\nEduFlow"
-                    font.pixelSize: 11
-                    color: !settingsManager.useLocalServer ? "#1976d2" : "#9e9e9e"
-                    horizontalAlignment: Text.AlignHCenter
+                    spacing: 6
+
+                    Image {
+                        source: "qrc:/icons/earth.png"
+                        sourceSize: Qt.size(20, 20)
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Text {
+                        text: "Официальный\nEduFlow"
+                        font.pixelSize: 11
+                        color: !settingsManager.useLocalServer ? "#1976d2" : "#9e9e9e"
+                        horizontalAlignment: Text.AlignHCenter
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
                 }
 
                 MouseArea {
                     anchors.fill: parent
+                    hoverEnabled: true
                     onClicked: {
                         console.log("Выбран официальный сервер");
                         serverTypeToggled(false);
@@ -82,16 +94,30 @@ Rectangle {
                 border.color: settingsManager.useLocalServer ? "#4caf50" : "#e0e0e0"
                 border.width: 2
 
-                Text {
+                Row {
                     anchors.centerIn: parent
-                    text: "💻 Локальный\nНастраиваемый"
-                    font.pixelSize: 11
-                    color: settingsManager.useLocalServer ? "#2e7d32" : "#9e9e9e"
-                    horizontalAlignment: Text.AlignHCenter
+                    spacing: 6
+
+                    AnimatedImage {
+                        source: settingsManager.useLocalServer ? "qrc:/icons/server.gif" : "qrc:/icons/server.png"
+                        sourceSize: Qt.size(20, 20)
+                        anchors.verticalCenter: parent.verticalCenter
+                        playing: settingsManager.useLocalServer
+                        speed: 0.7
+                    }
+
+                    Text {
+                        text: "Локальный\nНастраиваемый"
+                        font.pixelSize: 11
+                        color: settingsManager.useLocalServer ? "#2e7d32" : "#9e9e9e"
+                        horizontalAlignment: Text.AlignHCenter
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
                 }
 
                 MouseArea {
                     anchors.fill: parent
+                    hoverEnabled: true
                     onClicked: {
                         console.log("Выбран локальный сервер");
                         serverTypeToggled(true);
@@ -114,11 +140,20 @@ Rectangle {
                 Layout.fillWidth: true
                 spacing: 4
 
-                Text {
-                    text: "📡 Адрес сервера:"
-                    font.pixelSize: 11
-                    color: "#2c3e50"
-                    font.bold: true
+                Row {
+                    spacing: 4
+                    Image {
+                        source: "qrc:/icons/ip.png"
+                        sourceSize: Qt.size(14, 14)
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                    Text {
+                        text: "Адрес сервера:"
+                        font.pixelSize: 11
+                        color: "#2c3e50"
+                        font.bold: true
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
                 }
 
                 Rectangle {
@@ -165,17 +200,27 @@ Rectangle {
                     radius: 8
                     color: saveMouseArea.pressed ? "#27ae60" : "#2ecc71"
 
-                    Text {
+                    Row {
                         anchors.centerIn: parent
-                        text: "Сохранить"
-                        color: "white"
-                        font.pixelSize: 11
-                        font.bold: true
+                        spacing: 6
+                        Image {
+                            source: "qrc:/icons/save.png"
+                            sourceSize: Qt.size(14, 14)
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
+                        Text {
+                            text: "Сохранить"
+                            color: "white"
+                            font.pixelSize: 11
+                            font.bold: true
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
                     }
 
                     MouseArea {
                         id: saveMouseArea
                         anchors.fill: parent
+                        hoverEnabled: true
                         onClicked: {
                             console.log("Сохранение конфигурации сервера:", serverAddressField.text);
                             saveServerConfig(serverAddressField.text);
@@ -190,17 +235,28 @@ Rectangle {
                     radius: 8
                     color: resetMouseArea.pressed ? "#c0392b" : "#e74c3c"
 
-                    Text {
+                    Row {
                         anchors.centerIn: parent
-                        text: "Сбросить"
-                        color: "white"
-                        font.pixelSize: 11
-                        font.bold: true
+                        spacing: 6
+                        AnimatedImage {
+                            source: resetMouseArea.containsMouse ? "qrc:/icons/refresh.png" : "qrc:/icons/refresh.png"
+                            sourceSize: Qt.size(14, 14)
+                            anchors.verticalCenter: parent.verticalCenter
+                            playing: resetMouseArea.containsMouse
+                        }
+                        Text {
+                            text: "Сбросить"
+                            color: "white"
+                            font.pixelSize: 11
+                            font.bold: true
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
                     }
 
                     MouseArea {
                         id: resetMouseArea
                         anchors.fill: parent
+                        hoverEnabled: true
                         onClicked: {
                             console.log("Сброс настроек сервера");
                             resetSettings();

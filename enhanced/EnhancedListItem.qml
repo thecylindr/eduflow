@@ -48,17 +48,19 @@ Rectangle {
                 return "#95a5a6";
             }
 
-            Text {
+            Image {
                 anchors.centerIn: parent
-                text: {
-                    if (itemType === "teacher") return "👨‍🏫";
-                    if (itemType === "student") return "👨‍🎓";
-                    if (itemType === "group") return "👥";
-                    if (itemType === "event") return "🎯";
-                    if (itemType === "portfolio") return "📁";
-                    return "❓";
+                source: {
+                    if (itemType === "teacher") return "qrc:icons/teachers.png";
+                    if (itemType === "student") return "qrc:icons/students.png";
+                    if (itemType === "group") return "qrc:icons/groups.png";
+                    if (itemType === "event") return "qrc:icons/events.png";
+                    if (itemType === "portfolio") return "qrc:icons/portfolio.png";
+                    return "qrc:icons/info.png";
                 }
-                font.pixelSize: 16
+                width: 20
+                height: 20
+                fillMode: Image.PreserveAspectFit
             }
         }
 
@@ -70,26 +72,27 @@ Rectangle {
             Text {
                 text: {
                     if (itemType === "teacher") {
-                        return (itemData.lastName || "") + " " + (itemData.firstName || "") + " " + (itemData.middleName || "");
-                    } else if (itemType === "student") {
-                        var last_name = itemData.last_name || itemData.lastName || "";
-                        var first_name = itemData.first_name || itemData.firstName || "";
-                        var middle_name = itemData.middle_name || itemData.middleName || "";
-                        return last_name + " " + first_name + " " + middle_name;
-                    } else if (itemType === "group") {
-                        return itemData.name || "Без названия";
-                    } else if (itemType === "event") {
-                        return itemData.eventType || "Без типа";
-                    } else if (itemType === "portfolio") {
-                        // ФОРМАТ: Портфолио студента #приказ
-                        var studentName = itemData.studentName || "Неизвестный студент";
-                        var decree = itemData.decree || "";
-                        if (decree) {
-                            return "Портфолио студента #" + decree;
-                        } else {
-                            return "Портфолио студента " + studentName;
+                            return (itemData.lastName || "") + " " + (itemData.firstName || "") + " " + (itemData.middleName || "");
+                        } else if (itemType === "student") {
+                            var last_name = itemData.last_name || itemData.lastName || "";
+                            var first_name = itemData.first_name || itemData.firstName || "";
+                            var middle_name = itemData.middle_name || itemData.middleName || "";
+                            return last_name + " " + first_name + " " + middle_name;
+                        } else if (itemType === "group") {
+                            return itemData.name || "Без названия";
+                        } else if (itemType === "event") {
+                            var eventType = itemData.eventType || "Без типа";
+                            var category = itemData.eventCategoryName || "Без категории";
+                            return eventType + " • " + category;
+                        } else if (itemType === "portfolio") {
+                            var studentName = itemData.studentName || "Неизвестный студент";
+                            var decree = itemData.decree || "";
+                            if (decree) {
+                                return "Портфолио студента #" + decree;
+                            } else {
+                                return "Портфолио студента " + studentName;
+                            }
                         }
-                    }
                     return "Неизвестный тип";
                 }
                 font.pixelSize: 13
@@ -108,16 +111,30 @@ Rectangle {
                     } else if (itemType === "group") {
                         return "Студентов: " + (itemData.studentCount || 0) + " · " + (itemData.teacherName || "Без куратора");
                     } else if (itemType === "event") {
-                        return "Категория: " + (itemData.eventCategoryName || "Не указана") + " · " + (itemData.location || "");
+                        var location = itemData.location || "Место не указано";
+                        var date = itemData.startDate || "";
+                        var status = itemData.status || "active";
+
+                        var statusText = "";
+                        if (status === "active") statusText = "Активно";
+                        else if (status === "completed") statusText = "Завершено";
+                        else if (status === "cancelled") statusText = "Отменено";
+                        else statusText = status;
+
+                        if (date) {
+                            return location + " · " + date + " · " + statusText;
+                        } else {
+                            return location + " · " + statusText;
+                        }
                     } else if (itemType === "portfolio") {
                         var studentName = itemData.studentName || "Неизвестный студент";
                         var date = itemData.date || "";
                         if (date) {
                             return studentName + " · " + date;
-                        } else {
-                            return studentName;
+                            } else {
+                                return studentName;
+                            }
                         }
-                    }
                     return "";
                 }
                 font.pixelSize: 11
@@ -146,11 +163,15 @@ Rectangle {
             border.width: 1
             z: 1001
 
-            Text {
+            // Анимированная иконка редактирования
+            AnimatedImage {
+                id: editIcon
                 anchors.centerIn: parent
-                text: "✏️"
-                font.pixelSize: 11
-                z: 1002
+                source: editMouseArea.containsMouse ? "qrc:icons/pencil.gif" : "qrc:icons/pencil.png"
+                width: 14
+                height: 14
+                fillMode: Image.PreserveAspectFit
+                playing: editMouseArea.containsMouse
             }
 
             MouseArea {
@@ -160,7 +181,7 @@ Rectangle {
                 cursorShape: Qt.PointingHandCursor
                 z: 1003
                 onClicked: {
-                    console.log("✏️ ListItem: редактирование запрошено для", listItem.itemData);
+                    console.log("ListItem: редактирование запрошено для", listItem.itemData);
                     listItem.editRequested(listItem.itemData);
                 }
             }
@@ -176,11 +197,12 @@ Rectangle {
             border.width: 1
             z: 1001
 
-            Text {
+            Image {
                 anchors.centerIn: parent
-                text: "🗑️"
-                font.pixelSize: 11
-                z: 1002
+                source: "qrc:icons/cross.png"
+                width: 14
+                height: 14
+                fillMode: Image.PreserveAspectFit
             }
 
             MouseArea {
@@ -190,7 +212,7 @@ Rectangle {
                 cursorShape: Qt.PointingHandCursor
                 z: 1003
                 onClicked: {
-                    console.log("🗑️ ListItem: удаление запрошено для", listItem.itemData);
+                    console.log("ListItem: удаление запрошено для", listItem.itemData);
                     listItem.deleteRequested(listItem.itemData);
                 }
             }

@@ -76,13 +76,24 @@ Rectangle {
                                 anchors.centerIn: parent
                                 color: "#e3f2fd"
 
-                                Image {
+                                AnimatedImage {
                                     anchors.centerIn: parent
-                                    source: "qrc:/icons/profile.png"
-                                    sourceSize: Qt.size(32, 32)
+                                    width: 52
+                                    height: 52
+                                    clip: true
+                                    source: profileMouseArea.containsMouse ? "qrc:/icons/profile.gif" : "qrc:/icons/profile.png"
                                     fillMode: Image.PreserveAspectFit
+                                    speed: 0.7
                                     mipmap: true
                                     antialiasing: true
+                                    playing: profileMouseArea.containsMouse
+                                }
+
+                                MouseArea {
+                                    id: profileMouseArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
                                 }
                             }
                         }
@@ -115,7 +126,7 @@ Rectangle {
                                     spacing: 4
                                     Image {
                                         source: "qrc:/icons/user.png"
-                                        sourceSize: Qt.size(10, 10)
+                                        sourceSize: Qt.size(18, 18)
                                         fillMode: Image.PreserveAspectFit
                                         mipmap: true
                                         antialiasing: true
@@ -144,18 +155,28 @@ Rectangle {
                             Layout.fillWidth: true
 
                             Rectangle {
-                                width: 30
-                                height: 30
-                                radius: 15
-                                color: "#e3f2fd"
+                                width: 40
+                                height: 40
+                                radius: 6
+                                color: emailMouseArea.containsMouse ? "#e3f2fd" : "#f8f9fa"
 
-                                Image {
+                                AnimatedImage {
                                     anchors.centerIn: parent
-                                    source: "qrc:/icons/email.png"
-                                    sourceSize: Qt.size(14, 14)
+                                    width: 28
+                                    height: 28
+                                    source: emailMouseArea.containsMouse ? "qrc:/icons/email.gif" : "qrc:/icons/email.png"
                                     fillMode: Image.PreserveAspectFit
+                                    speed: 0.7
                                     mipmap: true
                                     antialiasing: true
+                                    playing: emailMouseArea.containsMouse
+                                }
+
+                                MouseArea {
+                                    id: emailMouseArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
                                 }
                             }
 
@@ -185,18 +206,28 @@ Rectangle {
                             Layout.fillWidth: true
 
                             Rectangle {
-                                width: 30
-                                height: 30
-                                radius: 15
-                                color: "#e8f5e8"
+                                width: 40
+                                height: 40
+                                radius: 6
+                                color: phoneMouseArea.containsMouse ? "#e8f5e8" : "#f8f9fa"
 
-                                Image {
+                                AnimatedImage {
                                     anchors.centerIn: parent
-                                    source: "qrc:/icons/phone.png"
-                                    sourceSize: Qt.size(14, 14)
+                                    width: 28
+                                    height: 28
+                                    source: phoneMouseArea.containsMouse ? "qrc:/icons/phone.gif" : "qrc:/icons/phone.png"
                                     fillMode: Image.PreserveAspectFit
+                                    speed: 0.7
                                     mipmap: true
                                     antialiasing: true
+                                    playing: phoneMouseArea.containsMouse
+                                }
+
+                                MouseArea {
+                                    id: phoneMouseArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
                                 }
                             }
 
@@ -243,7 +274,7 @@ Rectangle {
 
                         Image {
                             source: "qrc:/icons/edit.png"
-                            sourceSize: Qt.size(18, 18)
+                            sourceSize: Qt.size(32, 32)
                             fillMode: Image.PreserveAspectFit
                             mipmap: true
                             antialiasing: true
@@ -511,7 +542,7 @@ Rectangle {
 
                                 Image {
                                     source: "qrc:/icons/save.png"
-                                    sourceSize: Qt.size(16, 16)
+                                    sourceSize: Qt.size(32, 32)
                                     fillMode: Image.PreserveAspectFit
                                     mipmap: true
                                     antialiasing: true

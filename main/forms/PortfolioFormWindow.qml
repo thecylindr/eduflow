@@ -7,7 +7,7 @@ import "../../common" as Common
 ApplicationWindow {
     id: portfolioFormWindow
     width: 450
-    height: 450
+    height: 520
     flags: Qt.Dialog | Qt.FramelessWindowHint
     modality: Qt.ApplicationModal
     color: "transparent"
@@ -26,11 +26,64 @@ ApplicationWindow {
         studentComboBox, dateField, decreeField
     ]
 
+    // Модель для отображения студентов в ComboBox
+    ListModel {
+        id: studentDisplayModel
+    }
+
+    function updateStudentModel() {
+        studentDisplayModel.clear()
+        console.log("🔄 Обновление модели студентов. Всего:", students.length)
+
+        for (var i = 0; i < students.length; i++) {
+            var student = students[i]
+            var displayName = formatStudentName(student)
+            var studentCode = student.studentCode || student.student_code || ""
+
+            studentDisplayModel.append({
+                displayName: displayName,
+                studentCode: studentCode,
+                originalIndex: i
+            })
+
+            console.log("  👨‍🎓 Добавлен студент:", displayName, "(код:", studentCode + ")")
+        }
+
+        // Восстанавливаем выбранного студента после обновления модели
+        if (isEditMode && currentPortfolio) {
+            restoreSelectedStudent()
+        }
+    }
+
+    function formatStudentName(student) {
+        var lastName = student.lastName || student.last_name || ""
+        var firstName = student.firstName || student.first_name || ""
+        var middleName = student.middleName || student.middle_name || ""
+        var studentCode = student.studentCode || student.student_code || ""
+        return [lastName, firstName, middleName].filter(Boolean).join(" ") + " (" + studentCode + ")"
+    }
+
+    function restoreSelectedStudent() {
+        var studentCode = currentPortfolio.studentCode || currentPortfolio.student_code
+        if (studentCode) {
+            var numericStudentCode = parseInt(studentCode)
+            for (var i = 0; i < studentDisplayModel.count; i++) {
+                var currentCode = parseInt(studentDisplayModel.get(i).studentCode || 0)
+                if (currentCode === numericStudentCode) {
+                    studentComboBox.currentIndex = i
+                    console.log("🎯 Восстановлен выбранный студент:", studentDisplayModel.get(i).displayName)
+                    break
+                }
+            }
+        }
+    }
+
     function openForAdd() {
         currentPortfolio = null
         isEditMode = false
         isSaving = false
         clearForm()
+        updateStudentModel()
         portfolioFormWindow.show()
         portfolioFormWindow.requestActivate()
         portfolioFormWindow.x = (Screen.width - portfolioFormWindow.width) / 2
@@ -42,6 +95,7 @@ ApplicationWindow {
         currentPortfolio = portfolioData
         isEditMode = true
         isSaving = false
+        updateStudentModel()
         fillForm(portfolioData)
         portfolioFormWindow.show()
         portfolioFormWindow.requestActivate()
@@ -61,15 +115,17 @@ ApplicationWindow {
     }
 
     function fillForm(portfolioData) {
-        // Заполняем студента - ПРЕОБРАЗУЕМ В ЧИСЛО
+        console.log("📝 Заполнение формы портфолио:", JSON.stringify(portfolioData))
+
+        // Заполняем студента
         var studentCode = portfolioData.studentCode || portfolioData.student_code
         if (studentCode) {
             var numericStudentCode = parseInt(studentCode)
-            for (var i = 0; i < students.length; i++) {
-                var student = students[i]
-                var currentStudentCode = parseInt(student.studentCode || student.student_code || 0)
-                if (currentStudentCode === numericStudentCode) {
+            for (var i = 0; i < studentDisplayModel.count; i++) {
+                var currentCode = parseInt(studentDisplayModel.get(i).studentCode || 0)
+                if (currentCode === numericStudentCode) {
                     studentComboBox.currentIndex = i
+                    console.log("✅ Найден студент в модели, индекс:", i)
                     break
                 }
             }
@@ -99,12 +155,17 @@ ApplicationWindow {
             portfolioId = currentPortfolio.portfolioId || currentPortfolio.portfolio_id || 0;
         }
 
-        var selectedStudent = studentComboBox.currentIndex >= 0 ?
-            students[studentComboBox.currentIndex] : null;
+        var selectedStudent = null;
+        var studentCode = 0;
 
-        // ИСПРАВЛЕНИЕ: Убеждаемся, что student_code передается как число
-        var studentCode = selectedStudent ?
-            parseInt(selectedStudent.studentCode || selectedStudent.student_code || 0) : 0;
+        if (studentComboBox.currentIndex >= 0) {
+            var selectedItem = studentDisplayModel.get(studentComboBox.currentIndex)
+            studentCode = parseInt(selectedItem.studentCode || 0)
+            selectedStudent = students[selectedItem.originalIndex]
+            console.log("📤 Выбран студент:", selectedItem.displayName, "код:", studentCode)
+        } else {
+            console.log("❌ Студент не выбран")
+        }
 
         // Преобразуем дату из ДД.ММ.ГГГГ в ГГГГ-ММ-ДД для сервера
         var dateText = dateField.text;
@@ -116,7 +177,7 @@ ApplicationWindow {
             }
         }
 
-        // ИСПРАВЛЕНИЕ: Создаем объект с правильными типами данных
+        // Создаем объект с правильными типами данных
         var portfolioData = {
             portfolio_id: portfolioId,
             student_code: studentCode, // Теперь это число
@@ -126,20 +187,6 @@ ApplicationWindow {
 
         console.log("📦 Подготовленные данные портфолио:", JSON.stringify(portfolioData));
         return portfolioData;
-    }
-
-    function formatDateText(text) {
-        // Удаляем все нецифры
-        var cleanText = text.replace(/[^\d]/g, '')
-
-        // Форматируем в ДД.ММ.ГГГГ
-        if (cleanText.length <= 2) {
-            return cleanText
-        } else if (cleanText.length <= 4) {
-            return cleanText.substring(0, 2) + '.' + cleanText.substring(2)
-        } else {
-            return cleanText.substring(0, 2) + '.' + cleanText.substring(2, 4) + '.' + cleanText.substring(4, 8)
-        }
     }
 
     function validateDate(text) {
@@ -208,6 +255,12 @@ ApplicationWindow {
         if (currentIndex > 0) {
             fieldNavigation[currentIndex - 1].forceActiveFocus()
         }
+    }
+
+    // Обновляем модель при изменении списка студентов
+    onStudentsChanged: {
+        console.log("📋 Список студентов изменен, количество:", students.length)
+        updateStudentModel()
     }
 
     // Основной контейнер с градиентом
@@ -298,52 +351,45 @@ ApplicationWindow {
                                 width: parent.width - 40
                                 height: 40
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                enabled: !isSaving && students.length > 0
+                                enabled: !isSaving && studentDisplayModel.count > 0
                                 font.pixelSize: 14
-                                model: portfolioFormWindow.students
+
+                                // Используем отдельную модель для отображения
+                                model: studentDisplayModel
                                 textRole: "displayName"
+
                                 KeyNavigation.tab: dateField
                                 Keys.onReturnPressed: navigateToNextField(studentComboBox)
                                 Keys.onEnterPressed: navigateToNextField(studentComboBox)
                                 Keys.onUpPressed: navigateToPreviousField(studentComboBox)
                                 Keys.onDownPressed: navigateToNextField(studentComboBox)
 
-                                // Функция для отображения ФИО студента
-                                property string displayName: {
-                                    if (model && currentIndex >= 0) {
-                                        var student = students[currentIndex]
-                                        var lastName = student.lastName || student.last_name || ""
-                                        var firstName = student.firstName || student.first_name || ""
-                                        var middleName = student.middleName || student.middle_name || ""
-                                        var studentCode = student.studentCode || student.student_code || ""
-                                        return [lastName, firstName, middleName].filter(Boolean).join(" ") + " (" + studentCode + ")"
-                                    }
-                                    return students.length > 0 ? "Выберите студента" : "Нет студентов"
-                                }
-
-                                // Делегат для отображения в выпадающем списке
-                                delegate: ItemDelegate {
-                                    width: parent.width
-                                    text: {
-                                        var lastName = modelData.lastName || modelData.last_name || ""
-                                        var firstName = modelData.firstName || modelData.first_name || ""
-                                        var middleName = modelData.middleName || modelData.middle_name || ""
-                                        var studentCode = modelData.studentCode || modelData.student_code || ""
-                                        return [lastName, firstName, middleName].filter(Boolean).join(" ") + " (" + studentCode + ")"
+                                onCurrentIndexChanged: {
+                                    if (currentIndex >= 0) {
+                                        var selected = studentDisplayModel.get(currentIndex)
+                                        console.log("🔄 Выбран студент:", selected.displayName, "код:", selected.studentCode)
                                     }
                                 }
                             }
 
                             Text {
-                                text: students.length === 0 ? "❌ Нет доступных студентов" : ""
+                                text: studentDisplayModel.count === 0 ? "❌ Нет доступных студентов" : ""
                                 color: "#e74c3c"
                                 font.pixelSize: 12
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                visible: students.length === 0
+                                visible: studentDisplayModel.count === 0
+                            }
+
+                            Text {
+                                visible: studentDisplayModel.count > 0
+                                text: "Доступно студентов: " + studentDisplayModel.count
+                                color: "#27ae60"
+                                font.pixelSize: 11
+                                anchors.horizontalCenter: parent.horizontalCenter
                             }
                         }
 
-                        // Дата
+                        // Дата - простой и понятный ввод
                         Column {
                             width: parent.width
                             spacing: 8
@@ -371,21 +417,15 @@ ApplicationWindow {
                                 Keys.onUpPressed: navigateToPreviousField(dateField)
                                 Keys.onDownPressed: navigateToNextField(dateField)
 
-                                // Валидатор для даты
+                                // Простой валидатор - только цифры и точки
                                 validator: RegularExpressionValidator {
-                                    regularExpression: /^(\d{0,2}\.?\d{0,2}\.?\d{0,4})$/
+                                    regularExpression: /^[\d\.]*$/
                                 }
 
-                                // Обработка изменения текста для форматирования
+                                // Простая обработка ввода - ограничение длины
                                 onTextChanged: {
                                     if (text.length > 10) {
                                         text = text.substring(0, 10)
-                                    }
-                                    var cursorPos = cursorPosition
-                                    var formatted = formatDateText(text)
-                                    if (formatted !== text) {
-                                        text = formatted
-                                        cursorPosition = Math.min(cursorPos, text.length)
                                     }
                                 }
 
@@ -398,11 +438,10 @@ ApplicationWindow {
                             }
 
                             Text {
-                                text: !validateDate(dateField.text) && dateField.text !== "" ? "❌ Неверный формат даты" : ""
-                                color: "#e74c3c"
+                                text: !validateDate(dateField.text) && dateField.text !== "" ? "❌ Неверный формат даты" : "Формат: ДД.ММ.ГГГГ"
+                                color: !validateDate(dateField.text) && dateField.text !== "" ? "#e74c3c" : "#7f8c8d"
                                 font.pixelSize: 11
                                 anchors.horizontalCenter: parent.horizontalCenter
-                                visible: !validateDate(dateField.text) && dateField.text !== ""
                             }
                         }
 
@@ -451,8 +490,25 @@ ApplicationWindow {
                         enabled: !isSaving && studentComboBox.currentIndex >= 0 &&
                                 dateField.text.trim() !== "" && validateDate(dateField.text) &&
                                 decreeField.text.trim() !== "" &&
-                                students.length > 0
+                                studentDisplayModel.count > 0
                         font.pixelSize: 14
+                        font.bold: true
+
+                        background: Rectangle {
+                            radius: 20
+                            color: saveButton.enabled ? "#27ae60" : "#95a5a6"
+                            border.color: saveButton.enabled ? "#219a52" : "transparent"
+                            border.width: 2
+                        }
+
+                        contentItem: Text {
+                            text: saveButton.text
+                            color: "white"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            font: saveButton.font
+                        }
+
                         KeyNavigation.tab: cancelButton
                         Keys.onReturnPressed: if (enabled && !isSaving) saveButton.clicked()
                         Keys.onEnterPressed: if (enabled && !isSaving) saveButton.clicked()
@@ -487,6 +543,23 @@ ApplicationWindow {
                         implicitHeight: 40
                         enabled: !isSaving
                         font.pixelSize: 14
+                        font.bold: true
+
+                        background: Rectangle {
+                            radius: 20
+                            color: "#e74c3c"
+                            border.color: "#c0392b"
+                            border.width: 2
+                        }
+
+                        contentItem: Text {
+                            text: cancelButton.text
+                            color: "white"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            font: cancelButton.font
+                        }
+
                         KeyNavigation.tab: studentComboBox
                         Keys.onReturnPressed: if (enabled) cancelButton.clicked()
                         Keys.onEnterPressed: if (enabled) cancelButton.clicked()

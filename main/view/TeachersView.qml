@@ -15,7 +15,6 @@ Item {
         mainWindow.mainApi.getTeachers(function(response) {
             isLoading = false;
             if (response.success) {
-                console.log("✅ Данные преподавателей получены:", response.data);
 
                 var teachersData = response.data || [];
                 var processedTeachers = [];
@@ -36,7 +35,6 @@ Item {
                 }
 
                 teachers = processedTeachers;
-                console.log("✅ Преподаватели обработаны:", teachers.length);
 
                 if (teachersTable) {
                     teachersTable.sourceModel = teachers;
@@ -79,12 +77,9 @@ Item {
     function updateTeacher(teacherData) {
         isLoading = true;
 
-        // ИСПРАВЛЕНИЕ: Правильно получаем teacherId
         var teacherId = teacherData.teacher_id || teacherData.teacherId;
-        console.log("🔄 Обновление преподавателя ID:", teacherId, "Данные:", JSON.stringify(teacherData));
 
         if (!teacherId || teacherId === 0) {
-            console.log("❌ Ошибка: teacherId не найден в данных:", teacherData);
             showMessage("❌ Ошибка: ID преподавателя не найден", "error");
             isLoading = false;
             if (teacherFormWindow.item) {
@@ -98,7 +93,7 @@ Item {
             console.log("📨 Ответ обновления преподавателя:", response);
 
             if (response.success) {
-                showMessage("✅ " + (response.message || "Данные преподавателя обновлены"), "success");
+                showMessage((response.message || "Данные преподавателя обновлены"), "success");
                 if (teacherFormWindow.item) {
                     teacherFormWindow.item.closeWindow();
                 }
@@ -208,8 +203,8 @@ Item {
                         spacing: 5
 
                         Image {
-                            source: "qrc:/icons/check.png"
-                            sourceSize: Qt.size(12, 12)
+                            source: "qrc:/icons/refresh.png"
+                            sourceSize: Qt.size(20, 20)
                             anchors.verticalCenter: parent.verticalCenter
                         }
 

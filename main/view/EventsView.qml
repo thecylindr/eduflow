@@ -11,7 +11,6 @@ Item {
     property bool isLoading: false
 
     function refreshEvents() {
-        console.log("🔄 Загрузка событий...");
         isLoading = true;
         mainWindow.mainApi.getEvents(function(response) {
             isLoading = false;
@@ -25,11 +24,9 @@ Item {
                     console.log("📋 Обработка события:", JSON.stringify(event));
 
                     var processedEvent = {
-                        // СОХРАНЯЕМ ОБА ID: уникальный и event_id
-                        id: event.id || 0, // Уникальный ID для удаления
-                        eventId: event.eventId || event.event_id || 0, // measure_code
-                        eventCategory: event.eventCategory || event.event_category || 0,
-                        eventCategoryName: getCategoryName(event.eventCategory || event.event_category),
+                        id: event.id || 0,
+                        eventId: event.eventId || event.event_id || 0,
+                        category: event.category || "",
                         eventType: event.eventType || event.event_type || "",
                         startDate: event.startDate || event.start_date || "",
                         endDate: event.endDate || event.end_date || "",
@@ -82,20 +79,6 @@ Item {
         }
     }
 
-    function getCategoryName(categoryId) {
-        if (!categoryId || !eventCategories || !Array.isArray(eventCategories)) {
-            return "Без категории";
-        }
-
-        for (var i = 0; i < eventCategories.length; i++) {
-            var category = eventCategories[i];
-            if (category && (category.event_category_id === categoryId || category.id === categoryId)) {
-                return category.category || category.name || "Без названия";
-            }
-        }
-        return "Неизвестная категория";
-    }
-
     // CRUD функции для событий
     function addEvent(eventData) {
         if (!eventData) {
@@ -132,7 +115,6 @@ Item {
             return
         }
 
-        // ИСПРАВЛЕНИЕ: используем уникальный id события вместо event_id
         var uniqueEventId = eventData.id
         if (!uniqueEventId) {
             showMessage("❌ ID события не указан", "error")
@@ -150,12 +132,12 @@ Item {
             startDate: eventData.startDate,
             endDate: eventData.endDate,
             location: eventData.location,
-            lore: eventData.lore
+            lore: eventData.lore,
+            category: eventData.eventCategory // НАИМЕНОВАНИЕ категории
         }
 
         console.log("   Данные для отправки:", JSON.stringify(updateData))
 
-        // ИСПРАВЛЕНИЕ: передаем уникальный id
         mainWindow.mainApi.updateEvent(uniqueEventId, updateData, function(response) {
             isLoading = false
             console.log("📨 ОТВЕТ ОБНОВЛЕНИЯ:", JSON.stringify(response))
@@ -285,8 +267,8 @@ Item {
                         spacing: 5
 
                         Image {
-                            source: "qrc:/icons/check.png"
-                            sourceSize: Qt.size(12, 12)
+                            source: "qrc:/icons/refresh.png"
+                            sourceSize: Qt.size(20, 20)
                             anchors.verticalCenter: parent.verticalCenter
                         }
 
@@ -385,9 +367,20 @@ Item {
             Layout.fillHeight: true
             sourceModel: eventsView.events || []
             itemType: "event"
-            searchPlaceholder: "Поиск событий..."
-            sortOptions: ["По категории", "По типу", "По дате начала", "По статусу"]
-            sortRoles: ["eventCategoryName", "eventType", "startDate", "status"]
+            searchPlaceholder: "Поиск по типу, наименованию, месту проведения..."
+            sortOptions: ["По наименованию", "По типу", "По дате начала", "По статусу", "По месту проведения"]
+            sortRoles: ["eventCategory", "eventType", "startDate", "status", "location"]
+
+            // КАСТОМНЫЕ ЗАГОЛОВКИ СТОЛБЦОВ
+            property var customHeaders: ({
+                "eventCategory": "Наименование",
+                "eventType": "Тип события",
+                "startDate": "Дата начала",
+                "endDate": "Дата окончания",
+                "location": "Место проведения",
+                "lore": "Описание",
+                "status": "Статус"
+            })
 
             onItemEditRequested: function(itemData) {
                 if (!itemData) return;
@@ -423,7 +416,7 @@ Item {
                     console.log("💾 Сохранение события:", JSON.stringify(eventData));
                     if (!eventData) return;
 
-                    // ИСПРАВЛЕНИЕ: Правильное определение режима по наличию ID
+                    // Определяем режим по наличию ID
                     if (eventData.id && eventData.id !== 0) {
                         console.log("🔧 Режим редактирования, ID:", eventData.id);
                         updateEvent(eventData);

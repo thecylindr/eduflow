@@ -114,7 +114,7 @@ Page {
                                             if (hours >= 72) return "qrc:/icons/status-inactive.png";
                                             return "qrc:/icons/status-warning.png";
                                         }
-                                        sourceSize: Qt.size(14, 14)
+                                        sourceSize: Qt.size(24, 24)
                                         fillMode: Image.PreserveAspectFit
                                         mipmap: true
                                         antialiasing: true
@@ -163,7 +163,7 @@ Page {
                                     spacing: 4
                                     Image {
                                         source: "qrc:/icons/os.png"
-                                        sourceSize: Qt.size(11, 11)
+                                        sourceSize: Qt.size(16, 16)
                                         fillMode: Image.PreserveAspectFit
                                         mipmap: true
                                         antialiasing: true
@@ -188,7 +188,7 @@ Page {
                                     spacing: 4
                                     Image {
                                         source: "qrc:/icons/ip.png"
-                                        sourceSize: Qt.size(11, 11)
+                                        sourceSize: Qt.size(16, 16)
                                         fillMode: Image.PreserveAspectFit
                                         mipmap: true
                                         antialiasing: true
@@ -213,7 +213,7 @@ Page {
                                     spacing: 4
                                     Image {
                                         source: "qrc:/icons/time.png"
-                                        sourceSize: Qt.size(11, 11)
+                                        sourceSize: Qt.size(16, 16)
                                         fillMode: Image.PreserveAspectFit
                                         mipmap: true
                                         antialiasing: true
@@ -236,7 +236,7 @@ Page {
                                     spacing: 4
                                     Image {
                                         source: "qrc:/icons/activity.png"
-                                        sourceSize: Qt.size(11, 11)
+                                        sourceSize: Qt.size(16, 16)
                                         fillMode: Image.PreserveAspectFit
                                         mipmap: true
                                         antialiasing: true
@@ -390,7 +390,7 @@ Page {
 
             Image {
                 source: "qrc:/icons/info.png"
-                sourceSize: Qt.size(11, 11)
+                sourceSize: Qt.size(18, 18)
                 fillMode: Image.PreserveAspectFit
                 mipmap: true
                 antialiasing: true
@@ -398,7 +398,7 @@ Page {
             }
 
             Text {
-                text: "Сессии, неактивные более 5 минут, отмечены красным цветом"
+                text: "Здесь отображаются все сессии вашего аккаунта."
                 font.pixelSize: 11
                 color: "#7f8c8d"
                 font.italic: true

@@ -319,69 +319,6 @@ ApplicationWindow {
                             model: teacherDisplayModel
                             textRole: "displayName"
 
-                            // Стилизация ComboBox
-                            background: Rectangle {
-                                border.color: teacherComboBox.enabled ? "#e0e0e0" : "#f0f0f0"
-                                border.width: 1
-                                radius: 8
-                                color: teacherComboBox.enabled ? "white" : "#f8f8f8"
-                            }
-
-                            contentItem: Text {
-                                text: teacherComboBox.displayText
-                                font: teacherComboBox.font
-                                color: teacherComboBox.enabled ? "#2c3e50" : "#7f8c8d"
-                                verticalAlignment: Text.AlignVCenter
-                                horizontalAlignment: Text.AlignHCenter
-                                elide: Text.ElideRight
-                            }
-
-                            // Улучшенный выпадающий список
-                            popup: Popup {
-                                y: teacherComboBox.height
-                                width: teacherComboBox.width
-                                implicitHeight: Math.min(400, contentItem.implicitHeight)
-                                padding: 1
-
-                                contentItem: ListView {
-                                    clip: true
-                                    implicitHeight: contentHeight
-                                    model: teacherComboBox.popup.visible ? teacherComboBox.delegateModel : null
-                                    currentIndex: teacherComboBox.highlightedIndex
-
-                                    ScrollIndicator.vertical: ScrollIndicator { }
-                                }
-
-                                background: Rectangle {
-                                    border.color: "#e0e0e0"
-                                    radius: 8
-                                    color: "white"
-                                }
-                            }
-
-                            // Делегат для элементов списка
-                            delegate: ItemDelegate {
-                                width: teacherComboBox.width
-                                height: 36
-                                text: model.displayName
-                                font: teacherComboBox.font
-                                highlighted: teacherComboBox.highlightedIndex === index
-
-                                background: Rectangle {
-                                    color: highlighted ? "#e3f2fd" :
-                                           (index % 2 === 0 ? "#f8f9fa" : "white")
-                                }
-
-                                contentItem: Text {
-                                    text: model.displayName
-                                    font: parent.font
-                                    color: "#2c3e50"
-                                    verticalAlignment: Text.AlignVCenter
-                                    horizontalAlignment: Text.AlignHCenter
-                                    elide: Text.ElideRight
-                                }
-                            }
-
                             KeyNavigation.tab: saveButton
                             Keys.onReturnPressed: navigateToNextField(teacherComboBox)
                             Keys.onEnterPressed: navigateToNextField(teacherComboBox)
@@ -474,15 +411,15 @@ ApplicationWindow {
                                 nameField.text.trim() !== "" &&
                                 teacherComboBox.currentIndex >= 0
                         font.pixelSize: 14
-                        KeyNavigation.tab: cancelButton
-                        Keys.onReturnPressed: if (enabled && !isSaving) saveButton.clicked()
-                        Keys.onEnterPressed: if (enabled && !isSaving) saveButton.clicked()
-                        Keys.onUpPressed: teacherComboBox.forceActiveFocus()
+                        font.bold: true
 
                         background: Rectangle {
-                            radius: 8
-                            color: saveButton.enabled ? "#4CAF50" : "#cccccc"
+                            radius: 20
+                            color: saveButton.enabled ? "#27ae60" : "#95a5a6"
+                            border.color: saveButton.enabled ? "#219a52" : "transparent"
+                            border.width: 2
                         }
+
                         contentItem: Text {
                             text: saveButton.text
                             color: "white"
@@ -490,6 +427,11 @@ ApplicationWindow {
                             verticalAlignment: Text.AlignVCenter
                             font: saveButton.font
                         }
+
+                        KeyNavigation.tab: cancelButton
+                        Keys.onReturnPressed: if (enabled && !isSaving) saveButton.clicked()
+                        Keys.onEnterPressed: if (enabled && !isSaving) saveButton.clicked()
+                        Keys.onUpPressed: teacherComboBox.forceActiveFocus()
 
                         onClicked: {
                             if (nameField.text.trim() === "") {
@@ -512,15 +454,15 @@ ApplicationWindow {
                         implicitHeight: 40
                         enabled: !isSaving
                         font.pixelSize: 14
-                        KeyNavigation.tab: nameField
-                        Keys.onReturnPressed: if (enabled) cancelButton.clicked()
-                        Keys.onEnterPressed: if (enabled) cancelButton.clicked()
-                        Keys.onUpPressed: saveButton.forceActiveFocus()
+                        font.bold: true
 
                         background: Rectangle {
-                            radius: 8
-                            color: "#f44336"
+                            radius: 20
+                            color: "#e74c3c"
+                            border.color: "#c0392b"
+                            border.width: 2
                         }
+
                         contentItem: Text {
                             text: cancelButton.text
                             color: "white"
@@ -528,6 +470,11 @@ ApplicationWindow {
                             verticalAlignment: Text.AlignVCenter
                             font: cancelButton.font
                         }
+
+                        KeyNavigation.tab: nameField
+                        Keys.onReturnPressed: if (enabled) cancelButton.clicked()
+                        Keys.onEnterPressed: if (enabled) cancelButton.clicked()
+                        Keys.onUpPressed: saveButton.forceActiveFocus()
 
                         onClicked: {
                             cancelled()

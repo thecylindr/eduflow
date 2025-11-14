@@ -29,6 +29,18 @@ ApplicationWindow {
     // Флаг инициализации API
     property bool apiInitialized: false
 
+
+    function showAuthWindow() {
+            // Если окно авторизации не существует, создаем его
+            var component = Qt.createComponent("../../auth/Auth.qml");
+            if (component.status === Component.Ready) {
+                var authWin = component.createObject(mainWindow);
+                authWin.show();
+            } else {
+                console.error("❌ Ошибка создания окна авторизации:", component.errorString());
+        }
+    }
+
     function navigateTo(view) {
         currentView = view;
 
@@ -56,9 +68,16 @@ ApplicationWindow {
     }
 
     function logout() {
-        console.log("🚪 Выход из системы...");
-        ////mainApi.clearAuth();
-        // Здесь будет дополнительная логика выхода
+
+        // Очищаем токен аутентификации
+        settingsManager.authToken = "";
+        authToken = "";
+
+        // Очищаем авторизацию в API
+        mainApi.clearAuth();
+
+        // Показываем окно авторизации
+        showAuthWindow();
     }
 
     function toggleMaximize() {

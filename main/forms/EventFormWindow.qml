@@ -6,8 +6,8 @@ import "../../common" as Common
 
 ApplicationWindow {
     id: eventFormWindow
-    width: 500
-    height: 550
+    width: 540
+    height: 640
     flags: Qt.Dialog | Qt.FramelessWindowHint
     modality: Qt.ApplicationModal
     color: "transparent"
@@ -27,7 +27,7 @@ ApplicationWindow {
     signal saveCompleted(bool success, string message)
 
     property var fieldNavigation: [
-        portfolioComboBox, eventTypeField, startDateField, endDateField, locationField, loreField
+        portfolioComboBox, eventTypeField, categoryField, startDateField, endDateField, locationField, loreField
     ]
 
     function openForAdd() {
@@ -95,7 +95,6 @@ ApplicationWindow {
             return
         }
 
-        // ИСПРАВЛЕНИЕ: Сохраняем оригинальный ID события
         var measureCode = eventData.measureCode || eventData.event_id || 0
         console.log("🔍 Ищем портфолио с measure_code:", measureCode)
 
@@ -117,6 +116,7 @@ ApplicationWindow {
         }
 
         eventTypeField.text = eventData.eventType || eventData.event_type || ""
+        categoryField.text = eventData.category || ""
         startDateField.text = eventData.startDate || eventData.start_date || ""
         endDateField.text = eventData.endDate || eventData.end_date || ""
         locationField.text = eventData.location || ""
@@ -138,6 +138,7 @@ ApplicationWindow {
 
         var eventData = {
             eventType: eventTypeField.text.trim(),
+            category: categoryField.text.trim(), // 🔥 ДОБАВЛЕНО: полное название
             measureCode: selectedPortfolio.measure_code,
             startDate: startDateField.text.trim(),
             endDate: endDateField.text.trim(),
@@ -145,9 +146,8 @@ ApplicationWindow {
             lore: loreField.text.trim()
         }
 
-        // ИСПРАВЛЕНИЕ: передаем уникальный id при редактировании
         if (isEditMode && currentEvent) {
-            eventData.id = currentEvent.id; // Используем уникальный id
+            eventData.id = currentEvent.id;
             console.log("🔧 Добавлен уникальный ID события для редактирования:", eventData.id)
         }
 
@@ -390,8 +390,6 @@ ApplicationWindow {
                             }
                         }
 
-                        // Остальные поля формы остаются без изменений
-                        // ... (тип мероприятия, даты, местоположение, описание)
                         Column {
                             width: parent.width
                             spacing: 6
@@ -420,6 +418,37 @@ ApplicationWindow {
                                 color: "#000000"
                                 KeyNavigation.tab: startDateField
                                 Keys.onReturnPressed: navigateToNextField(eventTypeField)
+                            }
+                        }
+
+                        Column {
+                            width: parent.width
+                            spacing: 6
+
+                            Text {
+                                text: "Полное название события:"
+                                color: "#2c3e50"
+                                font.bold: true
+                                font.pixelSize: 13
+                            }
+
+                            TextField {
+                                id: categoryField
+                                width: parent.width
+                                height: 32
+                                placeholderText: "Введите полное название мероприятия"
+                                horizontalAlignment: Text.AlignLeft
+                                enabled: !isSaving
+                                font.pixelSize: 13
+                                background: Rectangle {
+                                    radius: 8
+                                    color: "#ffffff"
+                                    border.color: "#e0e0e0"
+                                    border.width: 1
+                                }
+                                color: "#000000"
+                                KeyNavigation.tab: startDateField
+                                Keys.onReturnPressed: navigateToNextField(categoryField)
                             }
                         }
 
@@ -577,6 +606,7 @@ ApplicationWindow {
                                 portfolioComboBox.currentIndex >= 0 &&
                                 portfolioList.length > 0 &&
                                 eventTypeField.text.trim() !== "" &&
+                                categoryField.text.trim() !== "" &&
                                 startDateField.text.trim() !== "" &&
                                 endDateField.text.trim() !== ""
                         font.pixelSize: 13
@@ -610,6 +640,12 @@ ApplicationWindow {
                                 showMessage("❌ Введите тип мероприятия", "error")
                                 return
                             }
+
+                            if (categoryField.text.trim() === "") {
+                                showMessage("❌ Введите полное название категории", "error") // 🔥 НОВАЯ ПРОВЕРКА
+                                return
+                            }
+
                             if (startDateField.text.trim() === "" || endDateField.text.trim() === "") {
                                 showMessage("❌ Заполните даты проведения", "error")
                                 return

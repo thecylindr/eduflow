@@ -138,6 +138,30 @@ QtObject {
         }
     }
 
+    function getDashboard(callback) {
+        console.log("📊 Запрос данных дашборда...")
+
+        sendRequest("GET", "/dashboard", null, function(response) {
+            console.log("📨 Ответ дашборда:", JSON.stringify(response))
+
+            if (callback) {
+                if (response.success) {
+                    callback({
+                        success: true,
+                        data: response.data,
+                        status: response.status
+                    });
+                } else {
+                    callback({
+                        success: false,
+                        error: response.error || "Ошибка загрузки дашборда",
+                        status: response.status
+                    });
+                }
+            }
+        });
+    }
+
     function updateProfile(profileData, callback) {
         sendRequest("PUT", "/profile", profileData, function(response) {
             if (callback) {
@@ -404,46 +428,47 @@ QtObject {
 
 
     function getEvents(callback) {
-            sendRequest("GET", "/events", null, function(response) {
-                if (response.success) {
-                    var eventsData = response.data || {};
-                    var eventsArray = [];
+        sendRequest("GET", "/events", null, function(response) {
+            if (response.success) {
+                var eventsData = response.data || {};
+                var eventsArray = [];
 
-                    if (eventsData && eventsData.data && Array.isArray(eventsData.data)) {
-                        eventsArray = eventsData.data;
-                    } else if (Array.isArray(eventsData)) {
-                        eventsArray = eventsData;
-                    }
-
-                    // Преобразуем поля для совместимости
-                    var formattedEvents = eventsArray.map(function(event) {
-                        return {
-                            id: event.id || 0,
-                            eventId: event.event_id || 0,
-                            eventType: event.event_type || "",
-                            eventCategory: event.category || "",
-                            startDate: event.start_date || "",
-                            endDate: event.end_date || "",
-                            location: event.location || "",
-                            lore: event.lore || ""
-                        };
-                    });
-
-                    callback({
-                        success: true,
-                        data: formattedEvents,
-                        status: response.status
-                    });
-                } else {
-                    callback({
-                        success: false,
-                        error: response.error,
-                        data: [],
-                        status: response.status
-                    });
+                if (eventsData && eventsData.data && Array.isArray(eventsData.data)) {
+                    eventsArray = eventsData.data;
+                } else if (Array.isArray(eventsData)) {
+                    eventsArray = eventsData;
                 }
-            });
-        }
+
+                // ПРЕОБРАЗУЕМ ПОЛЯ ДЛЯ СОВМЕСТИМОСТИ
+                var formattedEvents = eventsArray.map(function(event) {
+                    return {
+                        id: event.id || 0,
+                        eventId: event.event_id || 0,
+                        eventType: event.event_type || "",
+                        // ИСПРАВЛЕНИЕ: используем category из ответа сервера
+                        category: event.category || "", // Наименование категории
+                        startDate: event.start_date || "",
+                        endDate: event.end_date || "",
+                        location: event.location || "",
+                        lore: event.lore || ""
+                    };
+                });
+
+                callback({
+                    success: true,
+                    data: formattedEvents,
+                    status: response.status
+                });
+            } else {
+                callback({
+                    success: false,
+                    error: response.error,
+                    data: [],
+                    status: response.status
+                });
+            }
+        });
+    }
 
     function openPortfolioForm() {
         // Загружаем студентов перед открытием формы
@@ -480,10 +505,11 @@ QtObject {
             start_date: eventData.startDate || "",
             end_date: eventData.endDate || "",
             location: eventData.location || "",
-            lore: eventData.lore || ""
+            lore: eventData.lore || "",
+            category: eventData.category || ""
         };
 
-        console.log("📤 Отправка события с measure_code:", cleanEventData.event_id);
+        console.log("📤 Отправка события с категорией:", cleanEventData.category);
 
         sendRequest("POST", "/events", cleanEventData, function(response) {
             console.log("📨 Ответ добавления события:", response);
@@ -496,14 +522,15 @@ QtObject {
 
         var endpoint = "/events/" + eventId;
 
-        // ИСПРАВЛЕНИЕ: преобразуем данные в формат сервера
+
         var updateData = {
             event_type: eventData.eventType,
             event_id: eventData.measureCode || eventData.event_id,
             start_date: eventData.startDate,
             end_date: eventData.endDate,
             location: eventData.location,
-            lore: eventData.lore
+            lore: eventData.lore,
+            category: eventData.category || ""
         };
 
         sendRequest("PUT", endpoint, updateData, function(response) {
