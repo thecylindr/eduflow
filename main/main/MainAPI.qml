@@ -429,29 +429,58 @@ QtObject {
 
     function getEvents(callback) {
         sendRequest("GET", "/events", null, function(response) {
+            console.log("📨 СЫРОЙ ОТВЕТ событий:", JSON.stringify(response));
+
             if (response.success) {
-                var eventsData = response.data || {};
+                // 🔥 ИСПРАВЛЕНИЕ: response.data уже содержит массив событий
+                var eventsData = response.data || [];
                 var eventsArray = [];
 
-                if (eventsData && eventsData.data && Array.isArray(eventsData.data)) {
-                    eventsArray = eventsData.data;
-                } else if (Array.isArray(eventsData)) {
+                console.log("📊 Анализ структуры данных событий:");
+                console.log("   Тип данных:", typeof eventsData);
+                console.log("   Это массив?", Array.isArray(eventsData));
+
+                if (Array.isArray(eventsData)) {
                     eventsArray = eventsData;
+                    console.log("✅ Формат 1: response.data - массив, длина:", eventsArray.length);
+                } else if (eventsData && eventsData.data && Array.isArray(eventsData.data)) {
+                    eventsArray = eventsData.data;
+                    console.log("✅ Формат 2: response.data.data - массив, длина:", eventsArray.length);
+                } else {
+                    console.log("❌ Неизвестный формат данных событий");
+                    eventsArray = [];
+                }
+
+                console.log("📊 Получено событий с сервера:", eventsArray.length);
+
+                // 🔥 ДЕБАГ: выводим структуру первого события
+                if (eventsArray.length > 0) {
+                    console.log("🔍 Структура первого события:", JSON.stringify(eventsArray[0]));
+                    console.log("🏷️ Категория первого события:", eventsArray[0].category);
                 }
 
                 // ПРЕОБРАЗУЕМ ПОЛЯ ДЛЯ СОВМЕСТИМОСТИ
                 var formattedEvents = eventsArray.map(function(event) {
-                    return {
+                    var formattedEvent = {
                         id: event.id || 0,
                         eventId: event.event_id || 0,
                         eventType: event.event_type || "",
-                        // ИСПРАВЛЕНИЕ: используем category из ответа сервера
+                        // 🔥 ИСПРАВЛЕНИЕ: используем category из ответа сервера
                         category: event.category || "", // Наименование категории
                         startDate: event.start_date || "",
                         endDate: event.end_date || "",
                         location: event.location || "",
-                        lore: event.lore || ""
+                        lore: event.lore || "",
+                        maxParticipants: event.max_participants || 0,
+                        currentParticipants: event.current_participants || 0,
+                        status: event.status || "active"
                     };
+
+                    console.log("🔄 Преобразовано событие:", formattedEvent.id,
+                              "Категория:", formattedEvent.category,
+                              "Тип:", formattedEvent.eventType);
+
+                    return formattedEvent;
                 });
 
                 callback({
@@ -460,6 +489,7 @@ QtObject {
                     status: response.status
                 });
             } else {
+                console.log("❌ Ошибка загрузки событий:", response.error);
                 callback({
                     success: false,
                     error: response.error,
@@ -694,7 +724,7 @@ QtObject {
             if (response.success) {
                 var portfolioData = [];
 
-                // Анализируем структуру ответа - она вложенная
+                // Анализируем структуру ответа
                 if (response.data && response.data.data && Array.isArray(response.data.data)) {
                     console.log("✅ Формат 1: response.data.data - массив");
                     portfolioData = response.data.data;
@@ -715,22 +745,22 @@ QtObject {
 
                 // Фильтруем и форматируем данные
                 var validPortfolios = portfolioData.filter(function(portfolio) {
-                    // Проверяем, что есть portfolio_id (будем использовать как measure_code)
-                    var isValid = portfolio && portfolio.portfolio_id && portfolio.portfolio_id > 0;
+                    // 🔥 ИСПРАВЛЕНИЕ: используем portfolio_id как measure_code
+                    var isValid = portfolio && (portfolio.portfolio_id || portfolio.id) && (portfolio.portfolio_id || portfolio.id) > 0;
                     if (!isValid) {
                         console.log("⚠️ Отфильтровано невалидное портфолио:", portfolio);
                     }
                     return isValid;
                 }).map(function(portfolio) {
-                    // Обеспечиваем наличие всех необходимых полей
-                    // Используем portfolio_id как measure_code, так как measure_code не приходит в ответе
+                    // 🔥 ИСПРАВЛЕНИЕ: используем portfolio_id как measure_code
+                    var measureCode = portfolio.portfolio_id || portfolio.id;
                     return {
-                        measure_code: portfolio.portfolio_id, // Используем portfolio_id как measure_code
+                        measure_code: measureCode,
                         decree: portfolio.decree || 0,
                         student_code: portfolio.student_code || 0,
                         student_name: portfolio.student_name || "Студент #" + (portfolio.student_code || "?"),
                         date: portfolio.date || "",
-                        portfolio_id: portfolio.portfolio_id // Сохраняем оригинальный portfolio_id
+                        portfolio_id: measureCode // Сохраняем оригинальный ID
                     };
                 });
 

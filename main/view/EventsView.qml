@@ -16,26 +16,44 @@ Item {
             isLoading = false;
             if (response && response.success) {
                 console.log("✅ Данные событий получены:", JSON.stringify(response.data));
+
+                // 🔥 ИСПРАВЛЕНИЕ: response.data уже содержит массив событий
                 var eventsData = response.data || [];
                 var processedEvents = [];
 
+                console.log("📊 Количество событий от сервера:", eventsData.length);
+
                 for (var i = 0; i < eventsData.length; i++) {
                     var event = eventsData[i];
-                    console.log("📋 Обработка события:", JSON.stringify(event));
+                    console.log("📋 Обработка события " + i + ":", JSON.stringify(event));
 
+                    // 🔥 УЛУЧШЕННОЕ ПРЕОБРАЗОВАНИЕ: используем все возможные варианты полей
                     var processedEvent = {
-                        id: event.id || 0,
+                        // Основные идентификаторы
+                        id: event.id || event.eventId || 0,
                         eventId: event.eventId || event.event_id || 0,
+
+                        // 🔥 ВАЖНОЕ ИСПРАВЛЕНИЕ: правильное получение категории
                         category: event.category || "",
+                        eventCategory: event.category || "", // Дублируем для таблицы
+
+                        // Основные поля события
                         eventType: event.eventType || event.event_type || "",
                         startDate: event.startDate || event.start_date || "",
                         endDate: event.endDate || event.end_date || "",
                         location: event.location || "",
                         lore: event.lore || "",
+
+                        // Дополнительные поля
                         maxParticipants: event.maxParticipants || event.max_participants || 0,
                         currentParticipants: event.currentParticipants || event.current_participants || 0,
                         status: event.status || "active"
                     };
+
+                    // 🔥 ДЕБАГ: логируем категорию
+                    console.log("   🏷️ Категория события " + i + ":", processedEvent.category);
+                    console.log("   🏷️ eventCategory события " + i + ":", processedEvent.eventCategory);
+
                     processedEvents.push(processedEvent);
                 }
 
@@ -44,6 +62,10 @@ Item {
 
                 if (eventsView.events.length > 0) {
                     console.log("📊 Первое событие:", JSON.stringify(eventsView.events[0]));
+                    console.log("🏷️ Категория первого события:", eventsView.events[0].category);
+                    console.log("🏷️ eventCategory первого события:", eventsView.events[0].eventCategory);
+                } else {
+                    console.log("⚠️ Нет событий для отображения");
                 }
             } else {
                 var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
@@ -367,13 +389,13 @@ Item {
             Layout.fillHeight: true
             sourceModel: eventsView.events || []
             itemType: "event"
-            searchPlaceholder: "Поиск по типу, наименованию, месту проведения..."
+            searchPlaceholder: "Поиск события..."
             sortOptions: ["По наименованию", "По типу", "По дате начала", "По статусу", "По месту проведения"]
             sortRoles: ["eventCategory", "eventType", "startDate", "status", "location"]
 
-            // КАСТОМНЫЕ ЗАГОЛОВКИ СТОЛБЦОВ
+            // 🔥 ОБНОВЛЕННЫЕ ЗАГОЛОВКИ СТОЛБЦОВ
             property var customHeaders: ({
-                "eventCategory": "Наименование",
+                "eventCategory": "Наименование категории",
                 "eventType": "Тип события",
                 "startDate": "Дата начала",
                 "endDate": "Дата окончания",
@@ -382,9 +404,25 @@ Item {
                 "status": "Статус"
             })
 
+            // 🔥 ДОБАВЛЕНО: кастомное отображение для категории
+            property var customDisplay: ({
+                "category": function(value, item) {
+                    return value || "Без категории";
+                },
+                "startDate": function(value, item) {
+                    return value || "Не указана";
+                },
+                "endDate": function(value, item) {
+                    return value || "Не указана";
+                }
+            })
+
             onItemEditRequested: function(itemData) {
                 if (!itemData) return;
                 console.log("✏️ EventsView: редактирование запрошено для", itemData);
+                console.log("🏷️ Категория события:", itemData.category);
+                console.log("🏷️ eventCategory события:", itemData.eventCategory);
+
                 if (eventFormWindow.item) {
                     eventFormWindow.openForEdit(itemData);
                 } else {
@@ -395,7 +433,7 @@ Item {
             onItemDeleteRequested: function(itemData) {
                 if (!itemData) return;
                 var uniqueEventId = itemData.id;
-                var eventName = itemData.eventType || "Без названия";
+                var eventName = itemData.eventType || itemData.category || "Без названия";
                 console.log("🗑️ EventsView: удаление запрошено для", eventName, "Уникальный ID:", uniqueEventId);
                 deleteEvent(uniqueEventId, eventName);
             }

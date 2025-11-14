@@ -95,12 +95,14 @@ ApplicationWindow {
             return
         }
 
-        var measureCode = eventData.measureCode || eventData.event_id || 0
-        console.log("🔍 Ищем портфолио с measure_code:", measureCode)
+        // 🔥 УЛУЧШЕННАЯ ЛОГИКА: пробуем разные возможные поля для measure_code
+        var measureCode = eventData.measureCode || eventData.portfolio_id || eventData.event_id || 0
+        console.log("🔍 Ищем портфолио с measure_code:", measureCode, "в списке из", portfolioList.length, "элементов")
 
         if (measureCode > 0) {
             var foundIndex = -1
             for (var i = 0; i < portfolioList.length; i++) {
+                console.log("   Сравниваем с portfolioList[", i, "]:", portfolioList[i].measure_code)
                 if (portfolioList[i].measure_code === measureCode) {
                     foundIndex = i
                     console.log("✅ Найдено портфолио, индекс:", i)
@@ -110,9 +112,13 @@ ApplicationWindow {
 
             if (foundIndex >= 0) {
                 portfolioComboBox.currentIndex = foundIndex
+                console.log("✅ Портфолио выбрано в комбобоксе")
             } else {
                 console.log("⚠️ Портфолио с measure_code", measureCode, "не найдено в списке")
+                console.log("📋 Доступные measure_codes:", portfolioList.map(function(p) { return p.measure_code; }))
             }
+        } else {
+            console.log("⚠️ measure_code не указан или равен 0")
         }
 
         eventTypeField.text = eventData.eventType || eventData.event_type || ""

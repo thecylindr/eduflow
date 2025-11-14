@@ -82,8 +82,8 @@ Rectangle {
                             return itemData.name || "Без названия";
                         } else if (itemType === "event") {
                             var eventType = itemData.eventType || "Без типа";
-                            var category = itemData.eventCategoryName || "Без категории";
-                            return eventType + " • " + category;
+                            var category = itemData.category || itemData.eventCategory || "Без наименования";
+                            return eventType + "\n" + category;
                         } else if (itemType === "portfolio") {
                             var studentName = itemData.studentName || "Неизвестный студент";
                             var decree = itemData.decree || "";

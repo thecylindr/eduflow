@@ -205,10 +205,10 @@ QtObject {
                             status: xhr.status
                         });
                     } catch (e) {
-                        console.log("Ошибка парсинга JSON:", e);
+                        console.log("Ошибка парсинга JSON:", error);
                         if (callback) callback({
                             success: false,
-                            error: "Ошибка формата ответа: " + e.toString(),
+                            error: "Ошибка формата ответа: " + error.toString(),
                             status: xhr.status
                         });
                     }

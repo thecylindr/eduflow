@@ -20,9 +20,6 @@ Item {
     property bool sortAscending: true
 
     function updateDisplayedModel() {
-        console.log("Updating displayed model. Source length:", sourceModel.length, "Search:", searchText, "Sort index:", sortIndex, "Ascending:", sortAscending);
-
-        // Проверка на пустую модель
         if (!sourceModel || sourceModel.length === 0) {
             filteredModel = [];
             console.log("Source model is empty");
@@ -50,11 +47,18 @@ Item {
                 var teacherName = (item.teacherName || "").toLowerCase();
                 return groupName.includes(searchLower) || teacherName.includes(searchLower);
             } else if (itemType === "event") {
-                var eventCategory = (item.eventCategoryName || "").toLowerCase();
+                // 🔥 ИСПРАВЛЕНИЕ: используем правильные поля для событий
+                var eventCategory = (item.eventCategory || item.category || "").toLowerCase();
                 var eventType = (item.eventType || "").toLowerCase();
                 var eventLocation = (item.location || "").toLowerCase();
                 var eventStatus = (item.status || "").toLowerCase();
-                return eventCategory.includes(searchLower) || eventType.includes(searchLower) || eventLocation.includes(searchLower) || eventStatus.includes(searchLower);
+                var eventDescription = (item.lore || "").toLowerCase();
+
+                return eventCategory.includes(searchLower) ||
+                       eventType.includes(searchLower) ||
+                       eventLocation.includes(searchLower) ||
+                       eventStatus.includes(searchLower) ||
+                       eventDescription.includes(searchLower);
             } else if (itemType === "portfolio") {
                 var studentName = (item.studentName || "").toLowerCase();
                 var decree = (item.decree || "").toString().toLowerCase();
@@ -105,9 +109,10 @@ Item {
                     bVal = (b[sortRole] || "").toString().toLowerCase();
                 }
                 else if (itemType === "event") {
-                    if (sortRole === "eventCategoryName") {
-                        aVal = (a.eventCategoryName || "Без категории").toString().toLowerCase();
-                        bVal = (b.eventCategoryName || "Без категории").toString().toLowerCase();
+                    // 🔥 ИСПРАВЛЕНИЕ: правильная обработка полей событий
+                    if (sortRole === "Category") {
+                        aVal = (a.eventCategory || a.category || "Без наименования").toString().toLowerCase();
+                        bVal = (b.eventCategory || b.category || "Без наименования").toString().toLowerCase();
                     } else if (sortRole === "eventType") {
                         aVal = (a.eventType || "Без типа").toString().toLowerCase();
                         bVal = (b.eventType || "Без типа").toString().toLowerCase();
@@ -120,6 +125,9 @@ Item {
                     } else if (sortRole === "location") {
                         aVal = (a.location || "").toString().toLowerCase();
                         bVal = (b.location || "").toString().toLowerCase();
+                    } else if (sortRole === "lore") {
+                        aVal = (a.lore || "").toString().toLowerCase();
+                        bVal = (b.lore || "").toString().toLowerCase();
                     } else {
                         aVal = (a[sortRole] || "").toString().toLowerCase();
                         bVal = (b[sortRole] || "").toString().toLowerCase();
@@ -159,8 +167,8 @@ Item {
 
     onSourceModelChanged: {
         console.log("Source model changed, length:", sourceModel.length);
-        if (sourceModel.length > 0 && itemType === "student") {
-            console.log("First student item:", JSON.stringify(sourceModel[0]));
+        if (sourceModel.length > 0) {
+            console.log("First item:", JSON.stringify(sourceModel[0]));
         }
         updateDisplayedModel();
     }
