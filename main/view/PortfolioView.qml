@@ -407,6 +407,15 @@ Item {
                 }
             }
 
+            onItemDoubleClicked: function(itemData) {
+                console.log("📚 Двойной клик по портфолио:", itemData);
+                if (portfolioFormWindow.item) {
+                    portfolioFormWindow.openForEdit(itemData);
+                } else {
+                    portfolioFormWindow.active = true;
+                }
+            }
+
             onItemDeleteRequested: function(itemData) {
                 if (!itemData) return;
                 var portfolioId = itemData.portfolioId;

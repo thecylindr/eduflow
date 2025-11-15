@@ -15,6 +15,7 @@ Rectangle {
     property string itemType: ""
 
     signal editRequested(var data)
+    signal doubleClicked(var data)
     signal deleteRequested(var data)
 
     Behavior on color {
@@ -30,7 +31,6 @@ Rectangle {
         width: parent.width - 20
         spacing: 8
 
-        // Аватар/иконка
         Rectangle {
             width: 60
             height: 60
@@ -61,7 +61,6 @@ Rectangle {
             }
         }
 
-        // Основная информация
         Column {
             width: parent.width
             spacing: 4
@@ -94,7 +93,6 @@ Rectangle {
                         }
                     }
                     return "Неизвестный тип";
-
                 }
                 font.pixelSize: 12
                 font.bold: true
@@ -134,13 +132,13 @@ Rectangle {
                         var studentName = itemData.studentName || "Неизвестный студент";
                         var date = itemData.date || "";
                         if (date) {
-                        return studentName + "\n" + date;
-                    } else {
-                    return studentName;
+                            return studentName + "\n" + date;
+                        } else {
+                            return studentName;
+                        }
+                    }
+                    return "";
                 }
-            }
-            return "";
-        }
                 font.pixelSize: 10
                 color: "#7f8c8d"
                 horizontalAlignment: Text.AlignHCenter
@@ -152,7 +150,6 @@ Rectangle {
         }
     }
 
-    // Кнопки действий - ВСЕГДА на переднем плане
     Row {
         anchors.top: parent.top
         anchors.right: parent.right
@@ -170,7 +167,6 @@ Rectangle {
             border.width: 1
             z: 1001
 
-            // Анимированная иконка редактирования
             AnimatedImage {
                 id: editIcon
                 anchors.centerIn: parent
@@ -233,7 +229,12 @@ Rectangle {
         cursorShape: Qt.PointingHandCursor
         propagateComposedEvents: true
 
-        onClicked: {
+        onDoubleClicked: {
+            console.log("GridItem: двойной клик по", gridItem.itemData);
+            gridItem.doubleClicked(gridItem.itemData);
+        }
+
+        onClicked: function(mouse) {
             if (!editMouseArea.containsMouse && !deleteMouseArea.containsMouse) {
                 mouse.accepted = false;
             }

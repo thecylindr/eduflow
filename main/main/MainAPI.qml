@@ -526,56 +526,121 @@ QtObject {
         });
     }
 
-    function addEvent(eventData, callback) {
-        console.log("➕ Добавление события:", JSON.stringify(eventData));
+    function getStudentsByGroup(groupId, callback) {
+        console.log("👥 Запрос студентов группы ID:", groupId);
 
-        var cleanEventData = {
-            event_id: parseInt(eventData.measureCode) || 0,
-            event_type: eventData.eventType || "",
-            start_date: eventData.startDate || "",
-            end_date: eventData.endDate || "",
-            location: eventData.location || "",
-            lore: eventData.lore || "",
-            category: eventData.category || ""
-        };
+        var endpoint = "/groups/" + groupId + "/students";
+        sendRequest("GET", endpoint, null, function(response) {
+            console.log("📨 Ответ студентов группы:", response);
 
-        console.log("📤 Отправка события с категорией:", cleanEventData.category);
+            if (callback) {
+                if (response.success) {
+                    var studentsData = response.data || [];
+                    var studentsArray = [];
 
-        sendRequest("POST", "/events", cleanEventData, function(response) {
-            console.log("📨 Ответ добавления события:", response);
-            if (callback) callback(response);
+                    if (studentsData && studentsData.data && Array.isArray(studentsData.data)) {
+                        studentsArray = studentsData.data;
+                    } else if (Array.isArray(studentsData)) {
+                        studentsArray = studentsData;
+                    }
+
+                    callback({
+                        success: true,
+                        data: studentsArray,
+                        status: response.status
+                    });
+                } else {
+                    callback({
+                        success: false,
+                        error: response.error || "Ошибка загрузки студентов группы",
+                        data: [],
+                        status: response.status
+                    });
+                }
+            }
         });
     }
 
-    function updateEvent(eventId, eventData, callback) {
-        console.log("🔄 Обновление события ID:", eventId, "Данные:", JSON.stringify(eventData));
+    function getAllTeachersSpecializations(excludeTeacherId, callback) {
+        console.log("📚 Загрузка всех специализаций преподавателей, исключая ID:", excludeTeacherId);
 
-        var endpoint = "/events/" + eventId;
+        getTeachers(function(response) {
+            if (response.success) {
+                var allSpecs = [];
+                var teachers = response.data || [];
 
+                console.log("👨‍🏫 Загружено преподавателей:", teachers.length);
 
-        var updateData = {
-            event_type: eventData.eventType,
-            event_id: eventData.measureCode || eventData.event_id,
-            start_date: eventData.startDate,
-            end_date: eventData.endDate,
-            location: eventData.location,
-            lore: eventData.lore,
-            category: eventData.category || ""
-        };
+                // Собираем ВСЕ специализации всех преподавателей, кроме исключенного
+                for (var i = 0; i < teachers.length; i++) {
+                    var teacher = teachers[i];
 
-        sendRequest("PUT", endpoint, updateData, function(response) {
-            console.log("📨 Ответ обновления события:", response);
-            if (callback) callback(response);
-        });
-    }
+                    // Если это преподаватель, которого нужно исключить, пропускаем
+                    if (excludeTeacherId && teacher.teacher_id === excludeTeacherId) {
+                        console.log("🚫 Пропускаем преподавателя с ID:", excludeTeacherId);
+                        continue;
+                    }
 
-    function deleteEvent(eventId, callback) {
-        console.log("🗑️ Удаление события ID:", eventId);
+                    console.log("🔍 Анализ преподавателя:", teacher.first_name, teacher.last_name);
 
-        var endpoint = "/events/" + eventId;
-        sendRequest("DELETE", endpoint, null, function(response) {
-            console.log("📨 Ответ удаления события:", response);
-            if (callback) callback(response);
+                    // Обрабатываем разные форматы специализаций
+                    if (teacher.specializations && Array.isArray(teacher.specializations)) {
+                        console.log("📋 Формат 1: teacher.specializations - массив");
+                        for (var j = 0; j < teacher.specializations.length; j++) {
+                            var specObj = teacher.specializations[j];
+                            var specName = specObj.name || specObj;
+                            if (specName && specName.trim() !== "") {
+                                allSpecs.push(specName.trim());
+                                console.log("   ➕ Специализация:", specName.trim());
+                            }
+                        }
+                    } else if (teacher.specialization && typeof teacher.specialization === 'string') {
+                        console.log("📋 Формат 2: teacher.specialization - строка:", teacher.specialization);
+                        var specArray = teacher.specialization.split(",").map(function(s) {
+                            return s.trim();
+                        }).filter(function(s) {
+                            return s !== "";
+                        });
+
+                        for (var k = 0; k < specArray.length; k++) {
+                            if (specArray[k].trim() !== "") {
+                                allSpecs.push(specArray[k].trim());
+                                console.log("   ➕ Специализация:", specArray[k].trim());
+                            }
+                        }
+                    } else {
+                        console.log("⚠️ Неизвестный формат специализаций:", teacher.specialization, teacher.specializations);
+                    }
+                }
+
+                // Убираем дубликаты
+                var uniqueSpecs = [];
+                var seen = {};
+                for (var m = 0; m < allSpecs.length; m++) {
+                    var specName = allSpecs[m];
+                    if (!seen[specName]) {
+                        seen[specName] = true;
+                        uniqueSpecs.push(specName);
+                    }
+                }
+
+                console.log("✅ Уникальных специализаций найдено (исключая преподавателя", excludeTeacherId, "):", uniqueSpecs.length);
+
+                if (callback) {
+                    callback({
+                        success: true,
+                        data: uniqueSpecs
+                    });
+                }
+            } else {
+                console.log("❌ Ошибка загрузки преподавателей:", response.error);
+                if (callback) {
+                    callback({
+                        success: false,
+                        error: response.error
+                    });
+                }
+            }
         });
     }
 

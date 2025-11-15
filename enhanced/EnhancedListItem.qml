@@ -17,6 +17,7 @@ Rectangle {
     property string itemType: ""
 
     signal editRequested(var data)
+    signal doubleClicked(var data)
     signal deleteRequested(var data)
 
     Behavior on color {
@@ -27,14 +28,12 @@ Rectangle {
         ColorAnimation { duration: 150 }
     }
 
-    // Основной контент
     Row {
         anchors.left: parent.left
         anchors.leftMargin: 12
         anchors.verticalCenter: parent.verticalCenter
         spacing: 12
 
-        // Аватар/иконка
         Rectangle {
             width: 40
             height: 40
@@ -64,7 +63,6 @@ Rectangle {
             }
         }
 
-        // Основная информация
         Column {
             width: listItem.width - 120
             spacing: 2
@@ -72,27 +70,27 @@ Rectangle {
             Text {
                 text: {
                     if (itemType === "teacher") {
-                            return (itemData.lastName || "") + " " + (itemData.firstName || "") + " " + (itemData.middleName || "");
-                        } else if (itemType === "student") {
-                            var last_name = itemData.last_name || itemData.lastName || "";
-                            var first_name = itemData.first_name || itemData.firstName || "";
-                            var middle_name = itemData.middle_name || itemData.middleName || "";
-                            return last_name + " " + first_name + " " + middle_name;
-                        } else if (itemType === "group") {
-                            return itemData.name || "Без названия";
-                        } else if (itemType === "event") {
-                            var eventType = itemData.eventType || "Без типа";
-                            var category = itemData.category || itemData.eventCategory || "Без наименования";
-                            return eventType + "\n" + category;
-                        } else if (itemType === "portfolio") {
-                            var studentName = itemData.studentName || "Неизвестный студент";
-                            var decree = itemData.decree || "";
-                            if (decree) {
-                                return "Портфолио студента #" + decree;
-                            } else {
-                                return "Портфолио студента " + studentName;
-                            }
+                        return (itemData.lastName || "") + " " + (itemData.firstName || "") + " " + (itemData.middleName || "");
+                    } else if (itemType === "student") {
+                        var last_name = itemData.last_name || itemData.lastName || "";
+                        var first_name = itemData.first_name || itemData.firstName || "";
+                        var middle_name = itemData.middle_name || itemData.middleName || "";
+                        return last_name + " " + first_name + " " + middle_name;
+                    } else if (itemType === "group") {
+                        return itemData.name || "Без названия";
+                    } else if (itemType === "event") {
+                        var eventType = itemData.eventType || "Без типа";
+                        var category = itemData.category || itemData.eventCategory || "Без наименования";
+                        return eventType + "\n" + category;
+                    } else if (itemType === "portfolio") {
+                        var studentName = itemData.studentName || "Неизвестный студент";
+                        var decree = itemData.decree || "";
+                        if (decree) {
+                            return "Портфолио студента #" + decree;
+                        } else {
+                            return "Портфолио студента " + studentName;
                         }
+                    }
                     return "Неизвестный тип";
                 }
                 font.pixelSize: 13
@@ -131,10 +129,10 @@ Rectangle {
                         var date = itemData.date || "";
                         if (date) {
                             return studentName + " · " + date;
-                            } else {
-                                return studentName;
-                            }
+                        } else {
+                            return studentName;
                         }
+                    }
                     return "";
                 }
                 font.pixelSize: 11
@@ -145,7 +143,6 @@ Rectangle {
         }
     }
 
-    // Кнопки действий
     Row {
         anchors.right: parent.right
         anchors.rightMargin: 12
@@ -163,7 +160,6 @@ Rectangle {
             border.width: 1
             z: 1001
 
-            // Анимированная иконка редактирования
             AnimatedImage {
                 id: editIcon
                 anchors.centerIn: parent
@@ -226,7 +222,12 @@ Rectangle {
         cursorShape: Qt.PointingHandCursor
         propagateComposedEvents: true
 
-        onClicked: {
+        onDoubleClicked: {
+            console.log("ListItem: двойной клик по", listItem.itemData);
+            listItem.doubleClicked(listItem.itemData);
+        }
+
+        onClicked: function(mouse) {
             if (!editMouseArea.containsMouse && !deleteMouseArea.containsMouse) {
                 mouse.accepted = false;
             }

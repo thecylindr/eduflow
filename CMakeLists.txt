@@ -76,6 +76,7 @@ qt_add_qml_module(EduFlow
                 main/view/settings/ProfilePage.qml
                 main/view/settings/SettingsMainPage.qml
                 main/view/settings/AboutPage.qml
+                QML_FILES main/forms/GroupViewFormWindow.qml
 )
 
 qt_add_resources(EduFlow "resources"

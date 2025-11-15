@@ -11,7 +11,7 @@ QtObject {
     property string remoteApiBaseUrl: "https://deltablast.fun"
     property int remotePort: 5000
 
-    // Кросс-платформенные настройки
+    // Кросс-платформенные настройки (Linux & Windows)
     property string windowsLocalUrl: "http://127.0.0.1:5000"
     property string windowsNetworkUrl: "http://localhost:5000"
     property string unixLocalUrl: "http://localhost:5000"
@@ -19,13 +19,12 @@ QtObject {
     function initialize(token, url) {
         authToken = token && token.length > 0 ? token : settingsManager.authToken || "";
 
-        // ОСОБАЯ ЛОГИКА ДЛЯ WINDOWS
+        // Выбор на что шлём запрос
         if (Qt.platform.os === "windows") {
             if (url && url.length > 0) {
                 baseUrl = url;
             } else {
                 if (settingsManager.useLocalServer) {
-                    // НА WINDOWS ВСЕГДА ИСПОЛЬЗУЕМ 127.0.0.1 ВМЕСТО LOCALHOST
                     var serverAddress = settingsManager.serverAddress;
                     if (serverAddress.includes("localhost")) {
                         baseUrl = serverAddress.replace("localhost", "127.0.0.1");
@@ -64,7 +63,7 @@ QtObject {
                 if (callback) callback(false);
             };
             try {
-                var testUrl = baseUrl + "/api/status";
+                var testUrl = baseUrl + "/status";
                 testXhr.open("GET", testUrl, true);
 
                 // Кросс-платформенные заголовки
@@ -142,7 +141,6 @@ QtObject {
     }
 
     function sendLoginRequest(login, password, callback) {
-        // ОЧИСТКА ЛОГИНА И ПАРОЛЯ ОТ ЛИШНИХ КАВЫЧЕК
         var cleanLogin = login;
         var cleanPassword = password;
 
@@ -269,7 +267,6 @@ QtObject {
                 xhr.setRequestHeader("Connection", "keep-alive");
             }
 
-            // ВАЖНО: НЕ ДОБАВЛЯЕМ Authorization header для verify-token
             if (isAuthenticated && endpoint !== "/verify-token" && endpoint !== "/login" && endpoint !== "/register") {
                 xhr.setRequestHeader("Authorization", "Bearer " + authToken);
             }

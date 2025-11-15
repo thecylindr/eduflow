@@ -13,6 +13,7 @@ Item {
 
     signal itemEditRequested(var itemData)
     signal itemDeleteRequested(var itemData)
+    signal itemDoubleClicked(var itemData)
 
     property var filteredModel: []
     property string searchText: ""
@@ -225,7 +226,6 @@ Item {
 
             Component {
                 id: listViewComponent
-
                 ScrollView {
                     id: listScrollView
                     anchors.fill: parent
@@ -234,14 +234,13 @@ Item {
 
                     Column {
                         id: listViewColumn
-                        width: listScrollView.availableWidth // Используем доступную ширину
+                        width: listScrollView.availableWidth
                         spacing: 6
 
                         Repeater {
                             model: enhancedTable.filteredModel
 
                             delegate: EnhancedListItem {
-                                // Упрощенная установка ширины без конфликтующих якорей
                                 width: listViewColumn.width - 20
                                 itemData: modelData
                                 itemType: enhancedTable.itemType
@@ -251,6 +250,9 @@ Item {
                                 onDeleteRequested: function(data) {
                                     enhancedTable.itemDeleteRequested(data)
                                 }
+                                onDoubleClicked: function(data) {
+                                    enhancedTable.itemDoubleClicked(data)
+                                }
                             }
                         }
                     }
@@ -259,7 +261,6 @@ Item {
 
             Component {
                 id: gridViewComponent
-
                 ScrollView {
                     id: gridScrollView
                     anchors.fill: parent
@@ -268,7 +269,7 @@ Item {
 
                     Flow {
                         id: gridViewLayout
-                        width: gridScrollView.availableWidth // Используем доступную ширину
+                        width: gridScrollView.availableWidth
                         spacing: 10
                         padding: 10
 
@@ -285,6 +286,9 @@ Item {
                                 }
                                 onDeleteRequested: function(data) {
                                     enhancedTable.itemDeleteRequested(data)
+                                }
+                                onDoubleClicked: function(data) {
+                                    enhancedTable.itemDoubleClicked(data)
                                 }
                             }
                         }

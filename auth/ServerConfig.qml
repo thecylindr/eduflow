@@ -144,7 +144,7 @@ Rectangle {
                     spacing: 4
                     Image {
                         source: "qrc:/icons/ip.png"
-                        sourceSize: Qt.size(14, 14)
+                        sourceSize: Qt.size(16, 16)
                         anchors.verticalCenter: parent.verticalCenter
                     }
                     Text {
@@ -205,7 +205,7 @@ Rectangle {
                         spacing: 6
                         Image {
                             source: "qrc:/icons/save.png"
-                            sourceSize: Qt.size(14, 14)
+                            sourceSize: Qt.size(16, 16)
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         Text {
@@ -240,7 +240,7 @@ Rectangle {
                         spacing: 6
                         AnimatedImage {
                             source: resetMouseArea.containsMouse ? "qrc:/icons/refresh.png" : "qrc:/icons/refresh.png"
-                            sourceSize: Qt.size(14, 14)
+                            sourceSize: Qt.size(16, 16)
                             anchors.verticalCenter: parent.verticalCenter
                             playing: resetMouseArea.containsMouse
                         }

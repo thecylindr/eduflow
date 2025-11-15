@@ -430,19 +430,36 @@ ApplicationWindow {
                 // Кнопки действий
                 RowLayout {
                     Layout.alignment: Qt.AlignHCenter
-                    spacing: 16
+                    spacing: 20
 
                     Button {
                         id: saveButton
                         text: isSaving ? "⏳ Сохранение..." : "💾 Сохранить"
-                        implicitWidth: 120
-                        implicitHeight: 36
+                        implicitWidth: 140
+                        implicitHeight: 40
                         enabled: !isSaving && lastNameField.text.trim() !== "" &&
                                 firstNameField.text.trim() !== "" &&
                                 passportSeriesField.text.trim() !== "" &&
                                 passportNumberField.text.trim() !== "" &&
                                 groupComboBox.currentIndex >= 0
-                        font.pixelSize: 13
+                        font.pixelSize: 14
+                        font.bold: true
+
+                        background: Rectangle {
+                            radius: 20
+                            color: saveButton.enabled ? "#27ae60" : "#95a5a6"
+                            border.color: saveButton.enabled ? "#219a52" : "transparent"
+                            border.width: 2
+                        }
+
+                        contentItem: Text {
+                            text: saveButton.text
+                            color: "white"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            font: saveButton.font
+                        }
+
                         KeyNavigation.tab: cancelButton
                         Keys.onReturnPressed: if (enabled && !isSaving) saveButton.clicked()
                         Keys.onEnterPressed: if (enabled && !isSaving) saveButton.clicked()
@@ -469,10 +486,27 @@ ApplicationWindow {
                     Button {
                         id: cancelButton
                         text: "❌ Отмена"
-                        implicitWidth: 120
-                        implicitHeight: 36
+                        implicitWidth: 140
+                        implicitHeight: 40
                         enabled: !isSaving
-                        font.pixelSize: 13
+                        font.pixelSize: 14
+                        font.bold: true
+
+                        background: Rectangle {
+                            radius: 20
+                            color: "#e74c3c"
+                            border.color: "#c0392b"
+                            border.width: 2
+                        }
+
+                        contentItem: Text {
+                            text: cancelButton.text
+                            color: "white"
+                            horizontalAlignment: Text.AlignHCenter
+                            verticalAlignment: Text.AlignVCenter
+                            font: cancelButton.font
+                        }
+
                         KeyNavigation.tab: lastNameField
                         Keys.onReturnPressed: if (enabled) cancelButton.clicked()
                         Keys.onEnterPressed: if (enabled) cancelButton.clicked()

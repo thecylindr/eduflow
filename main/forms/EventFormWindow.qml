@@ -81,6 +81,7 @@ ApplicationWindow {
     function clearForm() {
         portfolioComboBox.currentIndex = -1
         eventTypeField.text = ""
+        categoryField.text = "" // 🔥 ОЧИСТКА полного названия события
         startDateField.text = ""
         endDateField.text = ""
         locationField.text = ""
@@ -307,7 +308,7 @@ ApplicationWindow {
         Rectangle {
             id: whiteForm
             width: 480
-            height: 500
+            height: 560
             anchors {
                 top: titleBar.bottom
                 topMargin: 20
@@ -326,6 +327,9 @@ ApplicationWindow {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     clip: true
+
+                    ScrollBar.vertical.policy: ScrollBar.AlwaysOff
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
 
                     Column {
                         width: parent.width
@@ -374,6 +378,8 @@ ApplicationWindow {
 
                                 KeyNavigation.tab: eventTypeField
                                 Keys.onReturnPressed: navigateToNextField(portfolioComboBox)
+                                Keys.onUpPressed: navigateToPreviousField(portfolioComboBox)
+                                Keys.onDownPressed: navigateToNextField(portfolioComboBox)
 
                                 ToolTip.text: "Выберите портфолио студента для привязки события"
                                 ToolTip.visible: hovered
@@ -424,6 +430,8 @@ ApplicationWindow {
                                 color: "#000000"
                                 KeyNavigation.tab: startDateField
                                 Keys.onReturnPressed: navigateToNextField(eventTypeField)
+                                Keys.onUpPressed: navigateToPreviousField(eventTypeField)
+                                Keys.onDownPressed: navigateToNextField(eventTypeField)
                             }
                         }
 
@@ -455,6 +463,8 @@ ApplicationWindow {
                                 color: "#000000"
                                 KeyNavigation.tab: startDateField
                                 Keys.onReturnPressed: navigateToNextField(categoryField)
+                                Keys.onUpPressed: navigateToPreviousField(categoryField)
+                                Keys.onDownPressed: navigateToNextField(categoryField)
                             }
                         }
 
@@ -500,6 +510,8 @@ ApplicationWindow {
                                         color: "#000000"
                                         KeyNavigation.tab: endDateField
                                         Keys.onReturnPressed: navigateToNextField(startDateField)
+                                        Keys.onUpPressed: navigateToPreviousField(startDateField)
+                                        Keys.onDownPressed: navigateToNextField(startDateField)
                                     }
                                 }
 
@@ -530,6 +542,8 @@ ApplicationWindow {
                                         color: "#000000"
                                         KeyNavigation.tab: locationField
                                         Keys.onReturnPressed: navigateToNextField(endDateField)
+                                        Keys.onUpPressed: navigateToPreviousField(endDateField)
+                                        Keys.onDownPressed: navigateToNextField(endDateField)
                                     }
                                 }
                             }
@@ -563,6 +577,8 @@ ApplicationWindow {
                                 color: "#000000"
                                 KeyNavigation.tab: loreField
                                 Keys.onReturnPressed: navigateToNextField(locationField)
+                                Keys.onUpPressed: navigateToPreviousField(locationField)
+                                Keys.onDownPressed: navigateToNextField(locationField)
                             }
                         }
 
@@ -594,6 +610,8 @@ ApplicationWindow {
                                 color: "#000000"
                                 KeyNavigation.tab: saveButton
                                 Keys.onReturnPressed: navigateToNextField(loreField)
+                                Keys.onUpPressed: navigateToPreviousField(loreField)
+                                Keys.onDownPressed: saveButton.forceActiveFocus()
                             }
                         }
                     }
@@ -601,13 +619,13 @@ ApplicationWindow {
 
                 RowLayout {
                     Layout.alignment: Qt.AlignHCenter
-                    spacing: 15
+                    spacing: 20
 
                     Button {
                         id: saveButton
                         text: isSaving ? "⏳ Сохранение..." : "💾 Сохранить"
-                        implicitWidth: 130
-                        implicitHeight: 36
+                        implicitWidth: 140
+                        implicitHeight: 40
                         enabled: !isSaving &&
                                 portfolioComboBox.currentIndex >= 0 &&
                                 portfolioList.length > 0 &&
@@ -615,11 +633,16 @@ ApplicationWindow {
                                 categoryField.text.trim() !== "" &&
                                 startDateField.text.trim() !== "" &&
                                 endDateField.text.trim() !== ""
-                        font.pixelSize: 13
+                        font.pixelSize: 14
+                        font.bold: true
+
                         background: Rectangle {
-                            radius: 8
-                            color: saveButton.enabled ? "#4CAF50" : "#cccccc"
+                            radius: 20
+                            color: saveButton.enabled ? "#27ae60" : "#95a5a6"
+                            border.color: saveButton.enabled ? "#219a52" : "transparent"
+                            border.width: 2
                         }
+
                         contentItem: Text {
                             text: saveButton.text
                             color: "white"
@@ -627,8 +650,10 @@ ApplicationWindow {
                             verticalAlignment: Text.AlignVCenter
                             font: saveButton.font
                         }
+
                         KeyNavigation.tab: cancelButton
                         Keys.onReturnPressed: if (enabled && !isSaving) saveButton.clicked()
+                        Keys.onUpPressed: loreField.forceActiveFocus()
 
                         onClicked: {
                             if (portfolioComboBox.currentIndex < 0) {
@@ -672,14 +697,19 @@ ApplicationWindow {
                     Button {
                         id: cancelButton
                         text: "❌ Отмена"
-                        implicitWidth: 130
-                        implicitHeight: 36
+                        implicitWidth: 140
+                        implicitHeight: 40
                         enabled: !isSaving
-                        font.pixelSize: 13
+                        font.pixelSize: 14
+                        font.bold: true
+
                         background: Rectangle {
-                            radius: 8
-                            color: "#f44336"
+                            radius: 20
+                            color: "#e74c3c"
+                            border.color: "#c0392b"
+                            border.width: 2
                         }
+
                         contentItem: Text {
                             text: cancelButton.text
                             color: "white"
@@ -687,8 +717,10 @@ ApplicationWindow {
                             verticalAlignment: Text.AlignVCenter
                             font: cancelButton.font
                         }
+
                         KeyNavigation.tab: portfolioComboBox
                         Keys.onReturnPressed: if (enabled) cancelButton.clicked()
+                        Keys.onUpPressed: saveButton.forceActiveFocus()
 
                         onClicked: {
                             cancelled()

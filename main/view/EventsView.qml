@@ -417,6 +417,15 @@ Item {
                 }
             })
 
+            onItemDoubleClicked: function(itemData) {
+                console.log("📅 Двойной клик по событию:", itemData);
+                if (eventFormWindow.item) {
+                    eventFormWindow.openForEdit(itemData);
+                } else {
+                    eventFormWindow.active = true;
+                }
+            }
+
             onItemEditRequested: function(itemData) {
                 if (!itemData) return;
                 console.log("✏️ EventsView: редактирование запрошено для", itemData);

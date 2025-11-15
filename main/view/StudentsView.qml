@@ -329,6 +329,11 @@ Item {
                 studentFormWindow.openForEdit(itemData);
             }
 
+            onItemDoubleClicked: function(itemData) {
+                console.log("🎓 Двойной клик по студенту:", itemData);
+                studentFormWindow.openForEdit(itemData);
+            }
+
             onItemDeleteRequested: function(itemData) {
                 var studentName = (itemData.last_name || "") + " " + (itemData.first_name || "");
                 var studentCode = itemData.studentCode;

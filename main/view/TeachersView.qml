@@ -31,6 +31,20 @@ Item {
                         experience: teacher.experience || 0,
                         specialization: teacher.specialization || ""
                     };
+
+                    // Обрабатываем специализации из массива, если есть
+                    if (teacher.specializations && teacher.specializations.length > 0) {
+                        var specNames = [];
+                        for (var j = 0; j < teacher.specializations.length; j++) {
+                            if (teacher.specializations[j].name) {
+                                specNames.push(teacher.specializations[j].name);
+                            }
+                        }
+                        if (specNames.length > 0) {
+                            processedTeacher.specialization = specNames.join(", ");
+                        }
+                    }
+
                     processedTeachers.push(processedTeacher);
                 }
 
@@ -122,6 +136,33 @@ Item {
             });
         }
     }
+
+    function openFormForAdd() {
+            console.log("➕ Добавить преподавателя - вызов функции openFormForAdd");
+            if (!teacherFormWindow.item) {
+                console.log("🔄 Загрузчик не готов, активируем...");
+                teacherFormWindow.active = true;
+                teacherFormWindow.onLoaded = function() {
+                    console.log("✅ Загрузчик готов, открываем форму для добавления");
+                    teacherFormWindow.item.openForAdd();
+                };
+            } else {
+                console.log("✅ Загрузчик готов, сразу открываем форму");
+                teacherFormWindow.item.openForAdd();
+            }
+        }
+
+        function openFormForEdit(teacherData) {
+            console.log("✏️ Редактирование преподавателя - вызов функции openFormForEdit");
+            if (!teacherFormWindow.item) {
+                teacherFormWindow.active = true;
+                teacherFormWindow.onLoaded = function() {
+                    teacherFormWindow.item.openForEdit(teacherData);
+                };
+            } else {
+                teacherFormWindow.item.openForEdit(teacherData);
+            }
+        }
 
     Component.onCompleted: {
         console.log("🎯 TeachersView создан");
@@ -261,14 +302,12 @@ Item {
                         onClicked: {
                             console.log("➕ Добавить преподавателя - клик");
                             if (!teacherFormWindow.item) {
-                                console.log("❌ TeacherFormWindow не загружен, активируем Loader...");
                                 teacherFormWindow.active = true;
-                                // Ждем загрузки и пробуем снова
                                 teacherFormWindow.onLoaded = function() {
-                                    teacherFormWindow.item.openForAdd();
+                                    openFormForAdd();
                                 };
                             } else {
-                                teacherFormWindow.item.openForAdd();
+                                openFormForAdd();
                             }
                         }
                     }
@@ -314,15 +353,18 @@ Item {
             sortRoles: ["lastName", "specialization", "experience", "email"]
 
             onItemEditRequested: function(itemData) {
-                console.log("✏️ TeachersView: редактирование запрошено для", itemData);
-                if (!teacherFormWindow.item) {
-                    console.log("❌ TeacherFormWindow не загружен, активируем Loader...");
+                openFormForEdit(itemData);
+            }
+
+            onItemDoubleClicked: function(itemData) {
+                console.log("👨‍🏫 Двойной клик по преподавателю:", itemData);
+                if (teacherFormWindow.item) {
+                    teacherFormWindow.openForEdit(itemData);
+                } else {
                     teacherFormWindow.active = true;
                     teacherFormWindow.onLoaded = function() {
                         teacherFormWindow.item.openForEdit(itemData);
                     };
-                } else {
-                    teacherFormWindow.item.openForEdit(itemData);
                 }
             }
 

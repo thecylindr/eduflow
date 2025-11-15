@@ -14,19 +14,17 @@ Item {
     property string userLogin: ""
 
     property bool loading: false
+    property bool firstLoad: true // Флаг первой загрузки
 
     function refreshDashboard() {
-        if (loading) return;
-
-        console.log("🔄 Обновление данных дашборда...")
         loading = true
 
         mainApi.getDashboard(function(response) {
             loading = false
+            firstLoad = false
 
             if (response.success) {
                 var data = response.data
-                console.log("✅ Данные дашборда получены:", JSON.stringify(data))
 
                 // ИСПРАВЛЕНИЕ: Правильно извлекаем данные из вложенной структуры
                 var dashboardData = data.data || {}
@@ -41,24 +39,13 @@ Item {
                 eventsCount = stats.events || 0
                 userLogin = user.login || ""
 
-                console.log("📊 Обновленные счетчики:",
-                    "Преподаватели:", teachersCount,
-                    "Студенты:", studentsCount,
-                    "Группы:", groupsCount,
-                    "Портфолио:", portfoliosCount,
-                    "События:", eventsCount,
-                    "Пользователь:", userLogin)
-
             } else {
-                console.log("❌ Ошибка загрузки дашборда:", response.error)
-                // Fallback - используем старые данные если доступны
                 refreshStatsFallback()
             }
         })
     }
 
     function refreshStatsFallback() {
-        console.log("🔄 Резервное обновление статистики...")
         teachersCount = mainWindow.teachers ? mainWindow.teachers.length : 0
         studentsCount = mainWindow.students ? mainWindow.students.length : 0
         groupsCount = mainWindow.groups ? mainWindow.groups.length : 0
@@ -67,8 +54,23 @@ Item {
         userLogin = "Неизвестный"
     }
 
+
+    onVisibleChanged: {
+        if (visible) {
+            refreshTimer.start()
+        }
+    }
+
+    Timer {
+        id: refreshTimer
+        interval: 100
+        onTriggered: {
+            refreshDashboard()
+        }
+    }
+
     Component.onCompleted: {
-        refreshDashboard()
+        refreshTimer.start()
     }
 
     Flickable {
@@ -132,7 +134,8 @@ Item {
                 // ДОБАВЛЕНО: Отображение логина пользователя
                 Text {
                     text: {
-                        if (loading) return "Загрузка данных..."
+                        if (loading && firstLoad) return "Загрузка данных..."
+                        if (loading) return "Обновление данных..."
                         if (userLogin) return "Вы вошли как: " + userLogin + " | Обзор системы и ключевые метрики"
                         return "Обзор системы и ключевые метрики"
                     }
@@ -198,10 +201,10 @@ Item {
                             spacing: 2
 
                             Text {
-                                text: loading ? "..." : teachersCount
+                                text: loading && firstLoad ? "..." : teachersCount
                                 font.pixelSize: 20
                                 font.bold: true
-                                color: loading ? "#bdc3c7" : "#2c3e50"
+                                color: (loading && firstLoad) ? "#bdc3c7" : "#2c3e50"
                             }
 
                             Text {
@@ -262,10 +265,10 @@ Item {
                             spacing: 2
 
                             Text {
-                                text: loading ? "..." : studentsCount
+                                text: loading && firstLoad ? "..." : studentsCount
                                 font.pixelSize: 20
                                 font.bold: true
-                                color: loading ? "#bdc3c7" : "#2c3e50"
+                                color: (loading && firstLoad) ? "#bdc3c7" : "#2c3e50"
                             }
 
                             Text {
@@ -326,10 +329,10 @@ Item {
                             spacing: 2
 
                             Text {
-                                text: loading ? "..." : groupsCount
+                                text: loading && firstLoad ? "..." : groupsCount
                                 font.pixelSize: 20
                                 font.bold: true
-                                color: loading ? "#bdc3c7" : "#2c3e50"
+                                color: (loading && firstLoad) ? "#bdc3c7" : "#2c3e50"
                             }
 
                             Text {
@@ -390,10 +393,10 @@ Item {
                             spacing: 2
 
                             Text {
-                                text: loading ? "..." : portfoliosCount
+                                text: loading && firstLoad ? "..." : portfoliosCount
                                 font.pixelSize: 20
                                 font.bold: true
-                                color: loading ? "#bdc3c7" : "#2c3e50"
+                                color: (loading && firstLoad) ? "#bdc3c7" : "#2c3e50"
                             }
 
                             Text {
@@ -454,10 +457,10 @@ Item {
                             spacing: 2
 
                             Text {
-                                text: loading ? "..." : eventsCount
+                                text: loading && firstLoad ? "..." : eventsCount
                                 font.pixelSize: 20
                                 font.bold: true
-                                color: loading ? "#bdc3c7" : "#2c3e50"
+                                color: (loading && firstLoad) ? "#bdc3c7" : "#2c3e50"
                             }
 
                             Text {
@@ -508,7 +511,7 @@ Item {
                             Loader {
                                 id: settingsIconLoader
                                 anchors.centerIn: parent
-                                sourceComponent: settingsMouseArea.containsMouse ? animatedSettingsIcon : staticSettingsIcon
+                                sourceComponent: staticSettingsIcon
                             }
 
                             Component {
@@ -517,17 +520,6 @@ Item {
                                     source: "qrc:/icons/settings.png"
                                     sourceSize: Qt.size(26, 26)
                                     fillMode: Image.PreserveAspectFit
-                                }
-                            }
-
-                            Component {
-                                id: animatedSettingsIcon
-                                AnimatedImage {
-                                    source: "qrc:/icons/settings.gif"
-                                    sourceSize: Qt.size(26, 26)
-                                    fillMode: Image.PreserveAspectFit
-                                    playing: true
-                                    speed: 1.0
                                 }
                             }
                         }
@@ -607,11 +599,9 @@ Item {
 
                                 Text {
                                     text: {
-                                        if (loading) {
-                                            return "Обновление данных...";
-                                        } else {
-                                            return "Все службы работают стабильно";
-                                        }
+                                        if (loading && firstLoad) return "Загрузка данных..."
+                                        if (loading) return "Обновление данных..."
+                                        return "Все службы работают стабильно"
                                     }
                                     font.pixelSize: 12
                                     color: "#7f8c8d"
@@ -679,6 +669,8 @@ Item {
         interval: 90000
         running: true
         repeat: true
-        onTriggered: refreshDashboard()
+        onTriggered: {
+            refreshDashboard()
+        }
     }
 }

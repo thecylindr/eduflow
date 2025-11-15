@@ -78,7 +78,7 @@ Rectangle {
                 spacing: 4
                 AnimatedImage {
                     source: loginField.activeFocus ? "qrc:/icons/profile.gif" : "qrc:/icons/user.png"
-                    sourceSize: Qt.size(14, 14)
+                    sourceSize: Qt.size(16, 16)
                     anchors.verticalCenter: parent.verticalCenter
                     playing: loginField.activeFocus
                     speed: 0.7
@@ -143,7 +143,7 @@ Rectangle {
                 spacing: 4
                 AnimatedImage {
                     source: passwordField.activeFocus ? "qrc:/icons/security.gif" : "qrc:/icons/security.png"
-                    sourceSize: Qt.size(14, 14)
+                    sourceSize: Qt.size(16, 16)
                     anchors.verticalCenter: parent.verticalCenter
                     playing: passwordField.activeFocus
                     speed: 0.7
@@ -217,7 +217,7 @@ Rectangle {
                     Image {
                         anchors.centerIn: parent
                         source: showPasswordButton.checked ? "qrc:/icons/eye.png" : "qrc:/icons/eye-off.png"
-                        sourceSize: Qt.size(14, 14)
+                        sourceSize: Qt.size(16, 16)
                     }
 
                     MouseArea {

@@ -91,7 +91,7 @@ Item {
             if (response && response.success) {
                 showMessage("✅ " + ((response.message || response.data && response.data.message) || "Группа успешно добавлена"), "success");
                 if (groupFormWindow.item) {
-                    groupFormWindow.close();
+                    groupFormWindow.item.closeWindow();
                 }
                 refreshGroups();
             } else {
@@ -123,7 +123,7 @@ Item {
             if (response && response.success) {
                 showMessage("✅ " + ((response.message || response.data && response.data.message) || "Группа успешно обновлена"), "success");
                 if (groupFormWindow.item) {
-                    groupFormWindow.close();
+                    groupFormWindow.item.closeWindow();
                 }
                 refreshGroups();
             } else {
@@ -162,7 +162,6 @@ Item {
     }
 
     Component.onCompleted: {
-        console.log("GroupsView: Component.onCompleted");
         refreshTeachers();
     }
 
@@ -292,13 +291,7 @@ Item {
                         id: addMouseArea
                         anchors.fill: parent
                         hoverEnabled: true
-                        onClicked: {
-                            if (groupFormWindow.item) {
-                                groupFormWindow.openForAdd();
-                            } else {
-                                groupFormWindow.active = true;
-                            }
-                        }
+                        onClicked: openForAdd()
                     }
                 }
             }
@@ -343,12 +336,7 @@ Item {
 
             onItemEditRequested: function(itemData) {
                 if (!itemData) return;
-                console.log("✏️ GroupsView: редактирование запрошено для", itemData);
-                if (groupFormWindow.item) {
-                    groupFormWindow.openForEdit(itemData);
-                } else {
-                    groupFormWindow.active = true;
-                }
+                openForEdit(itemData);
             }
 
             onItemDeleteRequested: function(itemData) {
@@ -356,6 +344,12 @@ Item {
                 var groupId = itemData.groupId;
                 var groupName = itemData.name || "Без названия";
                 deleteGroup(groupId, groupName);
+            }
+
+            onItemDoubleClicked: function(itemData) {
+                if (!itemData) return;
+                console.log("👥 Двойной клик по группе:", itemData.name);
+                openGroupView(itemData);
             }
         }
     }
@@ -368,6 +362,8 @@ Item {
 
         onLoaded: {
             if (item) {
+                item.teachers = groupsView.teachers || [];
+
                 item.saved.connect(function(groupData) {
                     if (!groupData) return;
 
@@ -386,29 +382,61 @@ Item {
                 });
             }
         }
+    }
 
-        function openForAdd() {
-            if (groupFormWindow.item) {
+    // Загрузчик окна просмотра группы
+    Loader {
+        id: groupViewWindow
+        source: "../forms/GroupViewFormWindow.qml"
+        active: true
+
+        onLoaded: {
+            if (item) {
+                item.closed.connect(function() {
+                    if (item) {
+                        item.closeWindow();
+                    }
+                });
+            }
+        }
+    }
+
+    function openGroupView(groupData) {
+        console.log("👥 Открытие окна просмотра группы:", groupData);
+
+        if (groupViewWindow.status === Loader.Ready) {
+            groupViewWindow.item.openForGroup(groupData);
+        } else {
+            groupViewWindow.active = true;
+            groupViewWindow.loaded.connect(function() {
+                groupViewWindow.item.openForGroup(groupData);
+            });
+        }
+    }
+
+    function openForAdd() {
+        if (groupFormWindow.status === Loader.Ready) {
+            groupFormWindow.item.teachers = groupsView.teachers || [];
+            groupFormWindow.item.openForAdd();
+        } else {
+            groupFormWindow.active = true;
+            groupFormWindow.loaded.connect(function() {
                 groupFormWindow.item.teachers = groupsView.teachers || [];
                 groupFormWindow.item.openForAdd();
-            } else {
-                groupFormWindow.active = true;
-            }
+            });
         }
+    }
 
-        function openForEdit(groupData) {
-            if (groupFormWindow.item) {
+    function openForEdit(groupData) {
+        if (groupFormWindow.status === Loader.Ready) {
+            groupFormWindow.item.teachers = groupsView.teachers || [];
+            groupFormWindow.item.openForEdit(groupData);
+        } else {
+            groupFormWindow.active = true;
+            groupFormWindow.loaded.connect(function() {
                 groupFormWindow.item.teachers = groupsView.teachers || [];
                 groupFormWindow.item.openForEdit(groupData);
-            } else {
-                groupFormWindow.active = true;
-            }
-        }
-
-        function close() {
-            if (groupFormWindow.item) {
-                groupFormWindow.item.closeWindow();
-            }
+            });
         }
     }
 }
