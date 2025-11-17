@@ -47,11 +47,11 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("settingsManager", &settingsManager);
 
     QObject::connect(
-            &engine,
-            &QQmlApplicationEngine::objectCreationFailed,
-            &app,
-            [](const QUrl &) { QCoreApplication::exit(-1); },
-            Qt::QueuedConnection);
+        &engine,
+        &QQmlApplicationEngine::objectCreationFailed,
+        &app,
+        [](const QUrl &) { QCoreApplication::exit(-1); },
+        Qt::QueuedConnection);
 
     // Загружаем SplashScreen
     engine.loadFromModule("testing", "SplashScreen");

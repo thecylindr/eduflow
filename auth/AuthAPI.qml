@@ -19,32 +19,23 @@ QtObject {
     function initialize(token, url) {
         authToken = token && token.length > 0 ? token : settingsManager.authToken || "";
 
-        // Выбор на что шлём запрос
-        if (Qt.platform.os === "windows") {
-            if (url && url.length > 0) {
-                baseUrl = url;
+        // Если URL не передан, определяем его на основе текущих настроек
+        if (!url || url.length === 0) {
+            if (settingsManager.useLocalServer) {
+                baseUrl = settingsManager.serverAddress;
             } else {
-                if (settingsManager.useLocalServer) {
-                    var serverAddress = settingsManager.serverAddress;
-                    if (serverAddress.includes("localhost")) {
-                        baseUrl = serverAddress.replace("localhost", "127.0.0.1");
-                    } else {
-                        baseUrl = serverAddress;
-                    }
-                } else {
-                    baseUrl = remoteApiBaseUrl + ":" + remotePort;
-                }
+                baseUrl = remoteApiBaseUrl + ":" + remotePort;
             }
         } else {
-            // Обычная логика для других ОС
-            if (url && url.length > 0) {
-                baseUrl = url;
-            } else {
-                baseUrl = settingsManager.useLocalServer ?
-                    settingsManager.serverAddress :
-                    (remoteApiBaseUrl + ":" + remotePort);
-            }
+            baseUrl = url;
         }
+
+        // Корректировка для Windows
+        if (Qt.platform.os === "windows" && baseUrl.includes("localhost")) {
+            baseUrl = baseUrl.replace("localhost", "127.0.0.1");
+        }
+
+        console.log("🔧 AuthAPI инициализирован с baseUrl:", baseUrl);
     }
 
     function testConnection(callback) {
@@ -177,10 +168,13 @@ QtObject {
     function sendRequest(method, endpoint, data, callback) {
         var xhr = new XMLHttpRequest();
 
+        // КРОССПЛАТФОРМЕННЫЕ ТАЙМАУТЫ
         if (Qt.platform.os === "windows") {
-            xhr.timeout = 5000;
+            xhr.timeout = 5000 // 5 секунд для windows
+        } else if (Qt.platform.os === "android") {
+            xhr.timeout = 7500 // 7.5 секунд для android
         } else {
-            xhr.timeout = 3500;
+            xhr.timeout = 3500; // 3.5 секунд для других ОС
         }
 
         var normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
@@ -246,12 +240,9 @@ QtObject {
         };
 
         xhr.onerror = function() {
-            console.log("Ошибка сети для", url);
-            console.log("   Таймаут:", xhr.timeout);
-            console.log("   Состояние:", xhr.readyState);
             if (callback) callback({
                 success: false,
-                error: "Ошибка сети",
+                error: "Ошибка сети, возможно у вас включён VPN, неправильно введенные параметры подключения к серверу, или плохая связь.",
                 status: 0
             });
         };

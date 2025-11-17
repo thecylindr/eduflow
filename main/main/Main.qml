@@ -189,9 +189,11 @@ Window {
     Rectangle {
         id: windowContainer
         anchors {
-            fill: parent
-            topMargin: mainWindow.androidTopMargin
-            bottomMargin: mainWindow.androidBottomMargin
+            top: parent.top
+            bottom: parent.bottom
+            left: parent.left
+            right: parent.right
+            topMargin: isMobile ? 15 + androidTopMargin : 0
         }
         radius: 21
         color: "#f0f0f0"
@@ -206,11 +208,16 @@ Window {
             radius: 20
         }
 
-        // Полигоны (8-угольники на фоне)
-        Common.PolygonBackground {
-            id: polygonRepeater
-            anchors.fill: parent
-            visible: parent !== null && !isMobile
+        Common.BottomBlur {
+            id: bottomBlur
+            anchors {
+                left: parent.left
+                right: parent.right
+                bottom: parent.bottom
+            }
+            blurHeight: 48
+            blurOpacity: 0.8
+            z: 2
             isMobile: mainWindow.isMobile
         }
 
@@ -221,9 +228,7 @@ Window {
                 top: parent.top
                 left: parent.left
                 right: parent.right
-                topMargin: 10 + mainWindow.androidTopMargin
-                leftMargin: 10
-                rightMargin: 10
+                margins: 10
             }
             isWindowMaximized: mainWindow.isWindowMaximized
             currentView: getCurrentViewTitle()
@@ -235,14 +240,13 @@ Window {
             onClose: Qt.quit()
         }
 
-        // Мобильный заголовок - опускаем ниже
+        // Мобильный заголовок
         Common.TitleBarMobile {
             id: mobileHeader
             anchors {
                 top: parent.top
                 left: parent.left
                 right: parent.right
-                topMargin: mainWindow.androidTopMargin
                 leftMargin: 10
                 rightMargin: 10
             }
@@ -260,7 +264,7 @@ Window {
                 left: parent.left
                 right: parent.right
                 margins: 10
-                topMargin: isMobile ? 5 : 0
+                topMargin: isMobile ? 5 : 10
             }
         }
 
@@ -268,15 +272,16 @@ Window {
             id: mainContent
             anchors {
                 top: messageContainer.bottom
-                bottom: parent.bottom
+                bottom: isMobile ? bottomBlur.top : parent.bottom
                 left: parent.left
                 right: parent.right
                 margins: 10
                 topMargin: 5
+                bottomMargin: isMobile ? 5 : 10
             }
             color: "transparent"
 
-            // Адаптивная боковая панель для десктопа - ТЕПЕРЬ ВИДИМА
+            // Адаптивная боковая панель для десктопа
             AdaptiveSideBar {
                 id: sideBar
                 anchors { top: parent.top; bottom: parent.bottom; left: parent.left }
@@ -284,7 +289,7 @@ Window {
                 visible: !isMobile
             }
 
-            // Мобильное меню - опускаем еще ниже
+            // Мобильное меню
             AdaptiveSideBarMobile {
                 id: mobileMenu
                 anchors {

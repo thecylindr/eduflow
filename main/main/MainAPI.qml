@@ -1198,9 +1198,11 @@ QtObject {
 
         // КРОССПЛАТФОРМЕННЫЕ ТАЙМАУТЫ
         if (Qt.platform.os === "windows") {
-            xhr.timeout = 30000; // 30 секунд для Windows
+            xhr.timeout = 5000 // 5 секунд для windows
+        } else if (Qt.platform.os === "android") {
+            xhr.timeout = 7500 // 7.5 секунд для android
         } else {
-            xhr.timeout = 15000; // 15 секунд для других ОС
+            xhr.timeout = 3500; // 3.5 секунд для других ОС
         }
 
         var normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
@@ -1301,17 +1303,7 @@ QtObject {
         };
 
         xhr.onerror = function() {
-            console.log("❌ Ошибка сети для", url);
-            var networkErrorMsg = "Ошибка сети. ";
-
-            if (Qt.platform.os === "windows") {
-                networkErrorMsg += "На Windows проверьте:\n";
-                networkErrorMsg += "• Запущен ли сервер\n";
-                networkErrorMsg += "• Настройки сети\n";
-                networkErrorMsg += "• Попробуйте 127.0.0.1 вместо localhost";
-            } else {
-                networkErrorMsg += "Проверьте подключение к интернету.";
-            }
+            var networkErrorMsg = "Ошибка сети, возможно у вас включён VPN, неправильно введенные параметры подключения к серверу, или плохая связь.";
 
             if (callback) callback({
                 success: false,

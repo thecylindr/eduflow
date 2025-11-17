@@ -17,9 +17,10 @@ Window {
     minimumWidth: 420
 
     property bool isWindowMaximized: false
-    property int baseHeight: 500
+    property int baseNormalWidth: 420
+    property int baseNormalHeight: 500
     property int localServerExtraHeight: 100
-    property int errorExtraHeight: 0
+    property int registrationExtraHeight: 150
 
     property string _errorMessage: ""
     property bool _showingError: false
@@ -34,26 +35,15 @@ Window {
     property var _loginResult: null
 
     property bool _showingRegistration: false
-    property int registrationExtraHeight: 150
-
     property string authToken: ""
 
     // Фиксированные приращения для масштабирования
     property int widthIncrement: 90
     property int heightIncrement: 120
 
-    // Базовые размеры для разных состояний
-    property int baseNormalWidth: 420
-    property int baseNormalHeight: 500
-    property int baseScaledWidth: baseNormalWidth + widthIncrement
-    property int baseScaledHeight: baseNormalHeight + heightIncrement
-
     // Определение мобильного устройства по ОС
     property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
-                           Qt.platform.os === "tvos" || Qt.platform.os === "wasm" ||
-                           Screen.width < 768 || Screen.height < 768
-
-    // Дополнительная переменная для полного отключения изменения размеров
+                           Qt.platform.os === "tvos" || Qt.platform.os === "wasm"
     property bool disableResize: isMobile
 
     // Отступы для Android системных кнопок
@@ -62,14 +52,21 @@ Window {
 
     signal loginSuccessful(string token, var userData)
 
-    // Обновленный AuthAPI
+    // Оптимизированные Behavior анимации для android & linux & ios
+    Behavior on height {
+        enabled: Qt.platform.os !== "windows"
+        NumberAnimation {
+            duration: 250
+            easing.type: Easing.Linear
+        }
+    }
+
     AuthAPI {
         id: authAPI
         remoteApiBaseUrl: authWindow.remoteApiBaseUrl
         remotePort: authWindow.remotePort
     }
 
-    // Загрузчик главной формы
     Loader {
         id: mainWindowLoader
         active: false
@@ -79,19 +76,12 @@ Window {
         onLoaded: if (item) item.show()
     }
 
-    Behavior on width {
-        enabled: !disableResize // Отключаем анимацию на мобильных
-        NumberAnimation {
-            duration: 300;
-            easing.type: Easing.InOutQuad
-        }
-    }
-
-    Behavior on height {
-        enabled: !disableResize // Отключаем анимацию на мобильных
-        NumberAnimation {
-            duration: 300;
-            easing.type: Easing.InOutQuad
+    Timer {
+        id: tokenCheckTimer
+        interval: 100
+        onTriggered: {
+            var savedToken = settingsManager.authToken || "";
+            checkSavedToken(savedToken);
         }
     }
 
@@ -110,44 +100,97 @@ Window {
         updateWindowHeight();
         windowContainer.forceActiveFocus();
 
-        // Сначала проверяем доступность сервера
-        console.log("🧪 Проверка доступности сервера...");
-        var testXhr = new XMLHttpRequest();
-        testXhr.open("GET", settingsManager.serverAddress + "/api/status", true);
-        testXhr.onreadystatechange = function() {
-            if (testXhr.readyState === XMLHttpRequest.DONE) {
-                console.log("🧪 Статус сервера:", testXhr.status, testXhr.responseText);
+        // Инициализируем AuthAPI с текущими настройками
+        updateAuthAPI();
 
-                // После проверки сервера инициализируем AuthAPI
-                var baseUrl = settingsManager.useLocalServer ?
-                    settingsManager.serverAddress :
-                    (remoteApiBaseUrl + ":" + remotePort);
+        // Проверка сервера через AuthAPI
+        authAPI.testConnection(function(success) {
+            console.log("🧪 Статус сервера:", success ? "доступен" : "недоступен");
 
-                authAPI.initialize("", baseUrl);
-
-                // Затем проверяем токен
-                var savedToken = settingsManager.authToken || "";
-                if (savedToken && savedToken.length > 0) {
-                    console.log("🔐 Найден сохраненный токен, проверяем...");
-                    console.log("   Токен (первые 10):", savedToken.substring(0, 10) + "...");
-                    // Задержка для гарантии инициализации
-                    tokenCheckTimer.start();
-                } else {
-                    console.log("🔐 Сохраненный токен не найден, показываем форму входа");
-                }
+            var savedToken = settingsManager.authToken || "";
+            if (savedToken && savedToken.length > 0) {
+                console.log("🔐 Найден сохраненный токен, проверяем...");
+                tokenCheckTimer.start();
             }
-        };
-        testXhr.send();
+        });
     }
 
-    // Таймер для отложенной проверки токена
-    Timer {
-        id: tokenCheckTimer
-        interval: 100
-        onTriggered: {
-            var savedToken = settingsManager.authToken || "";
-            checkSavedToken(savedToken);
+    // Обработчик кнопки "Назад" для Android
+    onClosing: (close) => {
+        if (isMobile) {
+            close.accepted = false
+            handleBackButton()
         }
+    }
+
+
+    // Компонент для диалога выхода
+    Component {
+        id: exitDialogComponent
+        Common.MobileCloseApp {
+            onConfirmed: Qt.exit(0)
+            onCancelled: close()
+            Component.onCompleted: openDialog()
+        }
+    }
+
+    function toggleMaximize() {
+        // На мобильных устройствах полностью отключаем масштабирование
+        if (disableResize) {
+            return;
+        }
+
+        if (isWindowMaximized) {
+            // Возвращаем к исходному размеру с анимацией
+            authWindow.width = baseNormalWidth;
+            authWindow.height = calculateBaseHeight();
+            isWindowMaximized = false;
+        } else {
+            // Увеличиваем на фиксированные значения с анимацией
+            var targetWidth = Math.min(baseNormalWidth + widthIncrement, maximumWidth);
+            var baseHeightValue = calculateBaseHeight();
+            var targetHeight = Math.min(baseHeightValue + heightIncrement, maximumHeight);
+
+            authWindow.width = targetWidth;
+            authWindow.height = targetHeight;
+            isWindowMaximized = true;
+        }
+    }
+
+    function showMinimized() {
+        authWindow.showMinimized()
+    }
+
+    // Функция для обновления высоты окна с анимацией
+    function updateWindowHeight() {
+        // На мобильных устройствах игнорируем изменение высоты
+        if (disableResize) return;
+
+        if (!isWindowMaximized) {
+            authWindow.height = calculateBaseHeight();
+        } else {
+            var baseHeightValue = calculateBaseHeight();
+            authWindow.height = Math.min(maximumHeight, baseHeightValue + heightIncrement);
+        }
+    }
+
+    // Расчет базовой высоты
+    function calculateBaseHeight() {
+        var targetHeight = baseNormalHeight;
+
+        if (settingsManager.useLocalServer && !_showingRegistration) {
+            targetHeight += localServerExtraHeight;
+        }
+
+        if (_showingError) {
+            targetHeight += 60;
+        }
+
+        if (_showingRegistration) {
+            targetHeight += registrationExtraHeight;
+        }
+
+        return Math.max(minimumHeight, Math.min(maximumHeight, targetHeight));
     }
 
     function saveServerConfig(serverAddress) {
@@ -171,51 +214,26 @@ Window {
     }
 
     function checkSavedToken(token) {
-        console.log("🔐 Проверка сохраненного токена...");
-        console.log("   Длина токена:", token.length);
-        console.log("   Токен (первые 20):", token.substring(0, 20) + "...");
-
-        // Защита от множественных вызовов
-        if (_isLoading) {
-            console.log("⚠️ Проверка токена уже выполняется, пропускаем...");
-            return;
-        }
+        if (_isLoading) return;
 
         _isLoading = true;
         showLoading();
 
-        // ОБНОВЛЯЕМ ТОКЕН В AuthAPI ПЕРЕД ПРОВЕРКОЙ
         authAPI.authToken = token;
 
         authAPI.validateToken(function(result) {
             _isLoading = false;
             hideLoading();
 
-            console.log("🔐 Результат проверки токена:", JSON.stringify(result, null, 2));
-
             if (result.success && result.valid) {
-                console.log("✅ Токен валиден, автоматический вход");
                 authToken = token;
                 settingsManager.authToken = token;
-
-                // ЗАПУСКАЕМ ГЛАВНОЕ ОКНО И СРАЗУ ЗАКРЫВАЕМ АВТОРИЗАЦИЮ
                 mainWindowLoader.active = true;
                 authWindow.close();
             } else {
-                console.log("⚠️ Токен невалиден, показываем форму авторизации");
-                console.log("   Причина:", result.message || result.error);
-
-                // ОЧИЩАЕМ НЕВАЛИДНЫЙ ТОКЕН
                 settingsManager.authToken = "";
                 authToken = "";
-
-                if (result.success === false || result.valid === false) {
-                    showError("Ваша сессия истекла. Пожалуйста, войдите снова.");
-                } else {
-                    showError("Проблема с подключением: " + (result.message || result.error));
-                }
-
-                // Показываем форму входа
+                showError("Ваша сессия истекла. Пожалуйста, войдите снова.");
                 showLoginForm();
             }
         });
@@ -224,139 +242,19 @@ Window {
     function showRegistrationForm() {
         _showingRegistration = true;
         updateWindowHeight();
-        // Даем фокус форме регистрации
-        if (registrationForm) {
-            registrationForm.focusUsername();
-        }
-        windowContainer.forceActiveFocus(); // Возвращаем фокус окну
+        windowContainer.forceActiveFocus();
     }
 
     function showLoginForm() {
         _showingRegistration = false;
         updateWindowHeight();
-        // Даем фокус форме входа
-        if (loginForm) {
-            loginForm.focusLogin();
-        }
-        windowContainer.forceActiveFocus(); // Возвращаем фокус окну
-    }
-
-    function calculateBaseHeight() {
-        var targetHeight = baseNormalHeight;
-
-        if (settingsManager.useLocalServer && !_showingRegistration) {
-            targetHeight += localServerExtraHeight;
-        }
-
-        if (_showingError) {
-            targetHeight += 60;
-        }
-
-        if (_showingRegistration) {
-            targetHeight += registrationExtraHeight;
-        }
-
-        return Math.max(minimumHeight, Math.min(maximumHeight, targetHeight));
-    }
-
-    function updateWindowHeight() {
-        // На мобильных устройствах игнорируем изменение высоты
-        if (disableResize) return;
-
-        if (!isWindowMaximized) {
-            authWindow.height = calculateBaseHeight();
-        } else {
-            // В масштабированном режиме учитываем базовую высоту + приращение
-            var baseHeightValue = calculateBaseHeight();
-            authWindow.height = Math.min(maximumHeight, baseHeightValue + heightIncrement);
-        }
-    }
-
-    function toggleMaximize() {
-        // На мобильных устройствах полностью отключаем масштабирование
-        if (disableResize) {
-            return;
-        }
-
-        if (isWindowMaximized) {
-            // Возвращаем к исходному размеру с учетом текущего состояния
-            authWindow.width = baseNormalWidth;
-            authWindow.height = calculateBaseHeight();
-            isWindowMaximized = false;
-        } else {
-            // Увеличиваем на фиксированные значения с учетом текущего состояния
-            var targetWidth = Math.min(baseNormalWidth + widthIncrement, maximumWidth);
-            var baseHeightValue = calculateBaseHeight();
-            var targetHeight = Math.min(baseHeightValue + heightIncrement, maximumHeight);
-
-            authWindow.width = targetWidth;
-            authWindow.height = targetHeight;
-            isWindowMaximized = true;
-        }
-    }
-
-    // Сбрасываем флаг масштабирования при ручном изменении размера
-    onWidthChanged: {
-        // На мобильных устройствах игнорируем изменение размера
-        if (disableResize) return;
-
-        if (!isWindowMaximized) return;
-
-        var expectedWidth = baseNormalWidth + widthIncrement;
-        if (Math.abs(width - expectedWidth) > 5) {
-            isWindowMaximized = false;
-        }
-    }
-
-    onHeightChanged: {
-        // На мобильных устройствах игнорируем изменение размера
-        if (disableResize) return;
-
-        if (!isWindowMaximized) return;
-
-        var expectedHeight = calculateBaseHeight() + heightIncrement;
-        if (Math.abs(height - expectedHeight) > 5) {
-            isWindowMaximized = false;
-        }
-    }
-
-    Timer {
-        id: loadingTimer
-        interval: 1
-        running: false
-        repeat: false
-        onTriggered: {
-            hideLoading();
-            _isLoading = false;
-            if (_loginResult) {
-                if (_loginResult.success) {
-                    showSuccess(_loginResult.message || "Вход выполнен успешно");
-
-                    if (_loginResult.token) {
-                        authToken = _loginResult.token;
-                        settingsManager.authToken = _loginResult.token;
-                        // ОБНОВЛЯЕМ ТОКЕН В API
-                        authAPI.authToken = _loginResult.token;
-                    }
-
-                    mainWindowLoader.active = true;
-                    authWindow.close();
-                } else {
-                    // ИСПОЛЬЗУЕМ error ЕСЛИ message ОТСУТСТВУЕТ
-                    var errorMessage = _loginResult.error || _loginResult.message || "Ошибка входа";
-                    showError(errorMessage);
-                    console.log("❌ Показана ошибка входа:", errorMessage);
-                }
-                _loginResult = null;
-            }
-        }
+        windowContainer.forceActiveFocus();
     }
 
     function attemptRegistration() {
         if (!isRegistrationFormValid() || _isLoading) return;
 
         _isLoading = true;
-        var startTime = Date.now();
         showLoading();
 
         try {
@@ -372,9 +270,6 @@ Window {
             };
 
             authAPI.sendRegistrationRequest(userData, function(result) {
-                var elapsed = Date.now() - startTime;
-                var remaining = Math.max(_minLoadingTime - elapsed, 0);
-                registrationResultTimer.interval = remaining;
                 registrationResultTimer.result = result;
                 registrationResultTimer.start();
             });
@@ -392,18 +287,9 @@ Window {
             hideLoading();
             _isLoading = false;
             if (result.success) {
-                // УБРАНО: showSuccess(result.message);
-
-                // Сохраняем email перед очисткой формы
                 var registeredEmail = registrationForm.emailField.text;
-
-                // Переключаемся на форму входа
                 showLoginForm();
-
-                // Заполняем поле логина в форме авторизации
                 setLoginEmail(registeredEmail);
-
-                // Очищаем все поля формы регистрации
                 registrationForm.clearAllFields();
             } else {
                 showError(result.message || result.error);
@@ -414,7 +300,6 @@ Window {
     function setLoginEmail(email) {
         if (loginForm && loginForm.loginField && email) {
             loginForm.loginField.text = email;
-            loginForm.loginField.cursorPosition = email.length;
         }
     }
 
@@ -430,7 +315,6 @@ Window {
     function attemptLogin() {
         if (!isFormValid() || _isLoading) return;
 
-        // Валидация полей
         var login = loginForm.loginField.text.trim();
         var password = loginForm.passwordField.text;
 
@@ -439,24 +323,17 @@ Window {
             return;
         }
 
-        var startTime = Date.now();
         showLoading();
 
         try {
             authAPI.sendLoginRequest(login, password, function(result) {
-                var elapsed = Date.now() - startTime;
-                var remaining = Math.max(_minLoadingTime - elapsed, 0);
-
                 _isLoading = true;
                 _loginResult = result;
-                loadingTimer.interval = remaining;
                 loadingTimer.start();
 
                 if (result.success && result.token) {
                     authToken = result.token;
                     settingsManager.authToken = result.token;
-                    console.log("🔐 Токен сохранен:", result.token.substring(0, 20) + "...");
-
                     if (mainWindowLoader.item) {
                         mainWindowLoader.item.initializeProfile(result.token, authAPI.baseUrl);
                     }
@@ -469,67 +346,63 @@ Window {
         }
     }
 
+    function updateAuthAPI() {
+        var baseUrl = settingsManager.useLocalServer ?
+            settingsManager.serverAddress :
+            (remoteApiBaseUrl + ":" + remotePort);
+
+        authAPI.initialize(authAPI.authToken, baseUrl);
+    }
+
     function showError(message) {
-        try {
-            _successMessage = "";
-            _showingSuccess = false;
-            _errorMessage = message;
-            _showingError = message !== "";
+        _successMessage = "";
+        _showingSuccess = false;
+        _errorMessage = message;
+        _showingError = message !== "";
 
-            if (_showingError) {
-                errorExtraHeight = 60;
-                errorAutoHideTimer.restart();
-            } else {
-                errorExtraHeight = 0;
-            }
-
+        if (_showingError) {
+            errorAutoHideTimer.restart();
             updateWindowHeight();
-        } catch (error) {}
+        } else {
+            updateWindowHeight();
+        }
     }
 
     function showSuccess(message) {
-        try {
-            _errorMessage = "";
-            _showingError = false;
-            _successMessage = message;
-            _showingSuccess = message !== "";
+        _errorMessage = "";
+        _showingError = false;
+        _successMessage = message;
+        _showingSuccess = message !== "";
 
-            if (_showingSuccess) {
-                successAutoHideTimer.restart();
-            }
-
-            updateWindowHeight();
-        } catch (error) {}
+        if (_showingSuccess) {
+            successAutoHideTimer.restart();
+        }
     }
 
     function showLoading() {
-        try {
-            loadingAnimation.visible = true;
-            loadingAnimation.opacity = 1;
+        loadingAnimation.visible = true;
+        loadingAnimation.opacity = 1;
 
-            if (_showingRegistration) {
-                registrationForm.opacity = 0.6;
-                registrationForm.registerButton.enabled = false;
-            } else {
-                loginForm.opacity = 0.6;
-                loginForm.loginButton.enabled = false;
-            }
-        } catch (error) {}
+        if (_showingRegistration) {
+            registrationForm.opacity = 0.6;
+            registrationForm.registerButton.enabled = false;
+        } else {
+            loginForm.opacity = 0.6;
+            loginForm.loginButton.enabled = false;
+        }
     }
 
     function hideLoading() {
-        try {
-            loadingAnimation.opacity = 0;
-            loadingAnimation.visible = false;
+        loadingAnimation.opacity = 0;
+        loadingAnimation.visible = false;
 
-            if (_showingRegistration) {
-                registrationForm.opacity = 1.0;
-                registrationForm.registerButton.enabled = true;
-            } else {
-                loginForm.opacity = 1.0;
-                loginForm.loginButton.enabled = true;
-            }
-        } catch (error) {}
+        if (_showingRegistration) {
+            registrationForm.opacity = 1.0;
+            registrationForm.registerButton.enabled = true;
+        } else {
+            loginForm.opacity = 1.0;
+            loginForm.loginButton.enabled = true;
+        }
     }
 
     function isFormValid() {
@@ -538,21 +411,14 @@ Window {
 
     Rectangle {
         id: windowContainer
-        anchors {
-            fill: parent
-            topMargin: authWindow.androidTopMargin
-            bottomMargin: authWindow.androidBottomMargin
-        }
+        anchors.fill: parent
         radius: 24
         color: "#f0f0f0"
         clip: true
-        z: -3
         focus: true
 
-        // Обработка глобальных горячих клавиш
         Keys.onPressed: (event) => {
             if ((event.key === Qt.Key_Return || event.key === Qt.Key_Enter) && (event.modifiers & Qt.ControlModifier)) {
-                // Ctrl+Enter для принудительной отправки формы
                 if (_showingRegistration) {
                     attemptRegistration();
                 } else {
@@ -574,10 +440,28 @@ Window {
         }
 
         Common.PolygonBackground {
-            id: polygonRepeater
             anchors.fill: parent
             polygonCount: 4
-            visible: parent !== null
+            isMobile: authWindow.isMobile
+        }
+
+        // Искры на фоне - отключаем если лагают
+        Common.SparksBackground {
+            anchors.fill: parent
+            isMobile: authWindow.isMobile
+            z: 1
+            enabled: !authWindow._isLoading // Отключаем во время загрузки
+        }
+
+        Common.BottomBlur {
+            anchors {
+                left: parent.left
+                right: parent.right
+                bottom: parent.bottom
+            }
+            blurHeight: 48
+            blurOpacity: 0.8
+            z: 2
             isMobile: authWindow.isMobile
         }
 
@@ -592,9 +476,10 @@ Window {
                 rightMargin: 10
             }
             isWindowMaximized: authWindow.isWindowMaximized
-            currentView: "Вход в систему"
+            currentView: _showingRegistration ? "Регистрация" : "Вход в систему"
             window: authWindow
-            isMobile: authWindow.disableResize
+            isMobile: authWindow.isMobile
+            authmenu: true
 
             onToggleMaximize: authWindow.toggleMaximize()
             onShowMinimized: authWindow.showMinimized()
@@ -609,6 +494,7 @@ Window {
                 topMargin: 8
             }
             width: parent.width * 0.78
+            scale: isMobile ? 1.12 : 1
             messageText: _errorMessage
             showingMessage: _showingError
             messageType: "error"
@@ -624,6 +510,7 @@ Window {
                 topMargin: 8
             }
             width: parent.width * 0.78
+            scale: isMobile ? 1.12 : 1
             messageText: _successMessage
             showingMessage: _showingSuccess
             messageType: "success"
@@ -639,19 +526,24 @@ Window {
                 topMargin: 24
             }
             width: parent.width * 0.78
+            scale: isMobile ? 1.12 : 1
             visible: !_showingRegistration
 
             onServerTypeToggled: function(useLocal) {
                 settingsManager.useLocalServer = useLocal;
-                updateWindowHeight();
+                authWindow.updateWindowHeight();
+                updateAuthAPI();
             }
+
 
             onSaveServerConfig: function(serverAddress) {
                 authWindow.saveServerConfig(serverAddress);
+                updateAuthAPI(); // Обновляем AuthAPI после сохранения настроек
             }
 
             onResetSettings: {
                 authWindow.resetSettings();
+                updateAuthAPI(); // Обновляем AuthAPI после сброса настроек
             }
         }
 
@@ -660,9 +552,10 @@ Window {
             anchors {
                 horizontalCenter: parent.horizontalCenter
                 top: successMessage.bottom
-                topMargin: _showingRegistration ? 24 : 32
+                topMargin: 24
             }
             width: parent.width * 0.78
+            scale: isMobile ? 1.12 : 1
             visible: _showingRegistration
 
             onAttemptRegistration: authWindow.attemptRegistration()
@@ -677,6 +570,7 @@ Window {
                 topMargin: 32
             }
             width: parent.width * 0.78
+            scale: isMobile ? 1.12 : 1
             visible: !_showingRegistration
 
             onAttemptLogin: authWindow.attemptLogin()
@@ -684,14 +578,36 @@ Window {
 
         LoadingAnimation {
             id: loadingAnimation
+            scale: isMobile ? 1.12 : 1
             anchors.centerIn: parent
         }
 
         CopyrightFooter {
+            scale: isMobile ? 1.12 : 1
             anchors {
                 horizontalCenter: parent.horizontalCenter
                 bottom: parent.bottom
-                bottomMargin: 10
+                bottomMargin: 20 + androidBottomMargin
+            }
+        }
+
+        Timer {
+            id: loadingTimer
+            interval: 1
+            onTriggered: {
+                hideLoading();
+                _isLoading = false;
+                if (_loginResult) {
+                    if (_loginResult.success) {
+                        showSuccess(_loginResult.message || "Вход выполнен успешно");
+                        mainWindowLoader.active = true;
+                        authWindow.close();
+                    } else {
+                        var errorMessage = _loginResult.error || _loginResult.message || "Ошибка входа";
+                        showError(errorMessage);
+                    }
+                    _loginResult = null;
+                }
             }
         }
 
@@ -713,5 +629,19 @@ Window {
         function onUseLocalServerChanged() {
             updateWindowHeight();
         }
+    }
+
+    // Вспомогательные функции
+    function handleBackButton() {
+        if (_showingRegistration) {
+            showLoginForm();
+        } else {
+            showExitDialog();
+        }
+    }
+
+    function showExitDialog() {
+        var dialog = exitDialogComponent.createObject(authWindow);
+        dialog.open();
     }
 }

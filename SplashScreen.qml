@@ -11,8 +11,10 @@ Window {
     modality: Qt.ApplicationModal
     visible: true
 
-    // Определяем мобильное устройство
-    property bool isMobile: Screen.width < 768 || Screen.height < 768
+    // Определение мобильного устройства по ОС
+    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
+                           Qt.platform.os === "tvos" || Qt.platform.os === "wasm"
+
 
     // Масштабирующий коэффициент для мобильных
     property real scaleFactor: isMobile ? Math.min(width / 700, height / 450, 1.0) : 1.0

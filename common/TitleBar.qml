@@ -14,6 +14,7 @@ Rectangle {
     property bool showGitflicButton: true
     property bool showWindowButtons: true
     property bool isMobile: false
+    property bool authmenu: false
 
     signal toggleMaximize
     signal showMinimized
@@ -101,6 +102,7 @@ Rectangle {
 
         Rectangle {
             id: maximizeBtn
+            visible: !authmenu
             width: 16
             height: 16
             radius: 8

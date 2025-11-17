@@ -1,10 +1,9 @@
 import QtQuick
-import QtQuick.Window
 import QtQuick.Controls
 import QtQuick.Layouts 1.15
 import "../../common" as Common
 
-ApplicationWindow {
+Window {
     id: portfolioFormWindow
     width: 450
     height: 520

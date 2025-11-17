@@ -1,12 +1,9 @@
-// TeacherFormWindow.qml - Fixed version with centered button content
-
 import QtQuick
-import QtQuick.Window
 import QtQuick.Controls
 import QtQuick.Layouts 1.15
 import "../../common" as Common
 
-ApplicationWindow {
+Window {
     id: teacherFormWindow
     width: 600
     height: 700

@@ -6,12 +6,12 @@ Repeater {
 
     property real maxSparkSize: 4
     property real minSparkSize: 2
-    property var colors: ["#ffffff"]
+    property var colors: ["#f44336", "#ff9800", "#ffeb3b", "#4caf50", "#2196f3", "#9c27b0"]
     property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
                            Qt.platform.os === "tvos" || Screen.width < 768
-    property int sparkCount: isMobile ? 2 : 32
+    property int sparkCount: 16
 
-    model: isMobile ? 10 : sparkCount
+    model: isMobile ? 8 : sparkCount
 
     Rectangle {
         id: spark
@@ -21,7 +21,7 @@ Repeater {
         radius: width / 2
         color: colors[Math.floor(Math.random() * colors.length)]
         opacity: 0
-        z: 1
+        z: 0
 
         property real startX: Math.random() * parent.width
         property real startY: Math.random() * parent.height
@@ -43,11 +43,11 @@ Repeater {
         SequentialAnimation {
             running: true
             loops: Animation.Infinite
-            PauseAnimation { duration: Math.random() * (isMobile ? 8000 : 2000) }
+            PauseAnimation { duration: Math.random() * (isMobile ? 14000 : 2000) }
             ParallelAnimation {
                 NumberAnimation {
                     target: spark; property: "opacity"; from: 0; to: isMobile ? 0.6 : 0.8;
-                    duration: isMobile ? 1800 : 500; easing.type: Easing.InOutQuad }
+                    duration: isMobile ? 3400 : 500; easing.type: Easing.InOutQuad }
                 NumberAnimation {
                     target: spark; property: "x"; from: startX; to: targetX; duration: speed; easing.type: Easing.InOutQuad }
                 NumberAnimation {
@@ -62,7 +62,7 @@ Repeater {
                     spark.targetX = Math.random() * parent.width;
                     spark.targetY = Math.random() * parent.height;
                     spark.color = colors[Math.floor(Math.random() * colors.length)];
-                    spark.speed = isMobile ? (1500 + Math.random() * 2500) : (1000 + Math.random() * 2000);
+                    spark.speed = isMobile ? (2100 + Math.random() * 1500) : (1000 + Math.random() * 2000);
                 }
             }
         }

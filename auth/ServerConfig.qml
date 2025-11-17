@@ -28,9 +28,6 @@ Rectangle {
     // Обработка изменений настроек
     Connections {
         target: settingsManager
-        function onUseLocalServerChanged() {
-            updateFromSettings();
-        }
         function onServerAddressChanged() {
             serverAddressField.text = settingsManager.serverAddress;
         }

@@ -3,6 +3,7 @@ project(EduFlow VERSION 0.0.37 LANGUAGES CXX)
 set(QT_ANDROID_NO_STYLE_WARNINGS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 find_package(Qt6 REQUIRED COMPONENTS Quick Core QuickControls2)
 qt_standard_project_setup(REQUIRES 6.8)
 # Добавляем файлы настроек
@@ -63,10 +64,12 @@ qt_add_qml_module(EduFlow
                 main/view/settings/ProfilePage.qml
                 main/view/settings/SettingsMainPage.qml
                 main/view/settings/AboutPage.qml
-                QML_FILES main/forms/GroupViewFormWindow.qml
-                QML_FILES common/SparksBackground.qml
-                QML_FILES common/TitleBarMobile.qml
-                QML_FILES main/main/AdaptiveSideBarMobile.qml
+                main/forms/GroupViewFormWindow.qml
+                common/SparksBackground.qml
+                common/TitleBarMobile.qml
+                main/main/AdaptiveSideBarMobile.qml
+                common/MobileCloseApp.qml
+                common/BottomBlur.qml
 )
 qt_add_resources(EduFlow "resources"
     PREFIX "/"
@@ -146,6 +149,7 @@ target_link_libraries(EduFlow
     PRIVATE Qt6::Quick
     PRIVATE Qt6::Core
 )
+
 include(GNUInstallDirs)
 install(TARGETS EduFlow
     BUNDLE DESTINATION .
