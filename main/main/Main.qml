@@ -1,10 +1,9 @@
-import QtQuick 2.15
-import QtQuick.Window 2.15
-import QtQuick.Controls 2.15
+import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts 1.15
 import "../../common" as Common
 
-ApplicationWindow {
+Window {
     id: mainWindow
     width: 1200
     height: 800
@@ -18,6 +17,14 @@ ApplicationWindow {
     property bool isWindowMaximized: false
     property string currentView: "dashboard"
 
+    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
+                           Qt.platform.os === "tvos" || Qt.platform.os === "wasm" ||
+                           Screen.width < 768 || Screen.height < 768
+
+    // Отступы для Android системных кнопок
+    property int androidTopMargin: (Qt.platform.os === "android") ? 24 : 0
+    property int androidBottomMargin: (Qt.platform.os === "android") ? 48 : 0
+
     // Данные
     property var teachers: []
     property var students: []
@@ -29,6 +36,8 @@ ApplicationWindow {
     // Флаг инициализации API
     property bool apiInitialized: false
 
+    // Мобильное меню
+    property bool mobileMenuOpen: false
 
     function showAuthWindow() {
             // Если окно авторизации не существует, создаем его
@@ -43,6 +52,7 @@ ApplicationWindow {
 
     function navigateTo(view) {
         currentView = view;
+        mobileMenuOpen = false; // Закрываем меню при переходе
 
         // Автоматически загружаем данные при переходе
         if (view === "students") {
@@ -67,8 +77,11 @@ ApplicationWindow {
         }
     }
 
-    function logout() {
+    function toggleMobileMenu() {
+        mobileMenuOpen = !mobileMenuOpen;
+    }
 
+    function logout() {
         // Очищаем токен аутентификации
         settingsManager.authToken = "";
         authToken = "";
@@ -172,10 +185,14 @@ ApplicationWindow {
         id: mainApiObject
     }
 
-    // Основной интерфейс (остается без изменений)
+    // Основной интерфейс
     Rectangle {
         id: windowContainer
-        anchors.fill: parent
+        anchors {
+            fill: parent
+            topMargin: mainWindow.androidTopMargin
+            bottomMargin: mainWindow.androidBottomMargin
+        }
         radius: 21
         color: "#f0f0f0"
         clip: true
@@ -189,39 +206,61 @@ ApplicationWindow {
             radius: 20
         }
 
-        // Обновленный импорт из common
+        // Полигоны (8-угольники на фоне)
         Common.PolygonBackground {
             id: polygonRepeater
             anchors.fill: parent
-            visible: parent !== null
+            visible: parent !== null && !isMobile
+            isMobile: mainWindow.isMobile
         }
 
-        // Обновленный импорт из common
+        // Панель для Десктопных версий
         Common.TitleBar {
             id: titleBar
             anchors {
                 top: parent.top
                 left: parent.left
                 right: parent.right
-                margins: 10
+                topMargin: 10 + mainWindow.androidTopMargin
+                leftMargin: 10
+                rightMargin: 10
             }
             isWindowMaximized: mainWindow.isWindowMaximized
             currentView: getCurrentViewTitle()
             window: mainWindow
+            isMobile: mainWindow.isMobile
 
             onToggleMaximize: mainWindow.toggleMaximize()
             onShowMinimized: mainWindow.showMinimized()
             onClose: Qt.quit()
         }
 
-        // Контейнер для сообщений ПОД заголовком
+        // Мобильный заголовок - опускаем ниже
+        Common.TitleBarMobile {
+            id: mobileHeader
+            anchors {
+                top: parent.top
+                left: parent.left
+                right: parent.right
+                topMargin: mainWindow.androidTopMargin
+                leftMargin: 10
+                rightMargin: 10
+            }
+            currentView: getCurrentViewTitle()
+            menuOpen: mobileMenuOpen
+            onToggleMenu: toggleMobileMenu()
+            visible: isMobile
+        }
+
+        // Контейнер для сообщений
         MainMessage {
             id: messageContainer
             anchors {
-                top: titleBar.bottom
+                top: isMobile ? mobileHeader.bottom : titleBar.bottom
                 left: parent.left
                 right: parent.right
                 margins: 10
+                topMargin: isMobile ? 5 : 0
             }
         }
 
@@ -237,11 +276,27 @@ ApplicationWindow {
             }
             color: "transparent"
 
-            // Адаптивная боковая панель
+            // Адаптивная боковая панель для десктопа - ТЕПЕРЬ ВИДИМА
             AdaptiveSideBar {
                 id: sideBar
                 anchors { top: parent.top; bottom: parent.bottom; left: parent.left }
                 currentView: mainWindow.currentView
+                visible: !isMobile
+            }
+
+            // Мобильное меню - опускаем еще ниже
+            AdaptiveSideBarMobile {
+                id: mobileMenu
+                anchors {
+                    top: parent.top
+                    bottom: parent.bottom
+                    topMargin: 10
+                }
+                width: Math.min(parent.width * 0.8, 300)
+                currentView: mainWindow.currentView
+                isOpen: mobileMenuOpen
+                onCloseRequested: mobileMenuOpen = false
+                visible: isMobile
             }
 
             // Область контента
@@ -250,18 +305,33 @@ ApplicationWindow {
                 anchors {
                     top: parent.top;
                     bottom: parent.bottom;
-                    left: sideBar.right;
+                    left: isMobile ? parent.left : sideBar.right;
                     right: parent.right;
-                    leftMargin: 15
+                    leftMargin: isMobile ? 0 : 15
                 }
                 color: "#f8f8f8"
                 radius: 12
                 opacity: 0.925
 
+                // Затемнение фона при открытом мобильном меню
+                Rectangle {
+                    anchors.fill: parent
+                    color: "#000000"
+                    opacity: mobileMenuOpen ? 0.3 : 0
+                    visible: isMobile
+                    z: 4
+
+                    MouseArea {
+                        anchors.fill: parent
+                        enabled: mobileMenuOpen
+                        onClicked: mobileMenuOpen = false
+                    }
+                }
+
                 Loader {
                     id: contentLoader
                     anchors.fill: parent
-                    anchors.margins: 10
+                    anchors.margins: isMobile ? 5 : 10
                     source: {
                             var components = {
                                 "dashboard": "../view/DashboardView.qml",
@@ -274,6 +344,7 @@ ApplicationWindow {
                             }
                             return components[currentView] || "../view/DashboardView.qml"
                     }
+                    z: 3
                 }
             }
         }

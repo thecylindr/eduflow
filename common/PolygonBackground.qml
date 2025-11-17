@@ -1,9 +1,14 @@
-import QtQuick 2.15
+import QtQuick
 import Qt5Compat.GraphicalEffects
 
 Repeater {
     id: polygonRepeater
-    model: 15
+
+    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
+                           Qt.platform.os === "tvos" || Screen.width < 768
+    property int polygonCount: isMobile ? 2 : 15
+
+    model: isMobile ? 6 : polygonCount
     z: 1
 
     Item {
@@ -12,7 +17,7 @@ Repeater {
         property real startY: Math.random() * (parent.height + 120) - 60
         property real targetX: Math.random() * (parent.width + 120) - 60
         property real targetY: Math.random() * (parent.height + 120) - 60
-        property real polygonSize: 30 + Math.random() * 45
+        property real polygonSize: isMobile ? (20 + Math.random() * 30) : (30 + Math.random() * 45)
         property color polygonColor: [
             "#FF5252", "#FF4081", "#E040FB", "#7C4DFF", "#536DFE",
             "#448AFF", "#40C4FF", "#18FFFF", "#64FFDA", "#69F0AE",
@@ -37,13 +42,15 @@ Repeater {
             }
 
             function drawPolygon(ctx) {
-                var sides = 6 + Math.floor(Math.random() * 3);
+                var sides = isMobile ? 6 : (6 + Math.floor(Math.random() * 3));
                 var radius = polygonSize;
                 var centerX = width / 2;
                 var centerY = height / 2;
 
-                ctx.shadowColor = polygonColor;
-                ctx.shadowBlur = 12;
+                if (!isMobile) {
+                    ctx.shadowColor = polygonColor;
+                    ctx.shadowBlur = 12;
+                }
 
                 ctx.beginPath();
                 ctx.moveTo(centerX + radius * Math.cos(0), centerY + radius * Math.sin(0));
@@ -61,44 +68,52 @@ Repeater {
 
         Glow {
             anchors.fill: polygonCanvas
-            radius: 10
-            samples: 12
+            radius: isMobile ? 4 : 10
+            samples: isMobile ? 6 : 12
             color: polygonContainer.polygonColor
             source: polygonCanvas
             opacity: polygonContainer.opacity * 0.6
+            visible: !isMobile
         }
 
         SequentialAnimation {
             id: appearAnimation
             running: true
             loops: Animation.Infinite
-            PauseAnimation { duration: index * 1200 }
+            PauseAnimation { duration: index * (isMobile ? 5000 : 1200) }
             ParallelAnimation {
                 NumberAnimation {
-                    target: polygonContainer; property: "opacity"; from: 0; to: 0.6; duration: 3000; easing.type: Easing.InOutQuad }
+                    target: polygonContainer; property: "opacity"; from: 0; to: isMobile ? 0.4 : 0.6;
+                    duration: isMobile ? 7000 : 3000; easing.type: Easing.InOutQuad }
                 NumberAnimation {
-                    target: polygonContainer; property: "x"; from: startX; to: targetX; duration: 12000; easing.type: Easing.InOutQuad }
+                    target: polygonContainer; property: "x"; from: startX; to: targetX;
+                    duration: isMobile ? 18000 : 12000; easing.type: Easing.InOutQuad }
                 NumberAnimation {
-                    target: polygonContainer; property: "y"; from: startY; to: targetY; duration: 12000; easing.type: Easing.InOutQuad }
+                    target: polygonContainer; property: "y"; from: startY; to: targetY;
+                    duration: isMobile ? 24000 : 12000; easing.type: Easing.InOutQuad }
                 RotationAnimation {
-                    target: polygonContainer; from: 0; to: 90 + Math.random() * 90; duration: 10000; easing.type: Easing.InOutQuad }
+                    target: polygonContainer; from: 0; to: isMobile ? (45 + Math.random() * 45) : (90 + Math.random() * 90);
+                    duration: isMobile ? 22000 : 10000; easing.type: Easing.InOutQuad }
             }
-            PauseAnimation { duration: 3000 }
+            PauseAnimation { duration: isMobile ? 4000 : 3000 }
             ParallelAnimation {
                 NumberAnimation {
-                    target: polygonContainer; property: "opacity"; from: 0.6; to: 0; duration: 4000; easing.type: Easing.InOutQuad }
+                    target: polygonContainer; property: "opacity"; from: (isMobile ? 0.4 : 0.6); to: 0;
+                    duration: isMobile ? 9000 : 4000; easing.type: Easing.InOutQuad }
                 NumberAnimation {
-                    target: polygonContainer; property: "x"; from: targetX; to: targetX + (Math.random() - 0.5) * 150; duration: 4000; easing.type: Easing.InOutQuad }
+                    target: polygonContainer; property: "x"; from: targetX; to: targetX + (Math.random() - 0.5) * (isMobile ? 100 : 150);
+                    duration: isMobile ? 9000 : 4000; easing.type: Easing.InOutQuad }
                 NumberAnimation {
-                    target: polygonContainer; property: "y"; from: targetY; to: targetY + (Math.random() - 0.5) * 150; duration: 4000; easing.type: Easing.InOutQuad }
+                    target: polygonContainer; property: "y"; from: targetY; to: targetY + (Math.random() - 0.5) * (isMobile ? 100 : 150);
+                    duration: isMobile ? 14000 : 4000; easing.type: Easing.InOutQuad }
             }
-            PauseAnimation { duration: 2000 + Math.random() * 3000 }
+            PauseAnimation { duration: isMobile ? (3000 + Math.random() * 4000) : (2000 + Math.random() * 3000) }
             ScriptAction {
                 script: {
                     polygonContainer.startX = polygonContainer.x;
                     polygonContainer.startY = polygonContainer.y;
-                    polygonContainer.targetX = Math.random() * (parent.width + 150) - 75;
-                    polygonContainer.targetY = Math.random() * (parent.height + 150) - 75;
+                    polygonContainer.targetX = Math.random() * (parent.width + (isMobile ? 100 : 150)) - (isMobile ? 50 : 75);
+                    polygonContainer.targetY = Math.random() * (parent.height + (isMobile ? 100 : 150)) - (isMobile ? 50 : 75);
                     polygonContainer.polygonColor = [
                             "#FF5252", "#FF4081", "#E040FB", "#7C4DFF", "#536DFE",
                             "#448AFF", "#40C4FF", "#18FFFF", "#64FFDA", "#69F0AE",

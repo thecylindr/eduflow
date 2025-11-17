@@ -1,6 +1,6 @@
-import QtQuick 2.15
+import QtQuick
 import QtQuick.Layouts 1.15
-import QtQuick.Controls 2.15
+import QtQuick.Controls
 
 Item {
     id: dashboardView
@@ -15,6 +15,9 @@ Item {
 
     property bool loading: false
     property bool firstLoad: true // Флаг первой загрузки
+
+    // Определяем мобильное устройство из родительского окна
+    property bool isMobile: mainWindow ? mainWindow.isMobile : false
 
     function refreshDashboard() {
         loading = true
@@ -54,7 +57,6 @@ Item {
         userLogin = "Неизвестный"
     }
 
-
     onVisibleChanged: {
         if (visible) {
             refreshTimer.start()
@@ -82,26 +84,26 @@ Item {
         Column {
             id: contentColumn
             width: parent.width
-            spacing: 15
+            spacing: isMobile ? 10 : 15
 
-            // Заголовок
+            // Заголовок (упрощенный для мобильных)
             Column {
                 width: parent.width
-                spacing: 8
+                spacing: isMobile ? 5 : 8
 
                 Row {
                     anchors.horizontalCenter: parent.horizontalCenter
-                    spacing: 10
+                    spacing: 8
 
                     Image {
                         source: "qrc:/icons/home.png"
-                        sourceSize: Qt.size(24, 24)
+                        sourceSize: Qt.size(isMobile ? 20 : 24, isMobile ? 20 : 24)
                         anchors.verticalCenter: parent.verticalCenter
                     }
 
                     Text {
                         text: "Панель управления"
-                        font.pixelSize: 24
+                        font.pixelSize: isMobile ? 18 : 24
                         font.bold: true
                         color: "#2c3e50"
                         anchors.verticalCenter: parent.verticalCenter
@@ -109,9 +111,9 @@ Item {
 
                     // Индикатор загрузки
                     Rectangle {
-                        width: 20
-                        height: 20
-                        radius: 10
+                        width: isMobile ? 16 : 20
+                        height: isMobile ? 16 : 20
+                        radius: isMobile ? 8 : 10
                         color: "transparent"
                         visible: loading
 
@@ -126,7 +128,7 @@ Item {
                         Image {
                             anchors.fill: parent
                             source: "qrc:/icons/refresh.png"
-                            sourceSize: Qt.size(16, 16)
+                            sourceSize: Qt.size(isMobile ? 12 : 16, isMobile ? 12 : 16)
                         }
                     }
                 }
@@ -136,35 +138,36 @@ Item {
                     text: {
                         if (loading && firstLoad) return "Загрузка данных..."
                         if (loading) return "Обновление данных..."
-                        if (userLogin) return "Вы вошли как: " + userLogin + " | Обзор системы и ключевые метрики"
+                        if (userLogin) return "Вы вошли как: " + userLogin
                         return "Обзор системы и ключевые метрики"
                     }
-                    font.pixelSize: 12
+                    font.pixelSize: isMobile ? 10 : 12
                     color: "#7f8c8d"
                     anchors.horizontalCenter: parent.horizontalCenter
+                    horizontalAlignment: Text.AlignHCenter
                 }
 
                 Rectangle {
                     width: parent.width
-                    height: 2
+                    height: 1
                     color: "#3498db"
                     opacity: 0.3
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
             }
 
-            // Компактная статистика
+            // Компактная статистика - адаптивная сетка
             Grid {
-                columns: 3
-                rowSpacing: 10
-                columnSpacing: 10
+                columns: isMobile ? 2 : 3
+                rowSpacing: isMobile ? 8 : 10
+                columnSpacing: isMobile ? 8 : 10
                 width: parent.width
 
                 // Преподаватели
                 Rectangle {
-                    width: (parent.width - 20) / 3
-                    height: 80
-                    radius: 12
+                    width: (parent.width - (isMobile ? 8 : 20)) / (isMobile ? 2 : 3)
+                    height: isMobile ? 70 : 80
+                    radius: 10
                     color: teachersMouseArea.containsMouse ? "#e3f2fd" : "#ffffff"
                     border.color: teachersMouseArea.containsMouse ? "#3498db" : "#e0e0e0"
                     border.width: 1
@@ -178,20 +181,20 @@ Item {
 
                     Row {
                         anchors.fill: parent
-                        anchors.margins: 10
-                        spacing: 10
+                        anchors.margins: isMobile ? 8 : 10
+                        spacing: isMobile ? 8 : 10
 
                         Rectangle {
-                            width: 40
-                            height: 40
-                            radius: 8
+                            width: isMobile ? 32 : 40
+                            height: isMobile ? 32 : 40
+                            radius: 6
                             color: "#3498db"
                             anchors.verticalCenter: parent.verticalCenter
 
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/teachers.png"
-                                sourceSize: Qt.size(26, 26)
+                                sourceSize: Qt.size(isMobile ? 20 : 26, isMobile ? 20 : 26)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -202,14 +205,14 @@ Item {
 
                             Text {
                                 text: loading && firstLoad ? "..." : teachersCount
-                                font.pixelSize: 20
+                                font.pixelSize: isMobile ? 16 : 20
                                 font.bold: true
                                 color: (loading && firstLoad) ? "#bdc3c7" : "#2c3e50"
                             }
 
                             Text {
                                 text: "Преподаватели"
-                                font.pixelSize: 10
+                                font.pixelSize: isMobile ? 9 : 10
                                 color: "#7f8c8d"
                             }
                         }
@@ -226,9 +229,9 @@ Item {
 
                 // Студенты
                 Rectangle {
-                    width: (parent.width - 20) / 3
-                    height: 80
-                    radius: 12
+                    width: (parent.width - (isMobile ? 8 : 20)) / (isMobile ? 2 : 3)
+                    height: isMobile ? 70 : 80
+                    radius: 10
                     color: studentsMouseArea.containsMouse ? "#e8f5e8" : "#ffffff"
                     border.color: studentsMouseArea.containsMouse ? "#2ecc71" : "#e0e0e0"
                     border.width: 1
@@ -242,20 +245,20 @@ Item {
 
                     Row {
                         anchors.fill: parent
-                        anchors.margins: 10
-                        spacing: 10
+                        anchors.margins: isMobile ? 8 : 10
+                        spacing: isMobile ? 8 : 10
 
                         Rectangle {
-                            width: 40
-                            height: 40
-                            radius: 8
+                            width: isMobile ? 32 : 40
+                            height: isMobile ? 32 : 40
+                            radius: 6
                             color: "#2ecc71"
                             anchors.verticalCenter: parent.verticalCenter
 
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/students.png"
-                                sourceSize: Qt.size(26, 26)
+                                sourceSize: Qt.size(isMobile ? 20 : 26, isMobile ? 20 : 26)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -266,14 +269,14 @@ Item {
 
                             Text {
                                 text: loading && firstLoad ? "..." : studentsCount
-                                font.pixelSize: 20
+                                font.pixelSize: isMobile ? 16 : 20
                                 font.bold: true
                                 color: (loading && firstLoad) ? "#bdc3c7" : "#2c3e50"
                             }
 
                             Text {
                                 text: "Студенты"
-                                font.pixelSize: 10
+                                font.pixelSize: isMobile ? 9 : 10
                                 color: "#7f8c8d"
                             }
                         }
@@ -290,9 +293,9 @@ Item {
 
                 // Группы
                 Rectangle {
-                    width: (parent.width - 20) / 3
-                    height: 80
-                    radius: 12
+                    width: (parent.width - (isMobile ? 8 : 20)) / (isMobile ? 2 : 3)
+                    height: isMobile ? 70 : 80
+                    radius: 10
                     color: groupsMouseArea.containsMouse ? "#fdedec" : "#ffffff"
                     border.color: groupsMouseArea.containsMouse ? "#e74c3c" : "#e0e0e0"
                     border.width: 1
@@ -306,20 +309,20 @@ Item {
 
                     Row {
                         anchors.fill: parent
-                        anchors.margins: 10
-                        spacing: 10
+                        anchors.margins: isMobile ? 8 : 10
+                        spacing: isMobile ? 8 : 10
 
                         Rectangle {
-                            width: 40
-                            height: 40
-                            radius: 8
+                            width: isMobile ? 32 : 40
+                            height: isMobile ? 32 : 40
+                            radius: 6
                             color: "#e74c3c"
                             anchors.verticalCenter: parent.verticalCenter
 
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/groups.png"
-                                sourceSize: Qt.size(26, 26)
+                                sourceSize: Qt.size(isMobile ? 20 : 26, isMobile ? 20 : 26)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -330,14 +333,14 @@ Item {
 
                             Text {
                                 text: loading && firstLoad ? "..." : groupsCount
-                                font.pixelSize: 20
+                                font.pixelSize: isMobile ? 16 : 20
                                 font.bold: true
                                 color: (loading && firstLoad) ? "#bdc3c7" : "#2c3e50"
                             }
 
                             Text {
                                 text: "Группы"
-                                font.pixelSize: 10
+                                font.pixelSize: isMobile ? 9 : 10
                                 color: "#7f8c8d"
                             }
                         }
@@ -354,9 +357,9 @@ Item {
 
                 // Портфолио
                 Rectangle {
-                    width: (parent.width - 20) / 3
-                    height: 80
-                    radius: 12
+                    width: (parent.width - (isMobile ? 8 : 20)) / (isMobile ? 2 : 3)
+                    height: isMobile ? 70 : 80
+                    radius: 10
                     color: portfolioMouseArea.containsMouse ? "#f3e8fd" : "#ffffff"
                     border.color: portfolioMouseArea.containsMouse ? "#9b59b6" : "#e0e0e0"
                     border.width: 1
@@ -370,20 +373,20 @@ Item {
 
                     Row {
                         anchors.fill: parent
-                        anchors.margins: 10
-                        spacing: 10
+                        anchors.margins: isMobile ? 8 : 10
+                        spacing: isMobile ? 8 : 10
 
                         Rectangle {
-                            width: 40
-                            height: 40
-                            radius: 8
+                            width: isMobile ? 32 : 40
+                            height: isMobile ? 32 : 40
+                            radius: 6
                             color: "#9b59b6"
                             anchors.verticalCenter: parent.verticalCenter
 
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/portfolio.png"
-                                sourceSize: Qt.size(26, 26)
+                                sourceSize: Qt.size(isMobile ? 20 : 26, isMobile ? 20 : 26)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -394,14 +397,14 @@ Item {
 
                             Text {
                                 text: loading && firstLoad ? "..." : portfoliosCount
-                                font.pixelSize: 20
+                                font.pixelSize: isMobile ? 16 : 20
                                 font.bold: true
                                 color: (loading && firstLoad) ? "#bdc3c7" : "#2c3e50"
                             }
 
                             Text {
                                 text: "Портфолио"
-                                font.pixelSize: 10
+                                font.pixelSize: isMobile ? 9 : 10
                                 color: "#7f8c8d"
                             }
                         }
@@ -418,9 +421,9 @@ Item {
 
                 // События
                 Rectangle {
-                    width: (parent.width - 20) / 3
-                    height: 80
-                    radius: 12
+                    width: (parent.width - (isMobile ? 8 : 20)) / (isMobile ? 2 : 3)
+                    height: isMobile ? 70 : 80
+                    radius: 10
                     color: eventsMouseArea.containsMouse ? "#fef5e7" : "#ffffff"
                     border.color: eventsMouseArea.containsMouse ? "#e67e22" : "#e0e0e0"
                     border.width: 1
@@ -434,20 +437,20 @@ Item {
 
                     Row {
                         anchors.fill: parent
-                        anchors.margins: 10
-                        spacing: 10
+                        anchors.margins: isMobile ? 8 : 10
+                        spacing: isMobile ? 8 : 10
 
                         Rectangle {
-                            width: 40
-                            height: 40
-                            radius: 8
+                            width: isMobile ? 32 : 40
+                            height: isMobile ? 32 : 40
+                            radius: 6
                             color: "#e67e22"
                             anchors.verticalCenter: parent.verticalCenter
 
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/events.png"
-                                sourceSize: Qt.size(26, 26)
+                                sourceSize: Qt.size(isMobile ? 20 : 26, isMobile ? 20 : 26)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -458,14 +461,14 @@ Item {
 
                             Text {
                                 text: loading && firstLoad ? "..." : eventsCount
-                                font.pixelSize: 20
+                                font.pixelSize: isMobile ? 16 : 20
                                 font.bold: true
                                 color: (loading && firstLoad) ? "#bdc3c7" : "#2c3e50"
                             }
 
                             Text {
                                 text: "События"
-                                font.pixelSize: 10
+                                font.pixelSize: isMobile ? 9 : 10
                                 color: "#7f8c8d"
                             }
                         }
@@ -482,9 +485,9 @@ Item {
 
                 // Настройки системы
                 Rectangle {
-                    width: (parent.width - 20) / 3
-                    height: 80
-                    radius: 12
+                    width: (parent.width - (isMobile ? 8 : 20)) / (isMobile ? 2 : 3)
+                    height: isMobile ? 70 : 80
+                    radius: 10
                     color: settingsMouseArea.containsMouse ? "#f2f3f4" : "#ffffff"
                     border.color: settingsMouseArea.containsMouse ? "#95a5a6" : "#e0e0e0"
                     border.width: 1
@@ -498,29 +501,21 @@ Item {
 
                     Row {
                         anchors.fill: parent
-                        anchors.margins: 10
-                        spacing: 10
+                        anchors.margins: isMobile ? 8 : 10
+                        spacing: isMobile ? 8 : 10
 
                         Rectangle {
-                            width: 40
-                            height: 40
-                            radius: 8
+                            width: isMobile ? 32 : 40
+                            height: isMobile ? 32 : 40
+                            radius: 6
                             color: "#95a5a6"
                             anchors.verticalCenter: parent.verticalCenter
 
-                            Loader {
-                                id: settingsIconLoader
+                            Image {
                                 anchors.centerIn: parent
-                                sourceComponent: staticSettingsIcon
-                            }
-
-                            Component {
-                                id: staticSettingsIcon
-                                Image {
-                                    source: "qrc:/icons/settings.png"
-                                    sourceSize: Qt.size(26, 26)
-                                    fillMode: Image.PreserveAspectFit
-                                }
+                                source: "qrc:/icons/settings.png"
+                                sourceSize: Qt.size(isMobile ? 20 : 26, isMobile ? 20 : 26)
+                                fillMode: Image.PreserveAspectFit
                             }
                         }
 
@@ -529,15 +524,15 @@ Item {
                             spacing: 2
 
                             Text {
-                                text: "Настройки системы"
-                                font.pixelSize: 14
+                                text: "Настройки"
+                                font.pixelSize: isMobile ? 14 : 16
                                 font.bold: true
                                 color: "#2c3e50"
                             }
 
                             Text {
-                                text: "изменить параметры"
-                                font.pixelSize: 10
+                                text: "системы"
+                                font.pixelSize: isMobile ? 9 : 10
                                 color: "#7f8c8d"
                             }
                         }
@@ -554,13 +549,14 @@ Item {
             }
 
             // Системная информация и кнопка обновления
-            Row {
+            Column {
                 width: parent.width
-                spacing: 20
+                spacing: isMobile ? 10 : 20
+                visible: !isMobile // На мобильных скрываем эту секцию для экономии места
 
                 // Статус системы
                 Rectangle {
-                    width: (parent.width - 20) / 2
+                    width: parent.width
                     height: 120
                     radius: 12
                     color: "#ffffff"
@@ -623,7 +619,7 @@ Item {
 
                 // Кнопка обновления
                 Rectangle {
-                    width: (parent.width - 20) / 2
+                    width: parent.width
                     height: 50
                     radius: 8
                     color: refreshMouseArea.containsMouse ? "#2c81ba" : "#3498db"
@@ -658,6 +654,42 @@ Item {
                         cursorShape: Qt.PointingHandCursor
                         onClicked: refreshDashboard()
                     }
+                }
+            }
+
+            // Мобильная кнопка обновления
+            Rectangle {
+                width: parent.width
+                height: 45
+                radius: 8
+                color: mobileRefreshMouseArea.containsMouse ? "#2c81ba" : "#3498db"
+                visible: isMobile
+
+                Row {
+                    anchors.centerIn: parent
+                    spacing: 8
+
+                    Image {
+                        source: "qrc:/icons/refresh.png"
+                        sourceSize: Qt.size(18, 18)
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Text {
+                        text: loading ? "Обновление..." : "Обновить"
+                        font.pixelSize: 14
+                        color: "white"
+                        font.bold: true
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                MouseArea {
+                    id: mobileRefreshMouseArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: refreshDashboard()
                 }
             }
         }

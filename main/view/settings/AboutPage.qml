@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
+import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts 1.15
 
 Rectangle {
@@ -82,7 +82,7 @@ Rectangle {
 
                                     Image {
                                         anchors.centerIn: parent
-                                        source: "qrc:/icons/app-icon.png"
+                                        source: "qrc:/icons/app_icon.png"
                                         sourceSize: Qt.size(36, 36)
                                         fillMode: Image.PreserveAspectFit
                                         mipmap: true

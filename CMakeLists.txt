@@ -1,27 +1,21 @@
 cmake_minimum_required(VERSION 3.16)
-
 project(EduFlow VERSION 0.0.37 LANGUAGES CXX)
-
+set(QT_ANDROID_NO_STYLE_WARNINGS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-find_package(Qt6 REQUIRED COMPONENTS Quick Core)
-
+find_package(Qt6 REQUIRED COMPONENTS Quick Core QuickControls2)
 qt_standard_project_setup(REQUIRES 6.8)
-
 # Добавляем файлы настроек
 qt_add_executable(EduFlow
     main.cpp
     settings_manager.cpp
     settings_manager.h
 )
-
 qt_add_qml_module(EduFlow
     URI testing
     VERSION 1.0
     QML_FILES
         SplashScreen.qml
-
         # Формы для авторизации & регистрации
                 auth/Auth.qml
                 auth/AuthAPI.qml
@@ -31,14 +25,12 @@ qt_add_qml_module(EduFlow
                 auth/CopyrightFooter.qml
                 auth/LoadingAnimation.qml
                 auth/RegistrationForm.qml
-
                 # Формы главного меню
                 main/main/Main.qml
                 #main/main/InteractionsList.qml
                 main/main/MainAPI.qml
                 main/main/AdaptiveSideBar.qml
                 main/main/MainMessage.qml
-
                 # Представления (Views)
                 main/view/DashboardView.qml
                 main/view/TeachersView.qml
@@ -47,19 +39,16 @@ qt_add_qml_module(EduFlow
                 main/view/EventsView.qml
                 main/view/PortfolioView.qml
                 main/view/SettingsView.qml
-
                 # Общие компоненты
                 common/PolygonBackground.qml
                 common/DialogTitleBar.qml
                 common/TitleBar.qml
-
                 # Формы вывода информации и для добавления в таблицу данных
                 main/forms/TeacherFormWindow.qml
                 main/forms/GroupFormWindow.qml
                 main/forms/StudentFormWindow.qml
                 main/forms/PortfolioFormWindow.qml
                 main/forms/EventFormWindow.qml
-
                 # Компонет отображения данных с таблиц
                 enhanced/EnhancedTableView.qml
                 enhanced/EnhancedSearchBox.qml
@@ -68,8 +57,6 @@ qt_add_qml_module(EduFlow
                 enhanced/EnhancedListItem.qml
                 enhanced/EnhancedGridItem.qml
                 enhanced/EnhancedGroupBox.qml
-
-
                 main/view/settings/ServerPage.qml
                 main/view/settings/SessionsPage.qml
                 main/view/settings/SecurityPage.qml
@@ -77,39 +64,35 @@ qt_add_qml_module(EduFlow
                 main/view/settings/SettingsMainPage.qml
                 main/view/settings/AboutPage.qml
                 QML_FILES main/forms/GroupViewFormWindow.qml
+                QML_FILES common/SparksBackground.qml
+                QML_FILES common/TitleBarMobile.qml
+                QML_FILES main/main/AdaptiveSideBarMobile.qml
 )
-
 qt_add_resources(EduFlow "resources"
     PREFIX "/"
     FILES
         # Основные иконки
-        icons/app-icon.png
+        icons/app_icon.png
         icons/check.png
         icons/events.png
         icons/groups.png
         icons/home.png
         icons/portfolio.png
         icons/expand.png
-
         icons/settings.png
         icons/settings.gif
-
         icons/statistics.png
         icons/students.png
         icons/teachers.png
         icons/loading.png
-
         icons/about.png
         icons/activity.png
         icons/calendar.png
         icons/cross.png
         icons/edit.png
-
         icons/email.png
         icons/email.gif
-
         icons/git.png
-
         icons/eye.png
         icons/eye-off.png
         icons/info.png
@@ -119,48 +102,39 @@ qt_add_resources(EduFlow "resources"
         icons/logout.png
         icons/os.png
         icons/organization.png
-
         icons/phone.png
         icons/phone.gif
-
         icons/ping.png
         icons/platform.png
-
         icons/profile.png
         icons/profile.gif
-
         icons/refresh.png
         icons/revoke.png
         icons/save.png
         icons/security.png
         icons/security.gif
-
         icons/server.png
         icons/server.gif
-
         icons/sessions.png
         icons/sessions.gif
-
         icons/pencil.gif
         icons/pencil.png
-
         icons/status-active.png
         icons/status-connection.png
         icons/status-inactive.png
         icons/status-warning.png
         icons/time.png
         icons/earth.png
-
         icons/test.gif
         icons/warning.gif
-
         icons/user.png
         icons/version.png
-
         icons/search.gif
         icons/search.png
+        icons/sidebar.png
+        # Добавляем файл конфигурации стилей
+        qtquickcontrols2.conf  # <-- НОВАЯ СТРОКА: Добавьте этот файл в проект!
 )
-
 set_target_properties(EduFlow PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER "com.securesystems.EduFlow"
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
@@ -168,12 +142,10 @@ set_target_properties(EduFlow PROPERTIES
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
 )
-
 target_link_libraries(EduFlow
     PRIVATE Qt6::Quick
     PRIVATE Qt6::Core
 )
-
 include(GNUInstallDirs)
 install(TARGETS EduFlow
     BUNDLE DESTINATION .

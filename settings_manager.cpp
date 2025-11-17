@@ -6,7 +6,6 @@
 #include <QJsonObject>
 #include <QDebug>
 #include <QCoreApplication>
-
 SettingsManager::SettingsManager(QObject *parent)
     : QObject(parent)
     , m_useLocalServer(false)
@@ -18,15 +17,12 @@ SettingsManager::SettingsManager(QObject *parent)
     QCoreApplication::setApplicationName("EduFlow");
     QCoreApplication::setOrganizationName("EduFlow");
     QCoreApplication::setOrganizationDomain("eduflow.com");
-
     loadSettings();
 }
-
 bool SettingsManager::useLocalServer() const
 {
     return m_useLocalServer;
 }
-
 void SettingsManager::setUseLocalServer(bool useLocalServer)
 {
     if (m_useLocalServer != useLocalServer) {
@@ -36,12 +32,10 @@ void SettingsManager::setUseLocalServer(bool useLocalServer)
         saveSettings();
     }
 }
-
 QString SettingsManager::serverAddress() const
 {
     return m_serverAddress;
 }
-
 void SettingsManager::setServerAddress(const QString &serverAddress)
 {
     if (m_serverAddress != serverAddress) {
@@ -51,12 +45,10 @@ void SettingsManager::setServerAddress(const QString &serverAddress)
         saveSettings();
     }
 }
-
 QString SettingsManager::apiPath() const
 {
     return m_apiPath;
 }
-
 void SettingsManager::setApiPath(const QString &apiPath)
 {
     if (m_apiPath != apiPath) {
@@ -65,12 +57,10 @@ void SettingsManager::setApiPath(const QString &apiPath)
         saveSettings();
     }
 }
-
 QString SettingsManager::authToken() const
 {
     return m_authToken;
 }
-
 void SettingsManager::setAuthToken(const QString &authToken)
 {
     if (m_authToken != authToken) {
@@ -83,21 +73,17 @@ void SettingsManager::setAuthToken(const QString &authToken)
         saveSettings();
     }
 }
-
 bool SettingsManager::hasValidToken() const
 {
     // Токен считается валидным если он не пустой и имеет достаточную длину (сессионные токены обычно 64 символа)
     return !m_authToken.isEmpty() && m_authToken.length() >= 32;
 }
-
 QString SettingsManager::getConfigPath() const
 {
     QString configDir;
-
     // Принудительно используем правильные имена
     QString appName = "EduFlow";
     QString orgName = "EduFlow";
-
 #ifdef Q_OS_WINDOWS
     // Windows: AppData/Roaming/EduFlow/EduFlow
     configDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
@@ -107,38 +93,31 @@ QString SettingsManager::getConfigPath() const
     // Linux: ~/.config/EduFlow/EduFlow
     configDir = QStandardPaths::writableLocation(QStandardPaths::GenericConfigLocation) + "/" + orgName + "/" + appName;
 #endif
-
     QDir dir(configDir);
     if (!dir.exists()) {
         bool created = dir.mkpath(".");
         qDebug() << "Config directory created:" << created << "at:" << configDir;
     }
-
     QString configFile = configDir + "/config.json";
     qDebug() << "Config file path:" << configFile;
     return configFile;
 }
-
 void SettingsManager::loadSettings()
 {
     QString configFile = getConfigPath();
-
     QFile file(configFile);
     if (file.exists()) {
         qDebug() << "Config file exists, loading...";
         if (file.open(QIODevice::ReadOnly)) {
             QByteArray data = file.readAll();
             file.close();
-
             QJsonDocument doc = QJsonDocument::fromJson(data);
             if (!doc.isNull() && doc.isObject()) {
                 QJsonObject obj = doc.object();
-
                 m_useLocalServer = obj.value("useLocalServer").toBool(false);
                 m_serverAddress = obj.value("serverAddress").toString("http://localhost:5000");
                 m_apiPath = obj.value("apiPath").toString("/api");
                 m_authToken = obj.value("authToken").toString("");
-
                 qDebug() << "Config loaded successfully:";
                 qDebug() << "  useLocalServer:" << m_useLocalServer;
                 qDebug() << "  serverAddress:" << m_serverAddress;
@@ -157,11 +136,9 @@ void SettingsManager::loadSettings()
         saveSettings(); // Create with default values
     }
 }
-
 void SettingsManager::saveSettings()
 {
     QString configFile = getConfigPath();
-
     QFile file(configFile);
     if (file.open(QIODevice::WriteOnly)) {
         QJsonObject obj;
@@ -169,13 +146,10 @@ void SettingsManager::saveSettings()
         obj["serverAddress"] = m_serverAddress;
         obj["apiPath"] = m_apiPath;
         obj["authToken"] = m_authToken;
-
         QJsonDocument doc(obj);
         QByteArray data = doc.toJson(QJsonDocument::Indented);
-
         qint64 bytesWritten = file.write(data);
         file.close();
-
         qDebug() << "Settings saved to:" << configFile;
         qDebug() << "  authToken length:" << m_authToken.length();
         if (m_authToken.length() > 0) {

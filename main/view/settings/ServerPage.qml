@@ -1,5 +1,5 @@
-import QtQuick 2.15
-import QtQuick.Controls 2.15
+import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts 1.15
 
 Rectangle {
@@ -13,6 +13,26 @@ Rectangle {
 
     signal pingRequested()
 
+    function getStatusText() {
+        switch(pingStatus) {
+            case "success":
+                if (pingValue <= 50) return "Отличное соединение";
+                if (pingValue <= 100) return "Хорошее соединение";
+                if (pingValue <= 200) return "Нормальное соединение";
+                return "Медленное соединение";
+            case "error": return "Ошибка соединения";
+            case "checking": return "Измерение...";
+            default: return "Не проверен";
+        }
+    }
+
+    function getPingColor() {
+        if (pingValue <= 50) return "#27ae60";
+        if (pingValue <= 100) return "#f39c12";
+        if (pingValue <= 200) return "#e74c3c";
+        return "#902537";
+    }
+
     ScrollView {
         anchors.fill: parent
         anchors.margins: 10
@@ -24,7 +44,7 @@ Rectangle {
 
             Rectangle {
                 Layout.fillWidth: true
-                height: 340
+                height: 360
                 radius: 16
                 color: "#ffffff"
                 border.color: "#e0e0e0"
@@ -81,7 +101,8 @@ Rectangle {
                                 // Активная часть дуги
                                 if (pingStatus === "success" && pingValue >= 0) {
                                     ctx.beginPath();
-                                    var progress = Math.min(Math.max(pingValue, 0), 100) / 100;
+                                    // Масштабируем значение: 0-200ms = 0-100%, больше 200ms = 100%
+                                    var progress = Math.min(Math.max(pingValue, 0), 200) / 200;
                                     var endAngle = Math.PI + progress * Math.PI;
                                     ctx.arc(width/2, height/2 + 20, width/2 - 15, Math.PI, endAngle, false);
                                     ctx.strokeStyle = getPingColor();
@@ -99,10 +120,10 @@ Rectangle {
                                 ctx.strokeStyle = "#6c757d";
                                 ctx.lineWidth = 1;
 
-                                // Деления каждые 25 мс до 100
+                                // Деления каждые 50 мс до 200
                                 for (var i = 0; i <= 4; i++) {
                                     var angle = Math.PI + (i * Math.PI / 4);
-                                    var value = i * 25;
+                                    var value = i * 50;
 
                                     // Длина деления
                                     var innerRadius = width/2 - 25;
@@ -123,7 +144,7 @@ Rectangle {
                                     var textX = width/2 + textRadius * Math.cos(angle);
                                     var textY = height/2 + 20 + textRadius * Math.sin(angle);
 
-                                    ctx.fillText(value + (i === 4 ? "+" : ""), textX, textY);
+                                    ctx.fillText(value + (i === 4 ? "+" : "") + " мс", textX, textY);
                                 }
                             }
                         }
@@ -136,12 +157,16 @@ Rectangle {
                             spacing: 2
 
                             Text {
-                                text: pingStatus === "success" ? pingValue.toFixed(0) + " мс" : "—"
+                                text: {
+                                    if (pingStatus === "checking") return "Измерение..."
+                                    if (pingStatus === "success") return pingValue.toFixed(0) + " мс"
+                                    return "—"
+                                }
                                 font.pixelSize: 28
                                 font.bold: true
-                                color: pingStatus === "success" ? getPingColor() : "#bdc3c7"
+                                color: pingStatus === "success" ? getPingColor() :
+                                       pingStatus === "checking" ? "#3498db" : "#bdc3c7"
                             }
-
                         }
 
                         // Статус под значением
@@ -151,7 +176,8 @@ Rectangle {
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: getStatusText()
                             font.pixelSize: 12
-                            color: pingStatus === "success" ? getPingColor() : "#6c757d"
+                            color: pingStatus === "success" ? getPingColor() :
+                                   pingStatus === "checking" ? "#3498db" : "#6c757d"
                         }
                     }
 
@@ -179,6 +205,27 @@ Rectangle {
                                 elide: Text.ElideRight
                             }
                         }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 12
+
+                            Text {
+                                text: "Статус:"
+                                font.pixelSize: 14
+                                color: "#6c757d"
+                                Layout.preferredWidth: 120
+                            }
+
+                            Text {
+                                text: getStatusText()
+                                font.pixelSize: 14
+                                color: pingStatus === "success" ? "#27ae60" :
+                                       pingStatus === "checking" ? "#3498db" : "#e74c3c"
+                                font.bold: true
+                                Layout.fillWidth: true
+                            }
+                        }
                     }
 
                     Rectangle {
@@ -186,7 +233,8 @@ Rectangle {
                         Layout.preferredHeight: 44
                         Layout.alignment: Qt.AlignHCenter
                         radius: 10
-                        color: pingMouseArea.containsMouse ? "#2980b9" : "#3498db"
+                        color: pingMouseArea.containsMouse && (pingStatus !== "checking") ? "#2980b9" :
+                               (pingStatus === "checking") ? "#95a5a6" : "#3498db"
 
                         Row {
                             anchors.centerIn: parent
@@ -199,18 +247,10 @@ Rectangle {
                                 mipmap: true
                                 antialiasing: true
                                 anchors.verticalCenter: parent.verticalCenter
-
-                                RotationAnimation on rotation {
-                                    from: 0
-                                    to: 360
-                                    duration: 1000
-                                    running: pingStatus === "checking"
-                                    loops: Animation.Infinite
-                                }
                             }
 
                             Text {
-                                text: pingStatus === "checking" ? "Проверка..." : "Проверить связь"
+                                text: pingStatus === "checking" ? "Измерение..." : "Проверить ping"
                                 color: "white"
                                 font.pixelSize: 14
                                 font.bold: true
@@ -222,8 +262,12 @@ Rectangle {
                             id: pingMouseArea
                             anchors.fill: parent
                             hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: pingRequested()
+                            cursorShape: (pingStatus === "checking") ? Qt.ArrowCursor : Qt.PointingHandCursor
+                            onClicked: {
+                                if (pingStatus !== "checking") {
+                                    pingRequested();
+                                }
+                            }
                         }
                     }
                 }
@@ -272,37 +316,8 @@ Rectangle {
         }
     }
 
-    function getStatusText() {
-        switch(pingStatus) {
-            case "success":
-                if (pingValue <= 50) return "Отличное соединение";
-                if (pingValue <= 90) return "Стабильное соединение";
-                if (pingvalue <= 120) return "Хорошее соединение"
-                return "Медленное соединение";
-            case "error": return "Ошибка соединения";
-            case "checking": return "Проверка...";
-            default: return "Не проверен";
-        }
-    }
-
-    function getPingColor() {
-        if (pingValue <= 50) return "#27ae60";
-        if (pingValue <= 90) return "#f39c12";
-        if (pingValue <= 120) return "#e74c3c";
-        return "#902537";
-    }
-
-    onPingTimeChanged: {
-        if (pingStatus === "success") {
-            pingArc.requestPaint();
-        }
-    }
-
     onPingStatusChanged: {
         pingArc.requestPaint();
-        if (pingStatus !== "success") {
-            pingValue = 0;
-        }
     }
 
     onPingValueChanged: {

@@ -3,16 +3,39 @@
 #include <QIcon>
 #include <QQmlContext>
 #include "settings_manager.h"
+#include <QLoggingCategory>
+#include <QCoreApplication>
+#include <QtGlobal>
+
+typedef void (*QtMessageHandler)(QtMsgType, const QMessageLogContext &, const QString &);
+
+QtMessageHandler defaultHandler = nullptr;
+
+void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
+    if (type == QtWarningMsg && msg.contains("QML import could not be resolved")) {
+        return; // Suppress specific warnings
+    }
+    // Call the default handler for other messages
+    if (defaultHandler) {
+        defaultHandler(type, context, msg);
+    }
+}
 
 int main(int argc, char *argv[])
 {
+    qputenv("QT_QUICK_CONTROLS_STYLE", "Material");
+    qputenv("QSG_RENDER_LOOP", "basic");
+    qputenv("QT_QUICK_CONTROLS_MOBILE", "1");
+    qputenv("QT_ANDROID_BLOCK_FPS_MANAGEMENT", "1");
+
     QGuiApplication app(argc, argv);
 
-    SettingsManager settingsManager;
+    defaultHandler = qInstallMessageHandler(messageHandler);
 
+    SettingsManager settingsManager;
     QQmlApplicationEngine engine;
 
-    app.setWindowIcon(QIcon(":/icons/app-icon.png"));
+    app.setWindowIcon(QIcon(":/icons/app_icon.png"));
     app.setApplicationName("EduFlow");
     app.setApplicationVersion("0.0.25");
     app.setOrganizationName("NameLess Club");
@@ -24,11 +47,11 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("settingsManager", &settingsManager);
 
     QObject::connect(
-        &engine,
-        &QQmlApplicationEngine::objectCreationFailed,
-        &app,
-        []() { QCoreApplication::exit(-1); },
-        Qt::QueuedConnection);
+            &engine,
+            &QQmlApplicationEngine::objectCreationFailed,
+            &app,
+            [](const QUrl &) { QCoreApplication::exit(-1); },
+            Qt::QueuedConnection);
 
     // Загружаем SplashScreen
     engine.loadFromModule("testing", "SplashScreen");

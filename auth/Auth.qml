@@ -1,12 +1,11 @@
-import QtQuick 2.15
-import QtQuick.Window 2.15
-import QtQuick.Controls 2.15
+import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts 1.15
 import Qt5Compat.GraphicalEffects
 import QtQml 2.15
 import "../common" as Common
 
-ApplicationWindow {
+Window {
     id: authWindow
     width: 420
     height: 500
@@ -49,6 +48,18 @@ ApplicationWindow {
     property int baseScaledWidth: baseNormalWidth + widthIncrement
     property int baseScaledHeight: baseNormalHeight + heightIncrement
 
+    // Определение мобильного устройства по ОС
+    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
+                           Qt.platform.os === "tvos" || Qt.platform.os === "wasm" ||
+                           Screen.width < 768 || Screen.height < 768
+
+    // Дополнительная переменная для полного отключения изменения размеров
+    property bool disableResize: isMobile
+
+    // Отступы для Android системных кнопок
+    property int androidTopMargin: (Qt.platform.os === "android") ? 24 : 0
+    property int androidBottomMargin: (Qt.platform.os === "android") ? 48 : 0
+
     signal loginSuccessful(string token, var userData)
 
     // Обновленный AuthAPI
@@ -69,6 +80,7 @@ ApplicationWindow {
     }
 
     Behavior on width {
+        enabled: !disableResize // Отключаем анимацию на мобильных
         NumberAnimation {
             duration: 300;
             easing.type: Easing.InOutQuad
@@ -76,6 +88,7 @@ ApplicationWindow {
     }
 
     Behavior on height {
+        enabled: !disableResize // Отключаем анимацию на мобильных
         NumberAnimation {
             duration: 300;
             easing.type: Easing.InOutQuad
@@ -83,6 +96,16 @@ ApplicationWindow {
     }
 
     Component.onCompleted: {
+        // На мобильных устройствах устанавливаем фиксированный размер
+        if (disableResize) {
+            authWindow.width = Math.min(Screen.width, baseNormalWidth);
+            authWindow.height = Math.min(Screen.height, baseNormalHeight);
+            authWindow.minimumWidth = authWindow.width;
+            authWindow.maximumWidth = authWindow.width;
+            authWindow.minimumHeight = authWindow.height;
+            authWindow.maximumHeight = authWindow.height;
+        }
+
         serverConfig.updateFromSettings();
         updateWindowHeight();
         windowContainer.forceActiveFocus();
@@ -237,6 +260,9 @@ ApplicationWindow {
     }
 
     function updateWindowHeight() {
+        // На мобильных устройствах игнорируем изменение высоты
+        if (disableResize) return;
+
         if (!isWindowMaximized) {
             authWindow.height = calculateBaseHeight();
         } else {
@@ -247,6 +273,11 @@ ApplicationWindow {
     }
 
     function toggleMaximize() {
+        // На мобильных устройствах полностью отключаем масштабирование
+        if (disableResize) {
+            return;
+        }
+
         if (isWindowMaximized) {
             // Возвращаем к исходному размеру с учетом текущего состояния
             authWindow.width = baseNormalWidth;
@@ -266,6 +297,9 @@ ApplicationWindow {
 
     // Сбрасываем флаг масштабирования при ручном изменении размера
     onWidthChanged: {
+        // На мобильных устройствах игнорируем изменение размера
+        if (disableResize) return;
+
         if (!isWindowMaximized) return;
 
         var expectedWidth = baseNormalWidth + widthIncrement;
@@ -275,6 +309,9 @@ ApplicationWindow {
     }
 
     onHeightChanged: {
+        // На мобильных устройствах игнорируем изменение размера
+        if (disableResize) return;
+
         if (!isWindowMaximized) return;
 
         var expectedHeight = calculateBaseHeight() + heightIncrement;
@@ -501,7 +538,11 @@ ApplicationWindow {
 
     Rectangle {
         id: windowContainer
-        anchors.fill: parent
+        anchors {
+            fill: parent
+            topMargin: authWindow.androidTopMargin
+            bottomMargin: authWindow.androidBottomMargin
+        }
         radius: 24
         color: "#f0f0f0"
         clip: true
@@ -535,7 +576,9 @@ ApplicationWindow {
         Common.PolygonBackground {
             id: polygonRepeater
             anchors.fill: parent
+            polygonCount: 4
             visible: parent !== null
+            isMobile: authWindow.isMobile
         }
 
         Common.TitleBar {
@@ -544,11 +587,14 @@ ApplicationWindow {
                 top: parent.top
                 left: parent.left
                 right: parent.right
-                margins: 10
+                topMargin: 10 + authWindow.androidTopMargin
+                leftMargin: 10
+                rightMargin: 10
             }
             isWindowMaximized: authWindow.isWindowMaximized
             currentView: "Вход в систему"
             window: authWindow
+            isMobile: authWindow.disableResize
 
             onToggleMaximize: authWindow.toggleMaximize()
             onShowMinimized: authWindow.showMinimized()

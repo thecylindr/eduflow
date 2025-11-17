@@ -1,6 +1,5 @@
-// EnhancedSearchBox.qml
-import QtQuick 2.15
-import QtQuick.Controls 2.15
+import QtQuick
+import QtQuick.Controls
 
 Rectangle {
     id: searchBox
@@ -22,23 +21,38 @@ Rectangle {
 
         // Лупа с отступом
         Rectangle {
-            width: 40
+            width: 45
             height: parent.height
             color: "transparent"
 
-            Image {
-                id: searchIcon
+            Item {
+                id: searchIconContainer
                 anchors.centerIn: parent
-                source: (searchField.activeFocus || searchField.text) ? "qrc:icons/search.gif" : "qrc:icons/search.png"
-                width: 16
-                height: 16
-                fillMode: Image.PreserveAspectFit
+                width: 24
+                height: 24
+
+                AnimatedImage {
+                    id: animatedSearchIcon
+                    anchors.fill: parent
+                    source: "qrc:icons/search.gif"
+                    playing: searchField.activeFocus || searchField.text
+                    visible: playing
+                    fillMode: Image.PreserveAspectFit
+                }
+
+                Image {
+                    id: staticSearchIcon
+                    anchors.fill: parent
+                    source: "qrc:icons/search.png"
+                    visible: !animatedSearchIcon.playing
+                    fillMode: Image.PreserveAspectFit
+                }
             }
         }
 
         // Заменяем TextField на TextInput с кастомным оформлением
         Rectangle {
-            width: parent.width - 40 - (clearButton.visible ? 35 : 0)
+            width: parent.width - 45 - (clearButton.visible ? 35 : 0)
             height: parent.height
             color: "transparent"
 

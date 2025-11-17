@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 import QtQml 2.15
 
 QtObject {
@@ -8,7 +8,7 @@ QtObject {
     property bool isAuthenticated: authToken !== "" && baseUrl !== ""
     property bool tokenValid: false
     property string tokenStatus: "не проверен"
-    property string remoteApiBaseUrl: "https://deltablast.fun"
+    property string remoteApiBaseUrl: "http://deltablast.fun"
     property int remotePort: 5000
 
     // Кросс-платформенные настройки (Linux & Windows)

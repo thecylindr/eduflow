@@ -1,4 +1,4 @@
-import QtQuick 2.15
+import QtQuick
 
 Rectangle {
     id: titleBar
@@ -13,10 +13,13 @@ Rectangle {
     property bool isWindowMaximized: false
     property bool showGitflicButton: true
     property bool showWindowButtons: true
+    property bool isMobile: false
 
     signal toggleMaximize
     signal showMinimized
     signal close
+
+    visible: !isMobile
 
     Text {
         anchors.centerIn: parent
@@ -29,7 +32,7 @@ Rectangle {
     // Кнопка Gitflic (опциональная)
     Rectangle {
         id: gitflicButton
-        width: 28  // Увеличил размер
+        width: 28
         height: 28
         radius: 14
         color: gitflicMouseArea.containsMouse ? "#4CAF50" : "transparent"
@@ -38,12 +41,12 @@ Rectangle {
             leftMargin: 10
             verticalCenter: parent.verticalCenter
         }
-        visible: showGitflicButton
+        visible: showGitflicButton && !isMobile  // Скрываем на мобильных
 
         Image {
             anchors.centerIn: parent
             source: "qrc:/icons/git.png"
-            sourceSize: Qt.size(18, 18)  // Увеличил размер иконки
+            sourceSize: Qt.size(18, 18)
         }
 
         MouseArea {
@@ -65,7 +68,7 @@ Rectangle {
             rightMargin: 8
         }
         spacing: 6
-        visible: showWindowButtons
+        visible: showWindowButtons && !isMobile  // Скрываем на мобильных
 
         Rectangle {
             id: minimizeBtn
@@ -165,12 +168,14 @@ Rectangle {
             bottom: parent.bottom
             leftMargin: 5
         }
+        // Отключаем перетаскивание на мобильных устройствах
+        enabled: !isMobile
 
         property point clickPos: Qt.point(0, 0)
         property bool dragging: false
 
         onPressed: function(mouse) {
-            if (mouse.button === Qt.LeftButton) {
+            if (mouse.button === Qt.LeftButton && !isMobile) {
                 clickPos = Qt.point(mouse.x, mouse.y)
                 dragging = true
 
@@ -183,7 +188,7 @@ Rectangle {
         }
 
         onPositionChanged: function(mouse) {
-            if (dragging && mouse.buttons === Qt.LeftButton && window) {
+            if (dragging && mouse.buttons === Qt.LeftButton && window && !isMobile) {
                 var delta = Qt.point(mouse.x - clickPos.x, mouse.y - clickPos.y)
 
                 // Прямое перемещение окна - работает на всех платформах

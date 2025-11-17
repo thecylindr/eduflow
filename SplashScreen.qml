@@ -1,27 +1,28 @@
-import QtQuick 2.15
-import QtQuick.Window 2.15
+import QtQuick
 import Qt5Compat.GraphicalEffects
+import "common" as Common
 
 Window {
     id: splashWindow
-    width: 700
-    height: 450
-    flags: Qt.SplashScreen | Qt.FramelessWindowHint
+    width: isMobile ? Screen.width : 700
+    height: isMobile ? Screen.height : 450
+    flags: Qt.SplashScreen | (isMobile ? Qt.Window : Qt.FramelessWindowHint)
     color: "transparent"
     modality: Qt.ApplicationModal
     visible: true
+
+    // Определяем мобильное устройство
+    property bool isMobile: Screen.width < 768 || Screen.height < 768
+
+    // Масштабирующий коэффициент для мобильных
+    property real scaleFactor: isMobile ? Math.min(width / 700, height / 450, 1.0) : 1.0
 
     property bool loadingComplete: false
     property int nearestCircleIndex: -1
 
     // ---- Палитра для кружков и искр
     property var circleColors: [
-        "#f44336", // красный
-        "#ff9800", // оранжевый
-        "#ffeb3b", // жёлтый
-        "#4caf50", // зелёный
-        "#2196f3", // синий
-        "#9c27b0"  // фиолетовый
+        "#f44336", "#ff9800", "#ffeb3b", "#4caf50", "#2196f3", "#9c27b0"
     ]
 
     // ---- Стандартный фон
@@ -31,230 +32,22 @@ Window {
             GradientStop { position: 0.0; color: "#6a11cb" }
             GradientStop { position: 1.0; color: "#2575fc" }
         }
-        radius: 20
+        radius: isMobile ? 0 : 20
     }
 
-    // Анимация ожидания
-    Rectangle {
-        id: loadingAnimation
-        width: 70
-        height: 70
-        anchors.centerIn: parent
-        color: "transparent"
-        visible: false
-        opacity: 0
-
-        property real spinnerRotation: 0
-
-        Behavior on opacity { NumberAnimation { duration: 300 } }
-
-        Canvas {
-            id: spinnerCanvas
-            anchors.fill: parent
-            onPaint: {
-                var ctx = getContext("2d");
-                ctx.clearRect(0, 0, width, height);
-                ctx.strokeStyle = "#8A2BE2";
-                ctx.lineWidth = 3;
-                ctx.lineCap = "round";
-
-                var centerX = width / 2;
-                var centerY = height / 2;
-                var radius = Math.min(width, height) / 2 - 8;
-
-                ctx.beginPath();
-                ctx.arc(centerX, centerY, radius,
-                        loadingAnimation.spinnerRotation * Math.PI / 180,
-                        (loadingAnimation.spinnerRotation + 270) * Math.PI / 180,
-                        false);
-                ctx.stroke();
-            }
-        }
-
-        RotationAnimation {
-            target: loadingAnimation
-            property: "spinnerRotation"
-            from: 0
-            to: 360
-            duration: 1200
-            loops: Animation.Infinite
-            running: loadingAnimation.visible
-        }
-
-        Glow {
-            anchors.fill: spinnerCanvas
-            radius: 6
-            samples: 12
-            color: "#8A2BE2"
-            source: spinnerCanvas
-            transparentBorder: true
-        }
-
-        onSpinnerRotationChanged: spinnerCanvas.requestPaint()
+    // ---- Фоновые многоугольники
+    Common.PolygonBackground {
+        anchors.fill: parent
+        polygonCount: isMobile ? 4 : 15
+        isMobile: isMobile
     }
 
-    // Многоугольники с анимацией
-    Repeater {
-        id: polygonRepeater
-        model: 15
-
-        Item {
-            id: polygonContainer
-            property real startX: Math.random() * (splashWindow.width + 200) - 60
-            property real startY: Math.random() * (splashWindow.height + 200) - 60
-            property real targetX: Math.random() * (splashWindow.width + 200) - 60
-            property real targetY: Math.random() * (splashWindow.height + 200) - 60
-            property real polygonSize: 30 + Math.random() * 45
-            property color polygonColor: [
-                "#FF5252", "#FF4081", "#E040FB", "#7C4DFF", "#536DFE",
-                "#448AFF", "#40C4FF", "#18FFFF", "#64FFDA", "#69F0AE"
-            ][Math.floor(Math.random() * 10)]
-
-            x: startX
-            y: startY
-            opacity: 0
-            width: polygonSize * 2
-            height: polygonSize * 2
-
-            Canvas {
-                id: polygonCanvas
-                anchors.fill: parent
-                onPaint: {
-                    var ctx = getContext("2d");
-                    ctx.clearRect(0, 0, width, height);
-                    drawPolygon(ctx);
-                }
-
-                function drawPolygon(ctx) {
-                    var sides = 6 + Math.floor(Math.random() * 3);
-                    var radius = polygonSize;
-                    var centerX = width / 2;
-                    var centerY = height / 2;
-
-                    ctx.shadowColor = polygonColor;
-                    ctx.shadowBlur = 12;
-
-                    ctx.beginPath();
-                    ctx.moveTo(centerX + radius * Math.cos(0), centerY + radius * Math.sin(0));
-
-                    for (var i = 1; i <= sides; i++) {
-                        ctx.lineTo(centerX + radius * Math.cos(i * 2 * Math.PI / sides),
-                                  centerY + radius * Math.sin(i * 2 * Math.PI / sides));
-                    }
-
-                    ctx.closePath();
-                    ctx.fillStyle = polygonColor;
-                    ctx.fill();
-                }
-            }
-
-            Glow {
-                anchors.fill: polygonCanvas
-                radius: 10
-                samples: 14
-                color: polygonContainer.polygonColor
-                source: polygonCanvas
-                opacity: polygonContainer.opacity * 0.6
-            }
-
-            SequentialAnimation {
-                id: appearAnimation
-                running: true
-                loops: Animation.Infinite
-                PauseAnimation { duration: index * 1200 }
-                ParallelAnimation {
-                    NumberAnimation {
-                        target: polygonContainer; property: "opacity"; from: 0; to: 0.6; duration: 3000; easing.type: Easing.InOutQuad }
-                    NumberAnimation {
-                        target: polygonContainer; property: "x"; from: startX; to: targetX; duration: 12000; easing.type: Easing.InOutQuad }
-                    NumberAnimation {
-                        target: polygonContainer; property: "y"; from: startY; to: targetY; duration: 12000; easing.type: Easing.InOutQuad }
-                    RotationAnimation {
-                        target: polygonContainer; from: 0; to: 90 + Math.random() * 90; duration: 10000; easing.type: Easing.InOutQuad }
-                }
-                PauseAnimation { duration: 3000 }
-                ParallelAnimation {
-                    NumberAnimation {
-                        target: polygonContainer; property: "opacity"; from: 0.6; to: 0; duration: 4000; easing.type: Easing.InOutQuad }
-                    NumberAnimation {
-                        target: polygonContainer; property: "x"; from: targetX; to: targetX + (Math.random() - 0.5) * 150; duration: 4000; easing.type: Easing.InOutQuad }
-                    NumberAnimation {
-                        target: polygonContainer; property: "y"; from: targetY; to: targetY + (Math.random() - 0.5) * 150; duration: 4000; easing.type: Easing.InOutQuad }
-                }
-                PauseAnimation { duration: 2000 + Math.random() * 3000 }
-                ScriptAction {
-                    script: {
-                        polygonContainer.startX = polygonContainer.x;
-                        polygonContainer.startY = polygonContainer.y;
-                        polygonContainer.polygonColor = [
-                            "#FF5252", "#FF4081", "#E040FB", "#7C4DFF", "#536DFE",
-                            "#448AFF", "#40C4FF", "#18FFFF", "#64FFDA", "#69F0AE"
-                        ][Math.floor(Math.random() * 10)];
-                        polygonCanvas.requestPaint();
-                    }
-                }
-            }
-            Component.onCompleted: polygonCanvas.requestPaint()
-        }
-    }
-
-    // Быстрые искры при загрузке
-    Repeater {
-        id: sparks
-        model: 20
-
-        Rectangle {
-            id: spark
-            width: 2 + Math.random() * 4
-            height: width
-            radius: width / 2
-            color: circleColors[Math.floor(Math.random() * circleColors.length)]
-            opacity: 0
-            z: 1
-
-            property real startX: Math.random() * splashWindow.width
-            property real startY: Math.random() * splashWindow.height
-            property real targetX: Math.random() * splashWindow.width
-            property real targetY: Math.random() * splashWindow.height
-            property real speed: 1000 + Math.random() * 2000
-
-            x: startX
-            y: startY
-
-            layer.enabled: true
-            layer.effect: Glow {
-                color: spark.color
-                radius: 8
-                samples: 16
-                transparentBorder: true
-            }
-
-            SequentialAnimation {
-                running: true
-                loops: Animation.Infinite
-                PauseAnimation { duration: Math.random() * 2000 }
-                ParallelAnimation {
-                    NumberAnimation {
-                        target: spark; property: "opacity"; from: 0; to: 0.8; duration: 500; easing.type: Easing.InOutQuad }
-                    NumberAnimation {
-                        target: spark; property: "x"; from: startX; to: targetX; duration: speed; easing.type: Easing.InOutQuad }
-                    NumberAnimation {
-                        target: spark; property: "y"; from: startY; to: targetY; duration: speed; easing.type: Easing.InOutQuad }
-                }
-                NumberAnimation {
-                    target: spark; property: "opacity"; to: 0; duration: 500; easing.type: Easing.InOutQuad }
-                ScriptAction {
-                    script: {
-                        spark.startX = Math.random() * splashWindow.width;
-                        spark.startY = Math.random() * splashWindow.height;
-                        spark.targetX = Math.random() * splashWindow.width;
-                        spark.targetY = Math.random() * splashWindow.height;
-                        spark.color = circleColors[Math.floor(Math.random() * circleColors.length)];
-                        spark.speed = 1000 + Math.random() * 2000;
-                    }
-                }
-            }
-        }
+    // ---- Быстрые искры
+    Common.SparksBackground {
+        anchors.fill: parent
+        sparkCount: isMobile ? 4 : 32
+        isMobile: isMobile
+        colors: circleColors
     }
 
     // ---- Кружки (по периметру, под прямоугольником)
@@ -264,8 +57,8 @@ Window {
 
         Item {
             id: circleContainer
-            width: 22
-            height: 22
+            width: 22 * scaleFactor
+            height: 22 * scaleFactor
             z: 0
 
             property color circleColor: circleColors[index]
@@ -310,7 +103,7 @@ Window {
             Rectangle {
                 id: circle
                 anchors.centerIn: parent
-                width: circleContainer.isNearest ? 35 : 22
+                width: circleContainer.isNearest ? 35 * scaleFactor : 22 * scaleFactor
                 height: width
                 radius: width / 2
                 color: circleContainer.circleColor
@@ -322,7 +115,7 @@ Window {
                 layer.enabled: true
                 layer.effect: Glow {
                     color: circle.color
-                    radius: circleContainer.isNearest ? 20 : 12
+                    radius: circleContainer.isNearest ? 20 * scaleFactor : 12 * scaleFactor
                     samples: 24
                     transparentBorder: true
                 }
@@ -332,7 +125,7 @@ Window {
             Rectangle {
                 id: pulse
                 anchors.centerIn: parent
-                width: circleContainer.isNearest ? 80 : 0
+                width: circleContainer.isNearest ? 80 * scaleFactor : 0
                 height: width
                 radius: width / 2
                 color: circleContainer.circleColor
@@ -354,7 +147,7 @@ Window {
             // Запуск импульса при приближении
             onIsNearestChanged: {
                 if (isNearest) {
-                    pulse.width = 80;
+                    pulse.width = 80 * scaleFactor;
                     pulse.opacity = 0.5;
                     pulseTimer.restart();
                 }
@@ -374,11 +167,11 @@ Window {
     // ---- Основной прямоугольник (поверх кружков)
     Rectangle {
         id: infoRectangle
-        width: 260
-        height: 140
+        width: isMobile ? Math.min(parent.width * 0.8, 400) : 260
+        height: isMobile ? 160 * scaleFactor : 140
         anchors.centerIn: parent
         color: "#ffffff"
-        radius: 12
+        radius: 12 * scaleFactor
         opacity: 0.98
         z: 2
 
@@ -415,7 +208,7 @@ Window {
         layer.enabled: true
         layer.effect: Glow {
             color: infoRectangle.glowColor
-            radius: 15
+            radius: 15 * scaleFactor
             samples: 35
             transparentBorder: true
         }
@@ -424,21 +217,21 @@ Window {
         Text {
             id: iconText
             anchors.top: parent.top
-            anchors.topMargin: 18
+            anchors.topMargin: 20 * scaleFactor
             anchors.horizontalCenter: parent.horizontalCenter
             text: "🎓"
-            font.pixelSize: 34
+            font.pixelSize: 36 * scaleFactor
         }
 
         // Название
         Text {
             id: appNameText
             anchors.top: iconText.bottom
-            anchors.topMargin: 6
+            anchors.topMargin: 8 * scaleFactor
             anchors.horizontalCenter: parent.horizontalCenter
             color: "#2c3e50"
             text: appName
-            font.pixelSize: 18
+            font.pixelSize: Math.max(16, 18 * scaleFactor)
             font.family: "Arial"
             font.weight: Font.Bold
         }
@@ -446,9 +239,9 @@ Window {
         Text {
             id: appTextName
             anchors.top: appNameText.bottom
-            anchors.topMargin: 4
+            anchors.topMargin: 4 * scaleFactor
             anchors.horizontalCenter: parent.horizontalCenter
-            font.pixelSize: 12
+            font.pixelSize: Math.max(10, 12 * scaleFactor)
             text: "Курсовая Работа студента"
             color: "#808080"
         }
@@ -456,12 +249,12 @@ Window {
         // Версия
         Text {
             anchors.right: parent.right
-            anchors.rightMargin: 10
+            anchors.rightMargin: 12 * scaleFactor
             anchors.bottom: parent.bottom
-            anchors.bottomMargin: 8
+            anchors.bottomMargin: 8 * scaleFactor
             color: "#7f8c8d"
             text: appVersion
-            font.pixelSize: 10
+            font.pixelSize: Math.max(8, 10 * scaleFactor)
             font.family: "Monospace"
         }
     }
@@ -510,9 +303,9 @@ Window {
         id: statusText
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: infoRectangle.bottom
-        anchors.topMargin: 26
+        anchors.topMargin: 30 * scaleFactor
         text: "Инициализация системы..."
-        font.pixelSize: 14
+        font.pixelSize: Math.max(12, 14 * scaleFactor)
         color: "#ffffff"
         opacity: 0.95
     }
@@ -523,13 +316,13 @@ Window {
     Rectangle {
         id: progressBarBackground
         width: infoRectangle.width * 0.78
-        height: 8
+        height: 8 * scaleFactor
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: statusText.bottom
-        anchors.topMargin: 16
+        anchors.topMargin: 20 * scaleFactor
         color: "#ffffff"
         opacity: 0.18
-        radius: 6
+        radius: 6 * scaleFactor
     }
 
     Rectangle {
@@ -539,7 +332,7 @@ Window {
         anchors.left: progressBarBackground.left
         anchors.verticalCenter: progressBarBackground.verticalCenter
         color: infoRectangle.glowColor
-        radius: 6
+        radius: 6 * scaleFactor
         Behavior on width { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
     }
 
