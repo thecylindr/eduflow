@@ -58,6 +58,8 @@ qt_add_qml_module(EduFlow
                 enhanced/EnhancedListItem.qml
                 enhanced/EnhancedGridItem.qml
                 enhanced/EnhancedGroupBox.qml
+
+
                 main/view/settings/ServerPage.qml
                 main/view/settings/SessionsPage.qml
                 main/view/settings/SecurityPage.qml
@@ -135,6 +137,7 @@ qt_add_resources(EduFlow "resources"
         icons/search.gif
         icons/search.png
         icons/sidebar.png
+        icons/add.png
         # Добавляем файл конфигурации стилей
         qtquickcontrols2.conf  # <-- НОВАЯ СТРОКА: Добавьте этот файл в проект!
 )

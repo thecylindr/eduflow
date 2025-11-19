@@ -5,7 +5,7 @@ import QtQuick.Layouts
 Popup {
     id: root
     width: Math.min(parent.width * 0.85, 400)
-    height: contentColumn.implicitHeight + 40
+    height: contentColumn.implicitHeight + 50
     x: (parent.width - width) / 2
     y: (parent.height - height) / 2
     modal: true

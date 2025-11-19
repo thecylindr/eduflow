@@ -5,7 +5,7 @@ Repeater {
     id: polygonRepeater
 
     property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
-                           Qt.platform.os === "tvos" || Screen.width < 768
+                           Qt.platform.os === "tvos"
     property int polygonCount: 15
 
     model: isMobile ? 2 : polygonCount

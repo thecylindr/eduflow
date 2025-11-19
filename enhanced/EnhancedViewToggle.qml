@@ -3,25 +3,26 @@ import QtQuick.Controls
 
 Rectangle {
     id: viewToggle
-    width: 80
-    height: 35
-    radius: 8
+    width: isMobile ? 70 : 80
+    height: isMobile ? 32 : 35
+    radius: isMobile ? 6 : 8
     color: "#f5f5f5"
     border.color: "#ddd"
     border.width: 1
 
     property bool isGridView: false
+    property bool isMobile: false
     signal viewToggled(bool gridView)
 
     Row {
         anchors.centerIn: parent
-        spacing: 10
+        spacing: isMobile ? 6 : 10
 
         Rectangle {
             id: listViewButton
-            width: 30
-            height: 25
-            radius: 5
+            width: isMobile ? 26 : 30
+            height: isMobile ? 22 : 25
+            radius: isMobile ? 4 : 5
             color: !viewToggle.isGridView ? "#3498db" : "transparent"
             border.color: !viewToggle.isGridView ? "#2980b9" : "#ddd"
             border.width: 2
@@ -29,7 +30,7 @@ Rectangle {
             Text {
                 anchors.centerIn: parent
                 text: "≡"
-                font.pixelSize: 12
+                font.pixelSize: isMobile ? 10 : 12
                 color: !viewToggle.isGridView ? "white" : "#666"
                 font.bold: true
             }
@@ -45,9 +46,9 @@ Rectangle {
 
         Rectangle {
             id: gridViewButton
-            width: 30
-            height: 25
-            radius: 5
+            width: isMobile ? 26 : 30
+            height: isMobile ? 22 : 25
+            radius: isMobile ? 4 : 5
             color: viewToggle.isGridView ? "#3498db" : "transparent"
             border.color: viewToggle.isGridView ? "#2980b9" : "#ddd"
             border.width: 2
@@ -55,7 +56,7 @@ Rectangle {
             Text {
                 anchors.centerIn: parent
                 text: "⧉"
-                font.pixelSize: 12
+                font.pixelSize: isMobile ? 10 : 12
                 color: viewToggle.isGridView ? "white" : "#666"
                 font.bold: true
             }

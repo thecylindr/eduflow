@@ -1,12 +1,13 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts 1.15
+import QtQuick.Controls.Material
 import "../../common" as Common
 
 Window {
     id: studentFormWindow
     width: 420
-    height: 580
+    height: 530
     flags: Qt.Dialog | Qt.FramelessWindowHint
     modality: Qt.ApplicationModal
     color: "transparent"
@@ -211,7 +212,7 @@ Window {
         Rectangle {
             id: whiteForm
             width: 380
-            height: 500
+            height: 450
             anchors {
                 top: titleBar.bottom
                 topMargin: 16
@@ -415,6 +416,78 @@ Window {
                             anchors.horizontalCenter: parent.horizontalCenter
                             enabled: !isSaving
                             font.pixelSize: 12
+
+                            // Белый стиль для ComboBox
+                            background: Rectangle {
+                                radius: 6
+                                color: "#ffffff"
+                                border.color: groupComboBox.enabled ? "#e0e0e0" : "#f0f0f0"
+                                border.width: 1
+                            }
+
+                            contentItem: Text {
+                                text: groupComboBox.displayText
+                                color: "#000000"
+                                horizontalAlignment: Text.AlignLeft
+                                verticalAlignment: Text.AlignVCenter
+                                leftPadding: 10
+                                rightPadding: groupComboBox.indicator.width + 10
+                                font: groupComboBox.font
+                            }
+
+                            indicator: Rectangle {
+                                x: groupComboBox.width - width - 5
+                                y: groupComboBox.topPadding + (groupComboBox.height - height) / 2
+                                width: 12
+                                height: 8
+                                color: "transparent"
+                                Rectangle {
+                                    width: 8
+                                    height: 8
+                                    color: "#666666"
+                                    rotation: 45
+                                    anchors.centerIn: parent
+                                }
+                            }
+
+                            popup: Popup {
+                                y: groupComboBox.height - 1
+                                width: groupComboBox.width
+                                implicitHeight: contentItem.implicitHeight
+                                padding: 1
+
+                                contentItem: ListView {
+                                    clip: true
+                                    implicitHeight: contentHeight
+                                    model: groupComboBox.popup.visible ? groupComboBox.delegateModel : null
+                                    currentIndex: groupComboBox.highlightedIndex
+
+                                    ScrollIndicator.vertical: ScrollIndicator { }
+                                }
+
+                                background: Rectangle {
+                                    color: "#ffffff"
+                                    border.color: "#e0e0e0"
+                                    radius: 6
+                                }
+                            }
+
+                            delegate: ItemDelegate {
+                                width: groupComboBox.width
+                                contentItem: Text {
+                                    text: modelData.name
+                                    color: "#000000"
+                                    font: groupComboBox.font
+                                    elide: Text.ElideRight
+                                    verticalAlignment: Text.AlignVCenter
+                                    leftPadding: 10
+                                }
+                                background: Rectangle {
+                                    color: highlighted ? "#e0e0e0" : "#ffffff"
+                                }
+                                highlighted: groupComboBox.highlightedIndex === index
+                            }
+
                             model: studentFormWindow.groups
                             textRole: "name"
                             KeyNavigation.tab: saveButton

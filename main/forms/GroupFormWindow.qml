@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Controls.Material
 import QtQuick.Layouts 1.15
 import "../../common" as Common
 
@@ -33,7 +34,6 @@ Window {
 
     function updateTeacherModel() {
         teacherDisplayModel.clear()
-        console.log("🔄 Обновление модели преподавателей. Всего:", teachers.length)
 
         for (var i = 0; i < teachers.length; i++) {
             var teacher = teachers[i]
@@ -45,8 +45,6 @@ Window {
                 teacherId: teacherId,
                 originalIndex: i
             })
-
-            console.log("  👨‍🏫 Добавлен:", displayName, "(ID:", teacherId + ")")
         }
 
         // Восстанавливаем выбранного преподавателя после обновления модели
@@ -68,7 +66,6 @@ Window {
             for (var i = 0; i < teacherDisplayModel.count; i++) {
                 if (teacherDisplayModel.get(i).teacherId === teacherId) {
                     teacherComboBox.currentIndex = i
-                    console.log("🎯 Восстановлен выбранный преподаватель:", teacherDisplayModel.get(i).displayName)
                     break
                 }
             }
@@ -112,7 +109,6 @@ Window {
 
     function fillForm(groupData) {
         nameField.text = groupData.name || ""
-        console.log("📝 Заполнение формы группы:", groupData.name)
     }
 
     function getGroupData() {
@@ -128,9 +124,6 @@ Window {
             var selectedItem = teacherDisplayModel.get(teacherComboBox.currentIndex)
             teacherId = selectedItem.teacherId
             selectedTeacher = teachers[selectedItem.originalIndex]
-            console.log("📤 Выбран преподаватель:", selectedItem.displayName, "ID:", teacherId)
-        } else {
-            console.log("❌ Преподаватель не выбран")
         }
 
         return {
@@ -143,15 +136,14 @@ Window {
 
     function handleSaveResponse(response) {
         isSaving = false
-        console.log("🔔 Обработка ответа сохранения группы:", JSON.stringify(response, null, 2))
 
         if (response.success) {
-            var message = response.message || (isEditMode ? "✅ Группа успешно обновлена!" : "✅ Группа успешно добавлена!")
+            var message = response.message || (isEditMode ? "Группа успешно обновлена!" : "Группа успешно добавлена!")
             showMessage(message, "success")
             saveCompleted(true, message)
             closeWindow()
         } else {
-            var errorMsg = "❌ " + (response.error || "Неизвестная ошибка")
+            var errorMsg = (response.error || "Неизвестная ошибка")
             showMessage(errorMsg, "error")
             saveCompleted(false, errorMsg)
         }
@@ -193,7 +185,6 @@ Window {
 
     // Обновляем модель при изменении списка преподавателей
     onTeachersChanged: {
-        console.log("📋 Список преподавателей изменен, количество:", teachers.length)
         updateTeacherModel()
     }
 
@@ -268,14 +259,6 @@ Window {
                         width: parent.width
                         spacing: 8
 
-                        Text {
-                            text: "Название группы:"
-                            color: "#2c3e50"
-                            font.bold: true
-                            font.pixelSize: 14
-                            anchors.horizontalCenter: parent.horizontalCenter
-                        }
-
                         TextField {
                             id: nameField
                             width: parent.width - 40
@@ -327,7 +310,7 @@ Window {
                             onCurrentIndexChanged: {
                                 if (currentIndex >= 0) {
                                     var selected = teacherDisplayModel.get(currentIndex)
-                                    console.log("🔄 Выбран преподаватель:", selected.displayName, "ID:", selected.teacherId)
+                                    console.log("Выбран преподаватель:", selected.displayName, "ID:", selected.teacherId)
                                 }
                             }
                         }
@@ -335,7 +318,7 @@ Window {
                         // Сообщение если нет преподавателей
                         Text {
                             visible: teacherDisplayModel.count === 0
-                            text: teachers.length === 0 ? "❌ Нет доступных преподавателей" : "🔄 Загрузка преподавателей..."
+                            text: teachers.length === 0 ? "Нет доступных преподавателей" : "Загрузка преподавателей..."
                             color: "#e74c3c"
                             font.pixelSize: 12
                             anchors.horizontalCenter: parent.horizontalCenter
@@ -366,9 +349,10 @@ Window {
                             spacing: 12
                             width: parent.width - 24
 
-                            Text {
-                                text: "💡"
-                                font.pixelSize: 20
+                            Image {
+                                source: "qrc:/icons/info.png"
+                                width: 32
+                                height: 32
                                 anchors.verticalCenter: parent.verticalCenter
                             }
 
@@ -403,7 +387,7 @@ Window {
 
                     Button {
                         id: saveButton
-                        text: isSaving ? "⏳ Сохранение..." : "💾 Сохранить"
+                        text: isSaving ? "Сохранение..." : "Сохранить"
                         implicitWidth: 140
                         implicitHeight: 40
                         enabled: !isSaving &&
@@ -419,12 +403,25 @@ Window {
                             border.width: 2
                         }
 
-                        contentItem: Text {
-                            text: saveButton.text
-                            color: "white"
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            font: saveButton.font
+                        contentItem: Row {
+                            spacing: 8
+                            anchors.centerIn: parent
+
+                            Image {
+                                source: isSaving ? "qrc:/icons/loading.png" : "qrc:/icons/save.png"
+                                width: 16
+                                height: 16
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+
+                            Text {
+                                text: saveButton.text
+                                color: "white"
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                font: saveButton.font
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
                         }
 
                         KeyNavigation.tab: cancelButton
@@ -434,11 +431,11 @@ Window {
 
                         onClicked: {
                             if (nameField.text.trim() === "") {
-                                showMessage("❌ Введите название группы", "error")
+                                showMessage("Введите название группы", "error")
                                 return
                             }
                             if (teacherComboBox.currentIndex < 0) {
-                                showMessage("❌ Выберите преподавателя", "error")
+                                showMessage("Выберите преподавателя", "error")
                                 return
                             }
                             isSaving = true
@@ -448,7 +445,7 @@ Window {
 
                     Button {
                         id: cancelButton
-                        text: "❌ Отмена"
+                        text: "Отмена"
                         implicitWidth: 140
                         implicitHeight: 40
                         enabled: !isSaving
@@ -462,12 +459,25 @@ Window {
                             border.width: 2
                         }
 
-                        contentItem: Text {
-                            text: cancelButton.text
-                            color: "white"
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            font: cancelButton.font
+                        contentItem: Row {
+                            spacing: 8
+                            anchors.centerIn: parent
+
+                            Image {
+                                source: "qrc:/icons/cross.png"
+                                width: 16
+                                height: 16
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+
+                            Text {
+                                text: cancelButton.text
+                                color: "white"
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                font: cancelButton.font
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
                         }
 
                         KeyNavigation.tab: nameField

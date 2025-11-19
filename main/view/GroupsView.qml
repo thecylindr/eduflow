@@ -1,4 +1,3 @@
-// main/view/GroupsView.qml
 import QtQuick
 import QtQuick.Layouts 1.15
 import QtQuick.Controls
@@ -10,6 +9,8 @@ Item {
     property var groups: []
     property var teachers: []
     property bool isLoading: false
+    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
+                           Qt.platform.os === "tvos" || Qt.platform.os === "wasm"
 
     function refreshGroups() {
         isLoading = true;
@@ -208,10 +209,70 @@ Item {
             border.color: "#c0392b"
             border.width: 1
 
+            // Мобильная версия - центрированные большие кнопки
+            Row {
+                anchors.centerIn: parent
+                spacing: isMobile ? 30 : 15
+                visible: isMobile
+
+                // Кнопка обновления для мобильных
+                Rectangle {
+                    width: 50
+                    height: 50
+                    radius: 25
+                    color: refreshMouseAreaMobile.containsPress ? "#c0392b" : "transparent"
+
+                    Image {
+                        source: "qrc:/icons/refresh.png"
+                        sourceSize: Qt.size(28, 28)
+                        anchors.centerIn: parent
+                    }
+
+                    MouseArea {
+                        id: refreshMouseAreaMobile
+                        anchors.fill: parent
+                        onClicked: refreshGroups()
+                    }
+                }
+
+                // Текст счетчика для мобильных
+                Text {
+                    text: "Всего: " + (groups ? groups.length : 0)
+                    color: "white"
+                    font.pixelSize: 16
+                    font.bold: true
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                // Кнопка добавления для мобильных
+                Rectangle {
+                    width: 50
+                    height: 50
+                    radius: 25
+                    color: addMouseAreaMobile.containsPress ? "#c0392b" : "transparent"
+
+                    Text {
+                        text: "+"
+                        color: "white"
+                        font.pixelSize: 32
+                        font.bold: true
+                        anchors.centerIn: parent
+                    }
+
+                    MouseArea {
+                        id: addMouseAreaMobile
+                        anchors.fill: parent
+                        onClicked: openForAdd()
+                    }
+                }
+            }
+
+            // Десктопная версия - без изменений
             Row {
                 anchors.fill: parent
                 anchors.margins: 10
                 spacing: 15
+                visible: !isMobile
 
                 Text {
                     text: "Всего групп: " + (groups ? groups.length : 0)
@@ -227,8 +288,8 @@ Item {
                     width: 100
                     height: 30
                     radius: 6
-                    color: refreshMouseArea.containsMouse ? "#c0392b" : "#e74c3c"
-                    border.color: refreshMouseArea.containsMouse ? "#a93226" : "white"
+                    color: refreshMouseAreaDesktop.containsMouse ? "#c0392b" : "#e74c3c"
+                    border.color: refreshMouseAreaDesktop.containsMouse ? "#a93226" : "white"
                     border.width: 2
 
                     Row {
@@ -251,7 +312,7 @@ Item {
                     }
 
                     MouseArea {
-                        id: refreshMouseArea
+                        id: refreshMouseAreaDesktop
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: refreshGroups()
@@ -264,8 +325,8 @@ Item {
                     width: 150
                     height: 30
                     radius: 6
-                    color: addMouseArea.containsMouse ? "#c0392b" : "#e74c3c"
-                    border.color: addMouseArea.containsMouse ? "#a93226" : "white"
+                    color: addMouseAreaDesktop.containsMouse ? "#c0392b" : "#e74c3c"
+                    border.color: addMouseAreaDesktop.containsMouse ? "#a93226" : "white"
                     border.width: 2
 
                     Row {
@@ -288,7 +349,7 @@ Item {
                     }
 
                     MouseArea {
-                        id: addMouseArea
+                        id: addMouseAreaDesktop
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: openForAdd()
@@ -393,9 +454,6 @@ Item {
         onLoaded: {
             if (item) {
                 item.closed.connect(function() {
-                    if (item) {
-                        item.closeWindow();
-                    }
                 });
             }
         }

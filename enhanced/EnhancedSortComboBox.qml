@@ -1,12 +1,12 @@
-// EnhancedSortComboBox.qml
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Controls.Material
 
 Rectangle {
     id: sortComboBox
-    width: 200
-    height: 35
-    radius: 8
+    width: isMobile ? 150 : 200
+    height: isMobile ? 32 : 35
+    radius: isMobile ? 6 : 8
     color: "#f5f5f5"
     border.color: "#ddd"
     border.width: 1
@@ -15,40 +15,41 @@ Rectangle {
     property var sortRoles: []
     property int currentSortIndex: 0
     property bool sortAscending: true
+    property bool isMobile: false
 
     signal sortChanged(int index, bool ascending)
 
     Row {
         anchors.fill: parent
-        spacing: 5
+        spacing: isMobile ? 3 : 5
 
         // Кастомный комбобокс без использования стилизованного ComboBox
         Rectangle {
             id: comboBoxRect
-            width: parent.width - sortDirectionButton.width - 10
+            width: parent.width - sortDirectionButton.width - (isMobile ? 6 : 10)
             height: parent.height
-            radius: 6
+            radius: isMobile ? 4 : 6
             color: "transparent"
 
             Text {
                 id: selectedText
                 anchors.left: parent.left
-                anchors.leftMargin: 10
+                anchors.leftMargin: isMobile ? 6 : 10
                 anchors.verticalCenter: parent.verticalCenter
                 text: sortComboBox.sortOptions[sortComboBox.currentSortIndex] || ""
-                font.pixelSize: 12
+                font.pixelSize: isMobile ? 10 : 12
                 color: "#666"
                 elide: Text.ElideRight
-                width: parent.width - 20
+                width: parent.width - (isMobile ? 16 : 20)
             }
 
             // Стрелка вниз
             Text {
                 anchors.right: parent.right
-                anchors.rightMargin: 8
+                anchors.rightMargin: isMobile ? 6 : 8
                 anchors.verticalCenter: parent.verticalCenter
                 text: "▼"
-                font.pixelSize: 10
+                font.pixelSize: isMobile ? 8 : 10
                 color: "#666"
             }
 
@@ -68,6 +69,7 @@ Rectangle {
                     model: sortComboBox.sortOptions
                     MenuItem {
                         text: modelData
+                        font.pixelSize: isMobile ? 10 : 12
                         onTriggered: {
                             sortComboBox.currentSortIndex = index
                             sortComboBox.sortChanged(index, sortComboBox.sortAscending)
@@ -79,15 +81,15 @@ Rectangle {
 
         Rectangle {
             id: sortDirectionButton
-            width: 30
+            width: isMobile ? 26 : 30
             height: parent.height
-            radius: 6
+            radius: isMobile ? 4 : 6
             color: directionMouseArea.containsMouse ? "#e0e0e0" : "#f5f5f5"
 
             Text {
                 anchors.centerIn: parent
                 text: sortComboBox.sortAscending ? "↑" : "↓"
-                font.pixelSize: 14
+                font.pixelSize: isMobile ? 12 : 14
                 font.bold: true
                 color: "#666"
             }

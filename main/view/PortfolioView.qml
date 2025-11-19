@@ -8,8 +8,10 @@ Item {
 
     property var portfolios: []
     property var students: []
-    property var events: [] // Добавляем события для портфолио
+    property var events: []
     property bool isLoading: false
+    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
+                           Qt.platform.os === "tvos" || Qt.platform.os === "wasm"
 
     function refreshPortfolios() {
         isLoading = true;
@@ -42,7 +44,6 @@ Item {
                         studentName: studentName,
                         date: portfolio.date || "",
                         decree: portfolio.decree || "",
-                        // УБИРАЕМ description, так как теперь формируем его в компонентах отображения
                         eventId: portfolio.eventId || portfolio.event_id,
                         eventName: getEventName(portfolio.eventId || portfolio.event_id)
                     };
@@ -63,7 +64,7 @@ Item {
             if (response && response.success) {
                 portfolioView.students = response.data || [];
                 console.log("✅ Студенты загружены для портфолио:", portfolioView.students.length);
-                refreshEvents(); // Загружаем события после студентов
+                refreshEvents();
             } else {
                 var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
                 showMessage("❌ Ошибка загрузки студентов: " + errorMsg, "error");
@@ -77,7 +78,7 @@ Item {
             if (response && response.success) {
                 portfolioView.events = response.data || [];
                 console.log("✅ События загружены для портфолио:", portfolioView.events.length);
-                refreshPortfolios(); // Загружаем портфолио после событий
+                refreshPortfolios();
             } else {
                 var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
                 showMessage("❌ Ошибка загрузки событий: " + errorMsg, "error");
@@ -130,7 +131,6 @@ Item {
         return "Неизвестное событие";
     }
 
-    // CRUD функции для портфолио
     function addPortfolio(portfolioData) {
         if (!portfolioData) {
             showMessage("❌ Данные портфолио не указаны", "error");
@@ -265,10 +265,76 @@ Item {
             border.color: "#8e44ad"
             border.width: 1
 
+            // Мобильная версия - центрированные большие кнопки
+            Row {
+                anchors.centerIn: parent
+                spacing: isMobile ? 30 : 15
+                visible: isMobile
+
+                // Кнопка обновления для мобильных
+                Rectangle {
+                    width: 50
+                    height: 50
+                    radius: 25
+                    color: refreshMouseAreaMobile.containsPress ? "#8e44ad" : "transparent"
+
+                    Image {
+                        source: "qrc:/icons/refresh.png"
+                        sourceSize: Qt.size(28, 28)
+                        anchors.centerIn: parent
+                    }
+
+                    MouseArea {
+                        id: refreshMouseAreaMobile
+                        anchors.fill: parent
+                        onClicked: refreshPortfolios()
+                    }
+                }
+
+                // Текст счетчика для мобильных
+                Text {
+                    text: "Всего: " + (portfolios ? portfolios.length : 0)
+                    color: "white"
+                    font.pixelSize: 16
+                    font.bold: true
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                // Кнопка добавления для мобильных
+                Rectangle {
+                    width: 50
+                    height: 50
+                    radius: 25
+                    color: addMouseAreaMobile.containsPress ? "#8e44ad" : "transparent"
+
+                    Text {
+                        text: "+"
+                        color: "white"
+                        font.pixelSize: 32
+                        font.bold: true
+                        anchors.centerIn: parent
+                    }
+
+                    MouseArea {
+                        id: addMouseAreaMobile
+                        anchors.fill: parent
+                        onClicked: {
+                            if (portfolioFormWindow.item) {
+                                portfolioFormWindow.openForAdd();
+                            } else {
+                                portfolioFormWindow.active = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Десктопная версия - без изменений
             Row {
                 anchors.fill: parent
                 anchors.margins: 10
                 spacing: 15
+                visible: !isMobile
 
                 Text {
                     text: "Всего портфолио: " + (portfolios ? portfolios.length : 0)
@@ -284,8 +350,8 @@ Item {
                     width: 100
                     height: 30
                     radius: 6
-                    color: refreshMouseArea.containsMouse ? "#8e44ad" : "#9b59b6"
-                    border.color: refreshMouseArea.containsMouse ? "#6c3483" : "white"
+                    color: refreshMouseAreaDesktop.containsMouse ? "#8e44ad" : "#9b59b6"
+                    border.color: refreshMouseAreaDesktop.containsMouse ? "#6c3483" : "white"
                     border.width: 2
 
                     Row {
@@ -308,7 +374,7 @@ Item {
                     }
 
                     MouseArea {
-                        id: refreshMouseArea
+                        id: refreshMouseAreaDesktop
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: refreshPortfolios()
@@ -321,8 +387,8 @@ Item {
                     width: 150
                     height: 30
                     radius: 6
-                    color: addMouseArea.containsMouse ? "#8e44ad" : "#9b59b6"
-                    border.color: addMouseArea.containsMouse ? "#6c3483" : "white"
+                    color: addMouseAreaDesktop.containsMouse ? "#8e44ad" : "#9b59b6"
+                    border.color: addMouseAreaDesktop.containsMouse ? "#6c3483" : "white"
                     border.width: 2
 
                     Row {
@@ -345,7 +411,7 @@ Item {
                     }
 
                     MouseArea {
-                        id: addMouseArea
+                        id: addMouseAreaDesktop
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: {

@@ -15,6 +15,9 @@ Rectangle {
     property string currentView: "dashboard"
     property bool isOpen: false // Управление извне
 
+    // Добавляем свойство для отступа сверху
+    property int topMargin: 0
+
     property var menuItems: [
         {icon: "qrc:/icons/home.png", name: "Главная панель", view: "dashboard"},
         {icon: "qrc:/icons/teachers.png", name: "Преподаватели", view: "teachers"},
@@ -24,9 +27,10 @@ Rectangle {
         {icon: "qrc:/icons/events.png", name: "События", view: "events"}
     ]
 
-    // Управление через свойство isOpen
+    // Управление через свойство isOpen с учетом отступа
     x: isOpen ? 0 : -width - 10
     visible: isOpen
+    y: topMargin // Добавляем отступ сверху
 
     Behavior on x {
         NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
@@ -218,7 +222,7 @@ Rectangle {
         }
     }
 
-    // Затемнение фона
+    // Затемнение фона - обновляем привязки с учетом отступа
     Rectangle {
         anchors {
             left: parent.right

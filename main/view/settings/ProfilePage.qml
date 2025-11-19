@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.15
 Rectangle {
     id: profilePage
     color: "transparent"
+    property bool isMobile: false
 
     property alias userLogin: profilePage.userLoginInternal
     property alias userFirstName: profilePage.userFirstNameInternal
@@ -37,49 +38,49 @@ Rectangle {
 
     ScrollView {
         anchors.fill: parent
-        anchors.margins: 10
+        anchors.margins: isMobile ? 5 : 10
         clip: true
 
         ColumnLayout {
             width: parent.width
-            spacing: 10
+            spacing: isMobile ? 8 : 10
 
             Rectangle {
                 Layout.fillWidth: true
-                height: 220
-                radius: 16
+                height: isMobile ? 180 : 220
+                radius: isMobile ? 12 : 16
                 color: "#ffffff"
                 border.color: "#e0e0e0"
                 border.width: 1
 
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.margins: 24
-                    spacing: 16
+                    anchors.margins: isMobile ? 16 : 24
+                    spacing: isMobile ? 12 : 16
 
                     RowLayout {
                         Layout.fillWidth: true
-                        spacing: 16
+                        spacing: isMobile ? 12 : 16
 
                         Rectangle {
-                            Layout.preferredWidth: 80
-                            Layout.preferredHeight: 80
-                            radius: 40
+                            Layout.preferredWidth: isMobile ? 60 : 80
+                            Layout.preferredHeight: isMobile ? 60 : 80
+                            radius: isMobile ? 30 : 40
                             color: "transparent"
                             border.color: "#3498db"
-                            border.width: 3
+                            border.width: 2
 
                             Rectangle {
-                                width: 70
-                                height: 70
-                                radius: 35
+                                width: isMobile ? 50 : 70
+                                height: isMobile ? 50 : 70
+                                radius: isMobile ? 25 : 35
                                 anchors.centerIn: parent
                                 color: "#e3f2fd"
 
                                 AnimatedImage {
                                     anchors.centerIn: parent
-                                    width: 52
-                                    height: 52
+                                    width: isMobile ? 40 : 52
+                                    height: isMobile ? 40 : 52
                                     clip: true
                                     source: profileMouseArea.containsMouse ? "qrc:/icons/profile.gif" : "qrc:/icons/profile.png"
                                     fillMode: Image.PreserveAspectFit
@@ -99,11 +100,11 @@ Rectangle {
                         }
 
                         ColumnLayout {
-                            spacing: 6
+                            spacing: isMobile ? 4 : 6
 
                             Text {
                                 text: "@" + userLoginInternal || "???"
-                                font.pixelSize: 20
+                                font.pixelSize: isMobile ? 16 : 20
                                 font.bold: true
                                 color: "#2c3e50"
                             }
@@ -111,22 +112,22 @@ Rectangle {
                             Text {
                                 text: [userLastNameInternal, userFirstNameInternal, userMiddleNameInternal]
                                       .filter(Boolean).join(" ") || "Имя не указано"
-                                font.pixelSize: 16
+                                font.pixelSize: isMobile ? 14 : 16
                                 color: "#6c757d"
                             }
 
                             Rectangle {
-                                width: 140
-                                height: 24
-                                radius: 12
+                                width: isMobile ? 120 : 140
+                                height: isMobile ? 20 : 24
+                                radius: isMobile ? 10 : 12
                                 color: "#e3f2fd"
 
                                 Row {
                                     anchors.centerIn: parent
-                                    spacing: 4
+                                    spacing: isMobile ? 3 : 4
                                     Image {
                                         source: "qrc:/icons/user.png"
-                                        sourceSize: Qt.size(18, 18)
+                                        sourceSize: Qt.size(isMobile ? 14 : 18, isMobile ? 14 : 18)
                                         fillMode: Image.PreserveAspectFit
                                         mipmap: true
                                         antialiasing: true
@@ -134,7 +135,7 @@ Rectangle {
                                     }
                                     Text {
                                         text: "Аккаунт пользователя"
-                                        font.pixelSize: 10
+                                        font.pixelSize: isMobile ? 8 : 10
                                         color: "#3498db"
                                         font.bold: true
                                         anchors.verticalCenter: parent.verticalCenter
@@ -146,24 +147,24 @@ Rectangle {
 
                     GridLayout {
                         Layout.fillWidth: true
-                        columns: 2
-                        columnSpacing: 20
-                        rowSpacing: 12
+                        columns: isMobile ? 1 : 2
+                        columnSpacing: isMobile ? 0 : 20
+                        rowSpacing: isMobile ? 8 : 12
 
                         RowLayout {
-                            spacing: 8
+                            spacing: isMobile ? 6 : 8
                             Layout.fillWidth: true
 
                             Rectangle {
-                                width: 40
-                                height: 40
-                                radius: 6
+                                width: isMobile ? 32 : 40
+                                height: isMobile ? 32 : 40
+                                radius: isMobile ? 5 : 6
                                 color: emailMouseArea.containsMouse ? "#e3f2fd" : "#f8f9fa"
 
                                 AnimatedImage {
                                     anchors.centerIn: parent
-                                    width: 28
-                                    height: 28
+                                    width: isMobile ? 20 : 28
+                                    height: isMobile ? 20 : 28
                                     source: emailMouseArea.containsMouse ? "qrc:/icons/email.gif" : "qrc:/icons/email.png"
                                     fillMode: Image.PreserveAspectFit
                                     speed: 0.7
@@ -181,18 +182,18 @@ Rectangle {
                             }
 
                             ColumnLayout {
-                                spacing: 2
+                                spacing: isMobile ? 1 : 2
                                 Layout.fillWidth: true
 
                                 Text {
                                     text: "Email"
-                                    font.pixelSize: 12
+                                    font.pixelSize: isMobile ? 11 : 12
                                     color: "#6c757d"
                                 }
 
                                 Text {
                                     text: userEmailInternal || "Не указан"
-                                    font.pixelSize: 14
+                                    font.pixelSize: isMobile ? 12 : 14
                                     color: userEmailInternal ? "#2c3e50" : "#95a5a6"
                                     font.bold: !!userEmailInternal
                                     Layout.fillWidth: true
@@ -202,19 +203,19 @@ Rectangle {
                         }
 
                         RowLayout {
-                            spacing: 8
+                            spacing: isMobile ? 6 : 8
                             Layout.fillWidth: true
 
                             Rectangle {
-                                width: 40
-                                height: 40
-                                radius: 6
+                                width: isMobile ? 32 : 40
+                                height: isMobile ? 32 : 40
+                                radius: isMobile ? 5 : 6
                                 color: phoneMouseArea.containsMouse ? "#e8f5e8" : "#f8f9fa"
 
                                 AnimatedImage {
                                     anchors.centerIn: parent
-                                    width: 28
-                                    height: 28
+                                    width: isMobile ? 20 : 28
+                                    height: isMobile ? 20 : 28
                                     source: phoneMouseArea.containsMouse ? "qrc:/icons/phone.gif" : "qrc:/icons/phone.png"
                                     fillMode: Image.PreserveAspectFit
                                     speed: 0.7
@@ -232,18 +233,18 @@ Rectangle {
                             }
 
                             ColumnLayout {
-                                spacing: 2
+                                spacing: isMobile ? 1 : 2
                                 Layout.fillWidth: true
 
                                 Text {
                                     text: "Телефон"
-                                    font.pixelSize: 12
+                                    font.pixelSize: isMobile ? 11 : 12
                                     color: "#6c757d"
                                 }
 
                                 Text {
                                     text: userPhoneNumberInternal || "Не указан"
-                                    font.pixelSize: 14
+                                    font.pixelSize: isMobile ? 12 : 14
                                     color: userPhoneNumberInternal ? "#2c3e50" : "#95a5a6"
                                     font.bold: !!userPhoneNumberInternal
                                     Layout.fillWidth: true
@@ -257,24 +258,24 @@ Rectangle {
 
             Rectangle {
                 Layout.fillWidth: true
-                height: 600
-                radius: 16
+                height: isMobile ? 500 : 600
+                radius: isMobile ? 12 : 16
                 color: "#ffffff"
                 border.color: "#e0e0e0"
                 border.width: 1
 
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.margins: 24
-                    spacing: 20
+                    anchors.margins: isMobile ? 16 : 24
+                    spacing: isMobile ? 16 : 20
 
                     Row {
                         Layout.alignment: Qt.AlignHCenter
-                        spacing: 8
+                        spacing: isMobile ? 6 : 8
 
                         Image {
                             source: "qrc:/icons/edit.png"
-                            sourceSize: Qt.size(32, 32)
+                            sourceSize: Qt.size(isMobile ? 24 : 32, isMobile ? 24 : 32)
                             fillMode: Image.PreserveAspectFit
                             mipmap: true
                             antialiasing: true
@@ -283,7 +284,7 @@ Rectangle {
 
                         Text {
                             text: "Редактирование профиля"
-                            font.pixelSize: 18
+                            font.pixelSize: isMobile ? 16 : 18
                             font.bold: true
                             color: "#2c3e50"
                             anchors.verticalCenter: parent.verticalCenter
@@ -292,23 +293,23 @@ Rectangle {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 16
+                        spacing: isMobile ? 12 : 16
 
                         ColumnLayout {
-                            spacing: 6
+                            spacing: isMobile ? 4 : 6
                             Layout.fillWidth: true
 
                             Text {
                                 text: "Фамилия"
-                                font.pixelSize: 14
+                                font.pixelSize: isMobile ? 13 : 14
                                 color: "#2c3e50"
                                 font.bold: true
                             }
 
                             Rectangle {
                                 Layout.fillWidth: true
-                                height: 44
-                                radius: 8
+                                height: isMobile ? 40 : 44
+                                radius: isMobile ? 6 : 8
                                 border.color: lastNameField.activeFocus ? "#3498db" : "#e0e0e0"
                                 border.width: lastNameField.activeFocus ? 2 : 1
                                 color: "#ffffff"
@@ -316,10 +317,10 @@ Rectangle {
                                 TextInput {
                                     id: lastNameField
                                     anchors.fill: parent
-                                    anchors.margins: 8
+                                    anchors.margins: isMobile ? 6 : 8
                                     verticalAlignment: TextInput.AlignVCenter
                                     text: profilePage.editLastNameInternal
-                                    font.pixelSize: 14
+                                    font.pixelSize: isMobile ? 13 : 14
                                     selectByMouse: true
 
                                     onTextChanged: {
@@ -330,31 +331,31 @@ Rectangle {
 
                                 Text {
                                     anchors.fill: parent
-                                    anchors.margins: 8
+                                    anchors.margins: isMobile ? 6 : 8
                                     verticalAlignment: Text.AlignVCenter
                                     text: "Введите фамилию"
                                     color: "#a0a0a0"
                                     visible: !lastNameField.text && !lastNameField.activeFocus
-                                    font.pixelSize: 14
+                                    font.pixelSize: isMobile ? 13 : 14
                                 }
                             }
                         }
 
                         ColumnLayout {
-                            spacing: 6
+                            spacing: isMobile ? 4 : 6
                             Layout.fillWidth: true
 
                             Text {
                                 text: "Имя"
-                                font.pixelSize: 14
+                                font.pixelSize: isMobile ? 13 : 14
                                 color: "#2c3e50"
                                 font.bold: true
                             }
 
                             Rectangle {
                                 Layout.fillWidth: true
-                                height: 44
-                                radius: 8
+                                height: isMobile ? 40 : 44
+                                radius: isMobile ? 6 : 8
                                 border.color: firstNameField.activeFocus ? "#3498db" : "#e0e0e0"
                                 border.width: firstNameField.activeFocus ? 2 : 1
                                 color: "#ffffff"
@@ -362,10 +363,10 @@ Rectangle {
                                 TextInput {
                                     id: firstNameField
                                     anchors.fill: parent
-                                    anchors.margins: 8
+                                    anchors.margins: isMobile ? 6 : 8
                                     verticalAlignment: TextInput.AlignVCenter
                                     text: profilePage.editFirstNameInternal
-                                    font.pixelSize: 14
+                                    font.pixelSize: isMobile ? 13 : 14
                                     selectByMouse: true
 
                                     onTextChanged: {
@@ -376,31 +377,31 @@ Rectangle {
 
                                 Text {
                                     anchors.fill: parent
-                                    anchors.margins: 8
+                                    anchors.margins: isMobile ? 6 : 8
                                     verticalAlignment: Text.AlignVCenter
                                     text: "Введите имя"
                                     color: "#a0a0a0"
                                     visible: !firstNameField.text && !firstNameField.activeFocus
-                                    font.pixelSize: 14
+                                    font.pixelSize: isMobile ? 13 : 14
                                 }
                             }
                         }
 
                         ColumnLayout {
-                            spacing: 6
+                            spacing: isMobile ? 4 : 6
                             Layout.fillWidth: true
 
                             Text {
                                 text: "Отчество"
-                                font.pixelSize: 14
+                                font.pixelSize: isMobile ? 13 : 14
                                 color: "#2c3e50"
                                 font.bold: true
                             }
 
                             Rectangle {
                                 Layout.fillWidth: true
-                                height: 44
-                                radius: 8
+                                height: isMobile ? 40 : 44
+                                radius: isMobile ? 6 : 8
                                 border.color: middleNameField.activeFocus ? "#3498db" : "#e0e0e0"
                                 border.width: middleNameField.activeFocus ? 2 : 1
                                 color: "#ffffff"
@@ -408,10 +409,10 @@ Rectangle {
                                 TextInput {
                                     id: middleNameField
                                     anchors.fill: parent
-                                    anchors.margins: 8
+                                    anchors.margins: isMobile ? 6 : 8
                                     verticalAlignment: TextInput.AlignVCenter
                                     text: profilePage.editMiddleNameInternal
-                                    font.pixelSize: 14
+                                    font.pixelSize: isMobile ? 13 : 14
                                     selectByMouse: true
 
                                     onTextChanged: {
@@ -422,31 +423,31 @@ Rectangle {
 
                                 Text {
                                     anchors.fill: parent
-                                    anchors.margins: 8
+                                    anchors.margins: isMobile ? 6 : 8
                                     verticalAlignment: Text.AlignVCenter
                                     text: "Введите отчество"
                                     color: "#a0a0a0"
                                     visible: !middleNameField.text && !middleNameField.activeFocus
-                                    font.pixelSize: 14
+                                    font.pixelSize: isMobile ? 13 : 14
                                 }
                             }
                         }
 
                         ColumnLayout {
-                            spacing: 6
+                            spacing: isMobile ? 4 : 6
                             Layout.fillWidth: true
 
                             Text {
                                 text: "Email"
-                                font.pixelSize: 14
+                                font.pixelSize: isMobile ? 13 : 14
                                 color: "#2c3e50"
                                 font.bold: true
                             }
 
                             Rectangle {
                                 Layout.fillWidth: true
-                                height: 44
-                                radius: 8
+                                height: isMobile ? 40 : 44
+                                radius: isMobile ? 6 : 8
                                 border.color: emailField.activeFocus ? "#3498db" : "#e0e0e0"
                                 border.width: emailField.activeFocus ? 2 : 1
                                 color: "#ffffff"
@@ -454,10 +455,10 @@ Rectangle {
                                 TextInput {
                                     id: emailField
                                     anchors.fill: parent
-                                    anchors.margins: 8
+                                    anchors.margins: isMobile ? 6 : 8
                                     verticalAlignment: TextInput.AlignVCenter
                                     text: profilePage.editEmailInternal
-                                    font.pixelSize: 14
+                                    font.pixelSize: isMobile ? 13 : 14
                                     selectByMouse: true
 
                                     onTextChanged: {
@@ -468,31 +469,31 @@ Rectangle {
 
                                 Text {
                                     anchors.fill: parent
-                                    anchors.margins: 8
+                                    anchors.margins: isMobile ? 6 : 8
                                     verticalAlignment: Text.AlignVCenter
                                     text: "Введите email"
                                     color: "#a0a0a0"
                                     visible: !emailField.text && !emailField.activeFocus
-                                    font.pixelSize: 14
+                                    font.pixelSize: isMobile ? 13 : 14
                                 }
                             }
                         }
 
                         ColumnLayout {
-                            spacing: 6
+                            spacing: isMobile ? 4 : 6
                             Layout.fillWidth: true
 
                             Text {
                                 text: "Телефон"
-                                font.pixelSize: 14
+                                font.pixelSize: isMobile ? 13 : 14
                                 color: "#2c3e50"
                                 font.bold: true
                             }
 
                             Rectangle {
                                 Layout.fillWidth: true
-                                height: 44
-                                radius: 8
+                                height: isMobile ? 40 : 44
+                                radius: isMobile ? 6 : 8
                                 border.color: phoneField.activeFocus ? "#3498db" : "#e0e0e0"
                                 border.width: phoneField.activeFocus ? 2 : 1
                                 color: "#ffffff"
@@ -500,10 +501,10 @@ Rectangle {
                                 TextInput {
                                     id: phoneField
                                     anchors.fill: parent
-                                    anchors.margins: 8
+                                    anchors.margins: isMobile ? 6 : 8
                                     verticalAlignment: TextInput.AlignVCenter
                                     text: profilePage.editPhoneNumberInternal
-                                    font.pixelSize: 14
+                                    font.pixelSize: isMobile ? 13 : 14
                                     selectByMouse: true
 
                                     onTextChanged: {
@@ -514,12 +515,12 @@ Rectangle {
 
                                 Text {
                                     anchors.fill: parent
-                                    anchors.margins: 8
+                                    anchors.margins: isMobile ? 6 : 8
                                     verticalAlignment: Text.AlignVCenter
                                     text: "Введите телефон"
                                     color: "#a0a0a0"
                                     visible: !phoneField.text && !phoneField.activeFocus
-                                    font.pixelSize: 14
+                                    font.pixelSize: isMobile ? 13 : 14
                                 }
                             }
                         }
@@ -527,22 +528,22 @@ Rectangle {
 
                     Item {
                         Layout.fillWidth: true
-                        Layout.preferredHeight: 48
+                        Layout.preferredHeight: isMobile ? 40 : 48
 
                         Rectangle {
-                            width: 200
-                            height: 48
-                            radius: 10
+                            width: isMobile ? 180 : 200
+                            height: isMobile ? 40 : 48
+                            radius: isMobile ? 8 : 10
                             anchors.horizontalCenter: parent.horizontalCenter
                             color: saveMouseArea.containsMouse ? "#2980b9" : "#3498db"
 
                             Row {
                                 anchors.centerIn: parent
-                                spacing: 8
+                                spacing: isMobile ? 6 : 8
 
                                 Image {
                                     source: "qrc:/icons/save.png"
-                                    sourceSize: Qt.size(32, 32)
+                                    sourceSize: Qt.size(isMobile ? 24 : 32, isMobile ? 24 : 32)
                                     fillMode: Image.PreserveAspectFit
                                     mipmap: true
                                     antialiasing: true
@@ -551,7 +552,7 @@ Rectangle {
                                 Text {
                                     text: "Сохранить изменения"
                                     color: "white"
-                                    font.pixelSize: 14
+                                    font.pixelSize: isMobile ? 12 : 14
                                     font.bold: true
                                 }
                             }

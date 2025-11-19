@@ -2,19 +2,20 @@ import QtQuick
 
 Rectangle {
     id: listItem
-    height: 60
-    radius: 8
+    height: isMobile ? 50 : 60
+    radius: isMobile ? 6 : 8
     color: itemMouseArea.containsMouse ? "#f8f9fa" : "#ffffff"
     border.color: itemMouseArea.containsMouse ? "#3498db" : "#e0e0e0"
     border.width: 1
 
     scale: itemMouseArea.containsMouse ? 1.01 : 1.0
 
-    width: parent ? parent.width - 30 : 90
+    width: parent ? parent.width - (isMobile ? 10 : 30) : 90
     anchors.horizontalCenter: parent ? parent.horizontalCenter : undefined
 
     property var itemData: null
     property string itemType: ""
+    property bool isMobile: false
 
     signal editRequested(var data)
     signal doubleClicked(var data)
@@ -30,14 +31,14 @@ Rectangle {
 
     Row {
         anchors.left: parent.left
-        anchors.leftMargin: 12
+        anchors.leftMargin: isMobile ? 8 : 12
         anchors.verticalCenter: parent.verticalCenter
-        spacing: 12
+        spacing: isMobile ? 8 : 12
 
         Rectangle {
-            width: 40
-            height: 40
-            radius: 20
+            width: isMobile ? 32 : 40
+            height: isMobile ? 32 : 40
+            radius: isMobile ? 16 : 20
             color: {
                 if (itemType === "teacher") return "#3498db";
                 if (itemType === "student") return "#2ecc71";
@@ -57,15 +58,15 @@ Rectangle {
                     if (itemType === "portfolio") return "qrc:icons/portfolio.png";
                     return "qrc:icons/info.png";
                 }
-                width: 20
-                height: 20
+                width: isMobile ? 16 : 20
+                height: isMobile ? 16 : 20
                 fillMode: Image.PreserveAspectFit
             }
         }
 
         Column {
-            width: listItem.width - 120
-            spacing: 2
+            width: listItem.width - (isMobile ? 80 : 120)
+            spacing: isMobile ? 1 : 2
 
             Text {
                 text: {
@@ -81,33 +82,39 @@ Rectangle {
                     } else if (itemType === "event") {
                         var eventType = itemData.eventType || "Без типа";
                         var category = itemData.category || itemData.eventCategory || "Без наименования";
-                        return eventType + "\n" + category;
+                        return isMobile ? eventType : (eventType + "\n" + category);
                     } else if (itemType === "portfolio") {
                         var studentName = itemData.studentName || "Неизвестный студент";
                         var decree = itemData.decree || "";
                         if (decree) {
-                            return "Портфолио студента #" + decree;
+                            return isMobile ? "Портфолио #" + decree : "Портфолио студента #" + decree;
                         } else {
-                            return "Портфолио студента " + studentName;
+                            return isMobile ? "Портфолио" : "Портфолио студента " + studentName;
                         }
                     }
                     return "Неизвестный тип";
                 }
-                font.pixelSize: 13
+                font.pixelSize: isMobile ? 11 : 13
                 font.bold: true
                 color: "#2c3e50"
                 elide: Text.ElideRight
                 width: parent.width
+                wrapMode: Text.Wrap
+                maximumLineCount: isMobile ? 2 : 3
             }
 
             Text {
                 text: {
                     if (itemType === "teacher") {
-                        return (itemData.specialization || "Не указана") + " · " + (itemData.experience || 0) + " лет";
+                        var spec = itemData.specialization || "Не указана";
+                        var exp = (itemData.experience || 0) + " лет";
+                        return isMobile ? spec : (spec + " · " + exp);
                     } else if (itemType === "student") {
                         return "Группа: " + (itemData.groupName || itemData.group_name || "Не указана");
                     } else if (itemType === "group") {
-                        return "Студентов: " + (itemData.studentCount || 0) + " · " + (itemData.teacherName || "Без куратора");
+                        var students = itemData.studentCount || 0;
+                        var teacher = itemData.teacherName || "Без куратора";
+                        return isMobile ? (students + " студентов") : ("Студентов: " + students + " · " + teacher);
                     } else if (itemType === "event") {
                         var location = itemData.location || "Место не указано";
                         var date = itemData.startDate || "";
@@ -119,42 +126,52 @@ Rectangle {
                         else if (status === "cancelled") statusText = "Отменено";
                         else statusText = status;
 
-                        if (date) {
-                            return location + " · " + date + " · " + statusText;
+                        if (isMobile) {
+                            return location;
                         } else {
-                            return location + " · " + statusText;
+                            if (date) {
+                                return location + " · " + date + " · " + statusText;
+                            } else {
+                                return location + " · " + statusText;
+                            }
                         }
                     } else if (itemType === "portfolio") {
                         var studentName = itemData.studentName || "Неизвестный студент";
                         var date = itemData.date || "";
-                        if (date) {
-                            return studentName + " · " + date;
-                        } else {
+                        if (isMobile) {
                             return studentName;
+                        } else {
+                            if (date) {
+                                return studentName + " · " + date;
+                            } else {
+                                return studentName;
+                            }
                         }
                     }
                     return "";
                 }
-                font.pixelSize: 11
+                font.pixelSize: isMobile ? 9 : 11
                 color: "#7f8c8d"
                 elide: Text.ElideRight
                 width: parent.width
+                wrapMode: Text.Wrap
+                maximumLineCount: isMobile ? 1 : 2
             }
         }
     }
 
     Row {
         anchors.right: parent.right
-        anchors.rightMargin: 12
+        anchors.rightMargin: isMobile ? 6 : 12
         anchors.verticalCenter: parent.verticalCenter
-        spacing: 8
+        spacing: isMobile ? 4 : 8
         z: 1000
 
         Rectangle {
             id: editButton
-            width: 28
-            height: 28
-            radius: 6
+            width: isMobile ? 24 : 28
+            height: isMobile ? 24 : 28
+            radius: isMobile ? 5 : 6
             color: editMouseArea.containsMouse ? "#3498db" : "transparent"
             border.color: editMouseArea.containsMouse ? "#2980b9" : "#3498db"
             border.width: 1
@@ -164,8 +181,8 @@ Rectangle {
                 id: editIcon
                 anchors.centerIn: parent
                 source: editMouseArea.containsMouse ? "qrc:icons/pencil.gif" : "qrc:icons/pencil.png"
-                width: 14
-                height: 14
+                width: isMobile ? 12 : 14
+                height: isMobile ? 12 : 14
                 fillMode: Image.PreserveAspectFit
                 playing: editMouseArea.containsMouse
             }
@@ -185,9 +202,9 @@ Rectangle {
 
         Rectangle {
             id: deleteButton
-            width: 28
-            height: 28
-            radius: 6
+            width: isMobile ? 24 : 28
+            height: isMobile ? 24 : 28
+            radius: isMobile ? 5 : 6
             color: deleteMouseArea.containsMouse ? "#e74c3c" : "transparent"
             border.color: deleteMouseArea.containsMouse ? "#c0392b" : "#e74c3c"
             border.width: 1
@@ -196,8 +213,8 @@ Rectangle {
             Image {
                 anchors.centerIn: parent
                 source: "qrc:icons/cross.png"
-                width: 14
-                height: 14
+                width: isMobile ? 12 : 14
+                height: isMobile ? 12 : 14
                 fillMode: Image.PreserveAspectFit
             }
 

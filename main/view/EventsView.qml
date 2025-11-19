@@ -9,6 +9,8 @@ Item {
     property var events: []
     property var eventCategories: []
     property bool isLoading: false
+    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
+                           Qt.platform.os === "tvos" || Qt.platform.os === "wasm"
 
     function refreshEvents() {
         isLoading = true;
@@ -17,7 +19,6 @@ Item {
             if (response && response.success) {
                 console.log("✅ Данные событий получены:", JSON.stringify(response.data));
 
-                // 🔥 ИСПРАВЛЕНИЕ: response.data уже содержит массив событий
                 var eventsData = response.data || [];
                 var processedEvents = [];
 
@@ -27,30 +28,21 @@ Item {
                     var event = eventsData[i];
                     console.log("📋 Обработка события " + i + ":", JSON.stringify(event));
 
-                    // 🔥 УЛУЧШЕННОЕ ПРЕОБРАЗОВАНИЕ: используем все возможные варианты полей
                     var processedEvent = {
-                        // Основные идентификаторы
                         id: event.id || event.eventId || 0,
                         eventId: event.eventId || event.event_id || 0,
-
-                        // 🔥 ВАЖНОЕ ИСПРАВЛЕНИЕ: правильное получение категории
                         category: event.category || "",
-                        eventCategory: event.category || "", // Дублируем для таблицы
-
-                        // Основные поля события
+                        eventCategory: event.category || "",
                         eventType: event.eventType || event.event_type || "",
                         startDate: event.startDate || event.start_date || "",
                         endDate: event.endDate || event.end_date || "",
                         location: event.location || "",
                         lore: event.lore || "",
-
-                        // Дополнительные поля
                         maxParticipants: event.maxParticipants || event.max_participants || 0,
                         currentParticipants: event.currentParticipants || event.current_participants || 0,
                         status: event.status || "active"
                     };
 
-                    // 🔥 ДЕБАГ: логируем категорию
                     console.log("   🏷️ Категория события " + i + ":", processedEvent.category);
                     console.log("   🏷️ eventCategory события " + i + ":", processedEvent.eventCategory);
 
@@ -101,7 +93,6 @@ Item {
         }
     }
 
-    // CRUD функции для событий
     function addEvent(eventData) {
         if (!eventData) {
             showMessage("❌ Данные события не указаны", "error");
@@ -155,7 +146,7 @@ Item {
             endDate: eventData.endDate,
             location: eventData.location,
             lore: eventData.lore,
-            category: eventData.eventCategory // НАИМЕНОВАНИЕ категории
+            category: eventData.eventCategory
         }
 
         console.log("   Данные для отправки:", JSON.stringify(updateData))
@@ -261,10 +252,76 @@ Item {
             border.color: "#d35400"
             border.width: 1
 
+            // Мобильная версия - центрированные большие кнопки
+            Row {
+                anchors.centerIn: parent
+                spacing: isMobile ? 30 : 15
+                visible: isMobile
+
+                // Кнопка обновления для мобильных
+                Rectangle {
+                    width: 50
+                    height: 50
+                    radius: 25
+                    color: refreshMouseAreaMobile.containsPress ? "#d35400" : "transparent"
+
+                    Image {
+                        source: "qrc:/icons/refresh.png"
+                        sourceSize: Qt.size(28, 28)
+                        anchors.centerIn: parent
+                    }
+
+                    MouseArea {
+                        id: refreshMouseAreaMobile
+                        anchors.fill: parent
+                        onClicked: refreshEvents()
+                    }
+                }
+
+                // Текст счетчика для мобильных
+                Text {
+                    text: "Всего: " + (events ? events.length : 0)
+                    color: "white"
+                    font.pixelSize: 16
+                    font.bold: true
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                // Кнопка добавления для мобильных
+                Rectangle {
+                    width: 50
+                    height: 50
+                    radius: 25
+                    color: addMouseAreaMobile.containsPress ? "#d35400" : "transparent"
+
+                    Text {
+                        text: "+"
+                        color: "white"
+                        font.pixelSize: 32
+                        font.bold: true
+                        anchors.centerIn: parent
+                    }
+
+                    MouseArea {
+                        id: addMouseAreaMobile
+                        anchors.fill: parent
+                        onClicked: {
+                            if (eventFormWindow.item) {
+                                eventFormWindow.openForAdd();
+                            } else {
+                                eventFormWindow.active = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Десктопная версия - без изменений
             Row {
                 anchors.fill: parent
                 anchors.margins: 10
                 spacing: 15
+                visible: !isMobile
 
                 Text {
                     text: "Всего событий: " + (events ? events.length : 0)
@@ -280,8 +337,8 @@ Item {
                     width: 100
                     height: 30
                     radius: 6
-                    color: refreshMouseArea.containsMouse ? "#d35400" : "#e67e22"
-                    border.color: refreshMouseArea.containsMouse ? "#a04000" : "white"
+                    color: refreshMouseAreaDesktop.containsMouse ? "#d35400" : "#e67e22"
+                    border.color: refreshMouseAreaDesktop.containsMouse ? "#a04000" : "white"
                     border.width: 2
 
                     Row {
@@ -304,7 +361,7 @@ Item {
                     }
 
                     MouseArea {
-                        id: refreshMouseArea
+                        id: refreshMouseAreaDesktop
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: refreshEvents()
@@ -317,8 +374,8 @@ Item {
                     width: 150
                     height: 30
                     radius: 6
-                    color: addMouseArea.containsMouse ? "#d35400" : "#e67e22"
-                    border.color: addMouseArea.containsMouse ? "#a04000" : "white"
+                    color: addMouseAreaDesktop.containsMouse ? "#d35400" : "#e67e22"
+                    border.color: addMouseAreaDesktop.containsMouse ? "#a04000" : "white"
                     border.width: 2
 
                     Row {
@@ -341,7 +398,7 @@ Item {
                     }
 
                     MouseArea {
-                        id: addMouseArea
+                        id: addMouseAreaDesktop
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: {
@@ -393,7 +450,6 @@ Item {
             sortOptions: ["По наименованию", "По типу", "По дате начала", "По статусу", "По месту проведения"]
             sortRoles: ["eventCategory", "eventType", "startDate", "status", "location"]
 
-            // 🔥 ОБНОВЛЕННЫЕ ЗАГОЛОВКИ СТОЛБЦОВ
             property var customHeaders: ({
                 "eventCategory": "Наименование категории",
                 "eventType": "Тип события",
@@ -404,7 +460,6 @@ Item {
                 "status": "Статус"
             })
 
-            // 🔥 ДОБАВЛЕНО: кастомное отображение для категории
             property var customDisplay: ({
                 "category": function(value, item) {
                     return value || "Без категории";
@@ -463,7 +518,6 @@ Item {
                     console.log("💾 Сохранение события:", JSON.stringify(eventData));
                     if (!eventData) return;
 
-                    // Определяем режим по наличию ID
                     if (eventData.id && eventData.id !== 0) {
                         console.log("🔧 Режим редактирования, ID:", eventData.id);
                         updateEvent(eventData);

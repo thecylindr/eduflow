@@ -11,6 +11,9 @@ Rectangle {
     border.color: "#e0e0e0"
     border.width: 1
 
+    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
+                           Qt.platform.os === "tvos" || Qt.platform.os === "wasm"
+
     signal attemptLogin
 
     function focusLogin() {
@@ -63,7 +66,7 @@ Rectangle {
 
             Text {
                 text: "ВХОД В СИСТЕМУ"
-                font.pixelSize: 16
+                font.pixelSize: isMobile ? 18 : 16
                 font.bold: true
                 color: "#2c3e50"
                 anchors.verticalCenter: parent.verticalCenter
@@ -85,7 +88,7 @@ Rectangle {
                 }
                 Text {
                     text: "Логин или E-mail"
-                    font.pixelSize: 11
+                    font.pixelSize: isMobile ? 13 : 11
                     color: "#2c3e50"
                     anchors.verticalCenter: parent.verticalCenter
                 }
@@ -104,7 +107,7 @@ Rectangle {
                     anchors.fill: parent
                     anchors.margins: 8
                     verticalAlignment: TextInput.AlignVCenter
-                    font.pixelSize: 12
+                    font.pixelSize: isMobile ? 14 : 12
                     color: "#000000"
                     selectByMouse: true
                     focus: true
@@ -130,7 +133,7 @@ Rectangle {
                     text: "Введите логин или e-mail"
                     color: "#a0a0a0"
                     visible: !loginField.text && !loginField.activeFocus
-                    font.pixelSize: 12
+                    font.pixelSize: isMobile ? 14 : 12
                 }
             }
         }
@@ -150,7 +153,7 @@ Rectangle {
                 }
                 Text {
                     text: "Пароль"
-                    font.pixelSize: 11
+                    font.pixelSize: isMobile ? 13 : 11
                     color: "#2c3e50"
                     anchors.verticalCenter: parent.verticalCenter
                 }
@@ -173,7 +176,7 @@ Rectangle {
                         anchors.fill: parent
                         anchors.margins: 8
                         verticalAlignment: TextInput.AlignVCenter
-                        font.pixelSize: 12
+                        font.pixelSize: isMobile ? 14 : 12
                         echoMode: showPasswordButton.checked ? TextInput.Normal : TextInput.Password
                         color: "#000000"
                         selectByMouse: true
@@ -199,7 +202,7 @@ Rectangle {
                         text: "Введите пароль"
                         color: "#a0a0a0"
                         visible: !passwordField.text && !passwordField.activeFocus
-                        font.pixelSize: 12
+                        font.pixelSize: isMobile ? 14 : 12
                     }
                 }
 
@@ -250,7 +253,7 @@ Rectangle {
                 }
                 Text {
                     text: authWindow._isLoading ? "ЗАГРУЗКА..." : "ВОЙТИ"
-                    font.pixelSize: 12
+                    font.pixelSize: isMobile ? 14 : 12
                     font.bold: true
                     color: "white"
                     anchors.verticalCenter: parent.verticalCenter
@@ -272,7 +275,7 @@ Rectangle {
 
             Text {
                 text: "Забыли пароль?"
-                font.pixelSize: 12
+                font.pixelSize: isMobile ? 14 : 12
                 color: "#3498db"
                 opacity: 0.9
 
@@ -289,7 +292,7 @@ Rectangle {
 
             Text {
                 text: "Регистрация"
-                font.pixelSize: 12
+                font.pixelSize: isMobile ? 14 : 12
                 color: "#3498db"
                 opacity: 0.9
 

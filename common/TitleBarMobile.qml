@@ -16,14 +16,15 @@ Rectangle {
 
     RowLayout {
         anchors.fill: parent
-        anchors.margins: 8
-        spacing: 8
+        anchors.margins: 10
+        spacing: 10
 
         // Кнопка меню с анимацией поворота - отцентрирована
         Rectangle {
-            Layout.preferredWidth: 20
-            Layout.preferredHeight: 20
-            radius: 8
+            Layout.preferredWidth: 28
+            Layout.preferredHeight: 28
+            Layout.alignment: Qt.AlignVCenter
+            radius: 10
             color: menuMouseArea.containsMouse ? "#f1f3f4" : "transparent"
             border.color: menuMouseArea.containsMouse ? "#3498db" : "transparent"
             border.width: 1
@@ -32,7 +33,7 @@ Rectangle {
                 id: menuIcon
                 anchors.centerIn: parent
                 source: "qrc:/icons/sidebar.png"
-                sourceSize: Qt.size(16, 16)
+                sourceSize: Qt.size(20, 20)
                 fillMode: Image.PreserveAspectFit
                 mipmap: true
                 antialiasing: true
@@ -59,8 +60,9 @@ Rectangle {
         // Заголовок
         Text {
             Layout.fillWidth: true
+            Layout.alignment: Qt.AlignVCenter
             text: currentView
-            font.pixelSize: 16
+            font.pixelSize: 17
             font.bold: true
             color: "#2c3e50"
             horizontalAlignment: Text.AlignHCenter
@@ -69,9 +71,10 @@ Rectangle {
 
         // Кнопка Gitflic - отцентрирована
         Rectangle {
-            Layout.preferredWidth: 20
-            Layout.preferredHeight: 20
-            radius: 8
+            Layout.preferredWidth: 28
+            Layout.preferredHeight: 28
+            Layout.alignment: Qt.AlignVCenter
+            radius: 10
             color: gitflicMouseArea.containsMouse ? "#4CAF50" : "transparent"
             border.color: gitflicMouseArea.containsMouse ? "#4CAF50" : "transparent"
             border.width: 1
@@ -79,7 +82,7 @@ Rectangle {
             Image {
                 anchors.centerIn: parent
                 source: "qrc:/icons/git.png"
-                sourceSize: Qt.size(18, 18)
+                sourceSize: Qt.size(24, 24)
                 fillMode: Image.PreserveAspectFit
                 mipmap: true
                 antialiasing: true

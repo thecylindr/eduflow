@@ -4,11 +4,10 @@ import Qt5Compat.GraphicalEffects
 Repeater {
     id: sparksRepeater
 
-    property real maxSparkSize: 4
-    property real minSparkSize: 2
     property var colors: ["#f44336", "#ff9800", "#ffeb3b", "#4caf50", "#2196f3", "#9c27b0"]
-    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
-                           Qt.platform.os === "tvos" || Screen.width < 768
+    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" || Qt.platform.os === "tvos"
+    property real maxSparkSize: isMobile ? 4 : 6
+    property real minSparkSize: isMobile ? 2 : 3
     property int sparkCount: 16
 
     model: isMobile ? 8 : sparkCount
@@ -27,7 +26,7 @@ Repeater {
         property real startY: Math.random() * parent.height
         property real targetX: Math.random() * parent.width
         property real targetY: Math.random() * parent.height
-        property real speed: isMobile ? (1500 + Math.random() * 2500) : (1000 + Math.random() * 2000)
+        property real speed: isMobile ? (700 + Math.random() * 500) : (1000 + Math.random() * 2000)
 
         x: startX
         y: startY
@@ -47,7 +46,7 @@ Repeater {
             ParallelAnimation {
                 NumberAnimation {
                     target: spark; property: "opacity"; from: 0; to: isMobile ? 0.6 : 0.8;
-                    duration: isMobile ? 3400 : 500; easing.type: Easing.InOutQuad }
+                    duration: isMobile ? 900 : 500; easing.type: Easing.InOutQuad }
                 NumberAnimation {
                     target: spark; property: "x"; from: startX; to: targetX; duration: speed; easing.type: Easing.InOutQuad }
                 NumberAnimation {

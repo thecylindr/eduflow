@@ -25,8 +25,8 @@ int main(int argc, char *argv[])
 {
     qputenv("QT_QUICK_CONTROLS_STYLE", "Material");
     qputenv("QSG_RENDER_LOOP", "basic");
-    qputenv("QT_QUICK_CONTROLS_MOBILE", "1");
-    qputenv("QT_ANDROID_BLOCK_FPS_MANAGEMENT", "1");
+    qputenv("QT_QUICK_CONTROLS_MATERIAL_THEME", "Light");  // Или "Dark"
+    qputenv("QT_QUICK_CONTROLS_MATERIAL_VARIANT", "Dense");  // Для мобильных устройств, делает элементы компактнее
 
     QGuiApplication app(argc, argv);
 

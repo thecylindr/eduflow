@@ -9,6 +9,7 @@ Rectangle {
     radius: 8
     opacity: 0.925
 
+    property bool isMobile: false
     property var userProfile: ({})
     property var sessions: []
     property bool isLoading: false
@@ -195,28 +196,28 @@ Rectangle {
         anchors.top: parent.top
         anchors.left: parent.left
         anchors.right: parent.right
-        spacing: 8
+        spacing: isMobile ? 4 : 8
 
         RowLayout {
             Layout.fillWidth: true
-            Layout.leftMargin: 10
-            Layout.rightMargin: 10
-            Layout.topMargin: 10
-            spacing: 15
+            Layout.leftMargin: isMobile ? 5 : 10
+            Layout.rightMargin: isMobile ? 5 : 10
+            Layout.topMargin: isMobile ? 5 : 10
+            spacing: isMobile ? 8 : 15
 
             // Кнопка назад - видна только не на главной странице
             Rectangle {
                 id: backButton
-                width: 40
-                height: 40
-                radius: 8
+                width: isMobile ? 36 : 40
+                height: isMobile ? 36 : 40
+                radius: isMobile ? 6 : 8
                 color: backMouseArea.containsMouse ? "#f1f3f4" : "transparent"
                 visible: currentPage !== "main"
 
                 Text {
                     anchors.centerIn: parent
                     text: "←"
-                    font.pixelSize: 18
+                    font.pixelSize: isMobile ? 16 : 18
                     color: "#5f6368"
                     font.bold: true
                 }
@@ -232,20 +233,26 @@ Rectangle {
 
             Column {
                 Layout.fillWidth: true
-                spacing: 4
+                spacing: isMobile ? 2 : 4
 
                 Text {
                     text: getPageTitle()
-                    font.pixelSize: 20
+                    font.pixelSize: isMobile ? 16 : 20
                     font.bold: true
                     color: "#2c3e50"
+                    wrapMode: Text.Wrap
+                    maximumLineCount: 2
+                    elide: Text.ElideRight
                 }
 
                 Text {
                     text: getPageSubtitle()
-                    font.pixelSize: 12
+                    font.pixelSize: isMobile ? 10 : 12
                     color: "#6c757d"
                     visible: currentPage !== "main"
+                    wrapMode: Text.Wrap
+                    maximumLineCount: 2
+                    elide: Text.ElideRight
                 }
             }
         }
@@ -261,7 +268,7 @@ Rectangle {
 
     Item {
         anchors.top: parent.top
-        anchors.topMargin: 80
+        anchors.topMargin: isMobile ? 60 : 80
         anchors.bottom: parent.bottom
         anchors.left: parent.left
         anchors.right: parent.right
@@ -269,6 +276,7 @@ Rectangle {
         SettingsMainPage {
             visible: currentPage === "main"
             anchors.fill: parent
+            isMobile: settingsView.isMobile
             onSettingSelected: function(setting) {
                 currentPage = setting
             }
@@ -279,6 +287,7 @@ Rectangle {
             id: profilePage
             visible: currentPage === "profile"
             anchors.fill: parent
+            isMobile: settingsView.isMobile
 
             // Используем прямые привязки вместо alias
             userLogin: settingsView.userLogin
@@ -310,6 +319,7 @@ Rectangle {
             id: securityPage
             visible: currentPage === "security"
             anchors.fill: parent
+            isMobile: settingsView.isMobile
 
             // Используем прямые привязки вместо сигналов
             currentPassword: settingsView.currentPassword
@@ -325,6 +335,7 @@ Rectangle {
         SessionsPage {
             visible: currentPage === "sessions"
             anchors.fill: parent
+            isMobile: settingsView.isMobile
             sessions: settingsView.sessions
             onRevokeSession: function(token) {
                 settingsView.revokeSession(token)
@@ -334,6 +345,7 @@ Rectangle {
         ServerPage {
             visible: currentPage === "server"
             anchors.fill: parent
+            isMobile: settingsView.isMobile
             serverAddress: settingsView.serverAddress
             pingStatus: settingsView.pingStatus
             pingTime: settingsView.pingTime
@@ -344,6 +356,7 @@ Rectangle {
         AboutPage {
             visible: currentPage === "about"
             anchors.fill: parent
+            isMobile: settingsView.isMobile
             appVersion: settingsView.appVersion
             appName: settingsView.appName
             organizationName: settingsView.organizationName
@@ -357,30 +370,30 @@ Rectangle {
         color: "#ccffffff"
         visible: isLoading
         z: 3
-        radius: 16
+        radius: isMobile ? 8 : 16
 
         Rectangle {
-            width: 120
-            height: 120
-            radius: 16
+            width: isMobile ? 100 : 120
+            height: isMobile ? 100 : 120
+            radius: isMobile ? 8 : 16
             color: "#ffffff"
             anchors.centerIn: parent
 
             Column {
                 anchors.centerIn: parent
-                spacing: 12
+                spacing: isMobile ? 8 : 12
 
                 BusyIndicator {
                     id: busyIndicator
-                    width: 40
-                    height: 40
+                    width: isMobile ? 32 : 40
+                    height: isMobile ? 32 : 40
                     anchors.horizontalCenter: parent.horizontalCenter
                     running: isLoading
                 }
 
                 Text {
                     text: "Загрузка..."
-                    font.pixelSize: 14
+                    font.pixelSize: isMobile ? 12 : 14
                     color: "#5f6368"
                     anchors.horizontalCenter: parent.horizontalCenter
                 }
@@ -390,9 +403,9 @@ Rectangle {
 
     function getPageTitle() {
         switch(currentPage) {
-            case "main": return "Настройки системы @" + settingsView.userLogin
+            case "main": return "Настройки @" + settingsView.userLogin
             case "profile": return "Профиль пользователя"
-            case "security": return "Безопасность и пароли"
+            case "security": return "Безопасность"
             case "sessions": return "Активные сессии"
             case "server": return "Настройки сервера"
             case "about": return "О программе"
@@ -403,7 +416,7 @@ Rectangle {
     function getPageSubtitle() {
         switch(currentPage) {
             case "profile": return "Управление персональными данными"
-            case "security": return "Смена пароля и настройки безопасности"
+            case "security": return "Смена пароля и безопасность"
             case "sessions": return "Управление активными устройствами"
             case "server": return "Статус соединения и диагностика"
             case "about": return "Информация о версии и проекте"

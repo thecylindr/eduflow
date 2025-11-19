@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Controls.Material
 import QtQuick.Layouts 1.15
 import "../../common" as Common
 
@@ -144,8 +145,8 @@ Window {
 
         var eventData = {
             eventType: eventTypeField.text.trim(),
-            category: categoryField.text.trim(), // 🔥 ДОБАВЛЕНО: полное название
-            measureCode: selectedPortfolio.measure_code,
+            category: categoryField.text.trim(),
+            measureCode: selectedPortfolio.measure_code, // 🔥 Ключевое исправление
             startDate: startDateField.text.trim(),
             endDate: endDateField.text.trim(),
             location: locationField.text.trim(),
@@ -158,6 +159,7 @@ Window {
         }
 
         console.log("📦 Сформированные данные события:", JSON.stringify(eventData))
+        console.log("🔑 measureCode:", eventData.measureCode)
         return eventData
     }
 
@@ -358,6 +360,69 @@ Window {
                                     color: "#ffffff"
                                     border.color: portfolioComboBox.enabled ? "#e0e0e0" : "#f0f0f0"
                                     border.width: 1
+                                }
+
+                                contentItem: Text {
+                                    text: portfolioComboBox.displayText
+                                    color: "#000000"
+                                    horizontalAlignment: Text.AlignLeft
+                                    verticalAlignment: Text.AlignVCenter
+                                    leftPadding: 10
+                                    rightPadding: portfolioComboBox.indicator.width + 10
+                                    font: portfolioComboBox.font
+                                }
+
+                                indicator: Rectangle {
+                                    x: portfolioComboBox.width - width - 5
+                                    y: portfolioComboBox.topPadding + (portfolioComboBox.height - height) / 2
+                                    width: 12
+                                    height: 8
+                                    color: "transparent"
+                                    Rectangle {
+                                        width: 8
+                                        height: 8
+                                        color: "#666666"
+                                        rotation: 45
+                                        anchors.centerIn: parent
+                                    }
+                                }
+
+                                popup: Popup {
+                                    y: portfolioComboBox.height - 1
+                                    width: portfolioComboBox.width
+                                    implicitHeight: contentItem.implicitHeight
+                                    padding: 1
+
+                                    contentItem: ListView {
+                                        clip: true
+                                        implicitHeight: contentHeight
+                                        model: portfolioComboBox.popup.visible ? portfolioComboBox.delegateModel : null
+                                        currentIndex: portfolioComboBox.highlightedIndex
+
+                                        ScrollIndicator.vertical: ScrollIndicator { }
+                                    }
+
+                                    background: Rectangle {
+                                        color: "#ffffff"
+                                        border.color: "#e0e0e0"
+                                        radius: 8
+                                    }
+                                }
+
+                                delegate: ItemDelegate {
+                                    width: portfolioComboBox.width
+                                    contentItem: Text {
+                                        text: modelData.displayText
+                                        color: "#000000"
+                                        font: portfolioComboBox.font
+                                        elide: Text.ElideRight
+                                        verticalAlignment: Text.AlignVCenter
+                                        leftPadding: 10
+                                    }
+                                    background: Rectangle {
+                                        color: highlighted ? "#e0e0e0" : "#ffffff"
+                                    }
+                                    highlighted: portfolioComboBox.highlightedIndex === index
                                 }
 
                                 textRole: "displayText"

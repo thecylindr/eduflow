@@ -52,7 +52,7 @@ Window {
 
     signal loginSuccessful(string token, var userData)
 
-    // Оптимизированные Behavior анимации для android & linux & ios
+    // Behavior анимации для android & linux & ios
     Behavior on height {
         enabled: Qt.platform.os !== "windows"
         NumberAnimation {
@@ -445,12 +445,12 @@ Window {
             isMobile: authWindow.isMobile
         }
 
-        // Искры на фоне - отключаем если лагают
+        // Искры на фоне
         Common.SparksBackground {
             anchors.fill: parent
             isMobile: authWindow.isMobile
             z: 1
-            enabled: !authWindow._isLoading // Отключаем во время загрузки
+            enabled: !authWindow._isLoading
         }
 
         Common.BottomBlur {
@@ -528,6 +528,7 @@ Window {
             width: parent.width * 0.78
             scale: isMobile ? 1.12 : 1
             visible: !_showingRegistration
+            isMobile: authWindow.isMobile
 
             onServerTypeToggled: function(useLocal) {
                 settingsManager.useLocalServer = useLocal;
@@ -557,6 +558,7 @@ Window {
             width: parent.width * 0.78
             scale: isMobile ? 1.12 : 1
             visible: _showingRegistration
+            isMobile: authWindow.isMobile
 
             onAttemptRegistration: authWindow.attemptRegistration()
             onShowLoginForm: authWindow.showLoginForm()
@@ -567,11 +569,12 @@ Window {
             anchors {
                 horizontalCenter: parent.horizontalCenter
                 top: serverConfig.visible ? serverConfig.bottom : successMessage.bottom
-                topMargin: 32
+                topMargin: isMobile ? 40 : 32
             }
             width: parent.width * 0.78
             scale: isMobile ? 1.12 : 1
             visible: !_showingRegistration
+            isMobile: authWindow.isMobile
 
             onAttemptLogin: authWindow.attemptLogin()
         }
@@ -589,6 +592,7 @@ Window {
                 bottom: parent.bottom
                 bottomMargin: 20 + androidBottomMargin
             }
+            isMobile: authWindow.isMobile
         }
 
         Timer {

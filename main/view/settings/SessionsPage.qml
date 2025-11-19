@@ -8,6 +8,7 @@ Page {
         color: "#f8f9fa"
     }
 
+    property bool isMobile: false
     property var sessions: []
     signal revokeSession(string token)
 
@@ -29,21 +30,21 @@ Page {
 
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 15
-        spacing: 10
+        anchors.margins: isMobile ? 8 : 15
+        spacing: isMobile ? 6 : 10
 
         // Заголовок
         ColumnLayout {
             Layout.fillWidth: true
-            spacing: 5
+            spacing: isMobile ? 3 : 5
 
             Row {
                 Layout.alignment: Qt.AlignHCenter
-                spacing: 8
+                spacing: isMobile ? 6 : 8
 
                 Image {
                     source: "qrc:/icons/sessions.png"
-                    sourceSize: Qt.size(24, 24)
+                    sourceSize: Qt.size(isMobile ? 20 : 24, isMobile ? 20 : 24)
                     fillMode: Image.PreserveAspectFit
                     mipmap: true
                     antialiasing: true
@@ -52,7 +53,7 @@ Page {
 
                 Text {
                     text: "Активные сессии"
-                    font.pixelSize: 24
+                    font.pixelSize: isMobile ? 18 : 24
                     font.bold: true
                     color: "#2c3e50"
                     anchors.verticalCenter: parent.verticalCenter
@@ -61,7 +62,7 @@ Page {
 
             Text {
                 text: "Всего активных сессий: " + sessions.length
-                font.pixelSize: 14
+                font.pixelSize: isMobile ? 12 : 14
                 color: "#7f8c8d"
                 Layout.alignment: Qt.AlignHCenter
             }
@@ -76,7 +77,7 @@ Page {
             Column {
                 id: sessionsColumn
                 width: parent.width
-                spacing: 12
+                spacing: isMobile ? 8 : 12
                 anchors.horizontalCenter: parent.horizontalCenter
 
                 Repeater {
@@ -86,25 +87,25 @@ Page {
                         id: sessionCard
                         width: sessionsColumn.width
                         anchors.horizontalCenter: parent.horizontalCenter
-                        height: 100
-                        radius: 12
+                        height: isMobile ? 120 : 100
+                        radius: isMobile ? 8 : 12
                         color: modelData.isCurrent ? "#e3f2fd" : "#ffffff"
                         border.color: modelData.isCurrent ? "#2196f3" : "#e0e0e0"
                         border.width: 2
 
                         RowLayout {
                             anchors.fill: parent
-                            anchors.margins: 12
-                            spacing: 12
+                            anchors.margins: isMobile ? 8 : 12
+                            spacing: isMobile ? 8 : 12
 
                             // Левая часть - статус и дата
                             Column {
-                                Layout.preferredWidth: 100
+                                Layout.preferredWidth: isMobile ? 80 : 100
                                 Layout.alignment: Qt.AlignTop
-                                spacing: 4
+                                spacing: isMobile ? 2 : 4
 
                                 Row {
-                                    spacing: 6
+                                    spacing: isMobile ? 4 : 6
                                     Image {
                                         source: {
                                             if (modelData.isCurrent) return "qrc:/icons/status-connection.png";
@@ -114,7 +115,7 @@ Page {
                                             if (hours >= 72) return "qrc:/icons/status-inactive.png";
                                             return "qrc:/icons/status-warning.png";
                                         }
-                                        sourceSize: Qt.size(24, 24)
+                                        sourceSize: Qt.size(isMobile ? 20 : 24, isMobile ? 20 : 24)
                                         fillMode: Image.PreserveAspectFit
                                         mipmap: true
                                         antialiasing: true
@@ -128,7 +129,7 @@ Page {
                                             if (hours >= 72) return "Давно";
                                             return "Неактивная";
                                         }
-                                        font.pixelSize: 11
+                                        font.pixelSize: isMobile ? 9 : 11
                                         font.bold: true
                                         color: {
                                             if (modelData.isCurrent) return "#2196f3";
@@ -143,7 +144,7 @@ Page {
 
                                 Text {
                                     text: formatDate(modelData.createdAt)
-                                    font.pixelSize: 9
+                                    font.pixelSize: isMobile ? 8 : 9
                                     color: "#95a5a6"
                                     width: parent.width
                                     elide: Text.ElideRight
@@ -155,29 +156,29 @@ Page {
                                 Layout.fillWidth: true
                                 Layout.fillHeight: true
                                 columns: 2
-                                columnSpacing: 8
-                                rowSpacing: 4
+                                columnSpacing: isMobile ? 6 : 8
+                                rowSpacing: isMobile ? 2 : 4
 
                                 // ОС
                                 Row {
-                                    spacing: 4
+                                    spacing: isMobile ? 3 : 4
                                     Image {
                                         source: "qrc:/icons/os.png"
-                                        sourceSize: Qt.size(16, 16)
+                                        sourceSize: Qt.size(isMobile ? 14 : 16, isMobile ? 14 : 16)
                                         fillMode: Image.PreserveAspectFit
                                         mipmap: true
                                         antialiasing: true
                                     }
                                     Text {
                                         text: "ОС:"
-                                        font.pixelSize: 11
+                                        font.pixelSize: isMobile ? 9 : 11
                                         color: "#7f8c8d"
                                         font.bold: true
                                     }
                                 }
                                 Text {
                                     text: modelData.userOS && modelData.userOS !== "unknown" ? modelData.userOS : "Неизвестно"
-                                    font.pixelSize: 11
+                                    font.pixelSize: isMobile ? 9 : 11
                                     color: "#2c3e50"
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
@@ -185,24 +186,24 @@ Page {
 
                                 // IP
                                 Row {
-                                    spacing: 4
+                                    spacing: isMobile ? 3 : 4
                                     Image {
                                         source: "qrc:/icons/ip.png"
-                                        sourceSize: Qt.size(16, 16)
+                                        sourceSize: Qt.size(isMobile ? 14 : 16, isMobile ? 14 : 16)
                                         fillMode: Image.PreserveAspectFit
                                         mipmap: true
                                         antialiasing: true
                                     }
                                     Text {
                                         text: "IP:"
-                                        font.pixelSize: 11
+                                        font.pixelSize: isMobile ? 9 : 11
                                         color: "#7f8c8d"
                                         font.bold: true
                                     }
                                 }
                                 Text {
                                     text: modelData.ipAddress && modelData.ipAddress !== "unknown" ? modelData.ipAddress : "Неизвестно"
-                                    font.pixelSize: 11
+                                    font.pixelSize: isMobile ? 9 : 11
                                     color: "#2c3e50"
                                     Layout.fillWidth: true
                                     elide: Text.ElideRight
@@ -210,40 +211,40 @@ Page {
 
                                 // Время существования
                                 Row {
-                                    spacing: 4
+                                    spacing: isMobile ? 3 : 4
                                     Image {
                                         source: "qrc:/icons/time.png"
-                                        sourceSize: Qt.size(16, 16)
+                                        sourceSize: Qt.size(isMobile ? 14 : 16, isMobile ? 14 : 16)
                                         fillMode: Image.PreserveAspectFit
                                         mipmap: true
                                         antialiasing: true
                                     }
                                     Text {
                                         text: "Возраст:"
-                                        font.pixelSize: 11
+                                        font.pixelSize: isMobile ? 9 : 11
                                         color: "#7f8c8d"
                                         font.bold: true
                                     }
                                 }
                                 Text {
                                     text: (modelData.ageHours || "0") + " ч."
-                                    font.pixelSize: 11
+                                    font.pixelSize: isMobile ? 9 : 11
                                     color: "#2c3e50"
                                 }
 
                                 // Время неактивности
                                 Row {
-                                    spacing: 4
+                                    spacing: isMobile ? 3 : 4
                                     Image {
                                         source: "qrc:/icons/activity.png"
-                                        sourceSize: Qt.size(16, 16)
+                                        sourceSize: Qt.size(isMobile ? 14 : 16, isMobile ? 14 : 16)
                                         fillMode: Image.PreserveAspectFit
                                         mipmap: true
                                         antialiasing: true
                                     }
                                     Text {
                                         text: "Активность:"
-                                        font.pixelSize: 11
+                                        font.pixelSize: isMobile ? 9 : 11
                                         color: "#7f8c8d"
                                         font.bold: true
                                     }
@@ -265,7 +266,7 @@ Page {
                                             return "Давно";
                                         }
                                     }
-                                    font.pixelSize: 11
+                                    font.pixelSize: isMobile ? 9 : 11
                                     color: {
                                         var minutes = parseInt(modelData.inactiveMinutes || "0");
                                         var hours = parseInt(modelData.ageHours || "0");
@@ -284,32 +285,32 @@ Page {
 
                             // Правая часть - кнопка отзыва
                             Item {
-                                Layout.preferredWidth: 80
-                                Layout.preferredHeight: 28
+                                Layout.preferredWidth: isMobile ? 60 : 80
+                                Layout.preferredHeight: isMobile ? 24 : 28
                                 Layout.alignment: Qt.AlignCenter
 
                                 // Кнопка "Отозвать" для не текущих сессий
                                 Rectangle {
                                     visible: !modelData.isCurrent
                                     anchors.fill: parent
-                                    radius: 6
+                                    radius: isMobile ? 4 : 6
                                     color: revokeMouseArea.containsMouse ? "#c0392b" : "#e74c3c"
                                     border.color: revokeMouseArea.containsMouse ? "#a93226" : "#c0392b"
                                     border.width: 1
 
                                     Row {
                                         anchors.centerIn: parent
-                                        spacing: 4
+                                        spacing: isMobile ? 3 : 4
                                         Image {
                                             source: "qrc:/icons/revoke.png"
-                                            sourceSize: Qt.size(24, 24)
+                                            sourceSize: Qt.size(isMobile ? 16 : 24, isMobile ? 16 : 24)
                                             fillMode: Image.PreserveAspectFit
                                             mipmap: true
                                             antialiasing: true
                                         }
                                         Text {
                                             text: "Отозвать"
-                                            font.pixelSize: 10
+                                            font.pixelSize: isMobile ? 8 : 10
                                             color: "white"
                                             font.bold: true
                                         }
@@ -331,7 +332,7 @@ Page {
                                 Rectangle {
                                     visible: modelData.isCurrent
                                     anchors.fill: parent
-                                    radius: 5
+                                    radius: isMobile ? 4 : 5
                                     color: "transparent"
                                     border.color: "#2196f3"
                                     border.width: 1
@@ -339,7 +340,7 @@ Page {
                                     Text {
                                         text: "Текущая"
                                         color: "#2196f3"
-                                        font.pixelSize: 10
+                                        font.pixelSize: isMobile ? 8 : 10
                                         font.bold: true
                                         anchors.centerIn: parent
                                     }
@@ -352,19 +353,19 @@ Page {
                 // Сообщение когда нет сессий
                 Rectangle {
                     width: sessionsColumn.width
-                    height: 100
-                    radius: 12
+                    height: isMobile ? 80 : 100
+                    radius: isMobile ? 8 : 12
                     color: "#ecf0f1"
                     border.color: "#bdc3c7"
                     visible: sessions.length === 0
 
                     Column {
                         anchors.centerIn: parent
-                        spacing: 8
+                        spacing: isMobile ? 6 : 8
 
                         Image {
                             source: "qrc:/icons/sessions.png"
-                            sourceSize: Qt.size(28, 28)
+                            sourceSize: Qt.size(isMobile ? 24 : 28, isMobile ? 24 : 28)
                             fillMode: Image.PreserveAspectFit
                             mipmap: true
                             antialiasing: true
@@ -373,7 +374,7 @@ Page {
 
                         Text {
                             text: "Активные сессии не найдены"
-                            font.pixelSize: 14
+                            font.pixelSize: isMobile ? 12 : 14
                             color: "#7f8c8d"
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
@@ -385,12 +386,12 @@ Page {
         // Подсказка
         Row {
             Layout.alignment: Qt.AlignHCenter
-            spacing: 4
+            spacing: isMobile ? 3 : 4
             visible: sessions.length > 0
 
             Image {
                 source: "qrc:/icons/info.png"
-                sourceSize: Qt.size(18, 18)
+                sourceSize: Qt.size(isMobile ? 14 : 18, isMobile ? 14 : 18)
                 fillMode: Image.PreserveAspectFit
                 mipmap: true
                 antialiasing: true
@@ -399,7 +400,7 @@ Page {
 
             Text {
                 text: "Здесь отображаются все сессии вашего аккаунта."
-                font.pixelSize: 11
+                font.pixelSize: isMobile ? 10 : 11
                 color: "#7f8c8d"
                 font.italic: true
                 anchors.verticalCenter: parent.verticalCenter

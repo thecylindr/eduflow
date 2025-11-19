@@ -8,9 +8,10 @@ Item {
 
     property var teachers: []
     property bool isLoading: false
+    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
+                           Qt.platform.os === "tvos" || Qt.platform.os === "wasm"
 
     function refreshTeachers() {
-        console.log("🔄 Загрузка преподавателей...");
         isLoading = true;
         mainWindow.mainApi.getTeachers(function(response) {
             isLoading = false;
@@ -165,7 +166,6 @@ Item {
         }
 
     Component.onCompleted: {
-        console.log("🎯 TeachersView создан");
         refreshTeachers();
     }
 
@@ -216,10 +216,80 @@ Item {
             border.color: "#2980b9"
             border.width: 1
 
+            // Мобильная версия - центрированные большие кнопки
+            Row {
+                anchors.centerIn: parent
+                spacing: isMobile ? 30 : 15
+                visible: isMobile
+
+                // Кнопка обновления для мобильных
+                Rectangle {
+                    width: 50
+                    height: 50
+                    radius: 25
+                    color: refreshMouseAreaMobile.containsPress ? "#2980b9" : "transparent"
+
+                    Image {
+                        source: "qrc:/icons/refresh.png"
+                        sourceSize: Qt.size(28, 28)
+                        anchors.centerIn: parent
+                    }
+
+                    MouseArea {
+                        id: refreshMouseAreaMobile
+                        anchors.fill: parent
+                        onClicked: refreshTeachers()
+                    }
+                }
+
+                // Текст счетчика для мобильных
+                Text {
+                    text: "Всего: " + teachers.length
+                    color: "white"
+                    font.pixelSize: 16
+                    font.bold: true
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                // Кнопка добавления для мобильных - увеличенная с плюсом
+                Rectangle {
+                    width: 50
+                    height: 50
+                    radius: 25
+                    color: addMouseAreaMobile.containsPress ? "#2980b9" : "transparent"
+
+                    Text {
+                        text: "+"
+                        color: "white"
+                        font.pixelSize: 32
+                        font.bold: true
+                        anchors.centerIn: parent
+                    }
+
+                    MouseArea {
+                        id: addMouseAreaMobile
+                        anchors.fill: parent
+                        onClicked: {
+                            console.log("➕ Добавить преподавателя - клик");
+                            if (!teacherFormWindow.item) {
+                                teacherFormWindow.active = true;
+                                teacherFormWindow.onLoaded = function() {
+                                    openFormForAdd();
+                                };
+                            } else {
+                                openFormForAdd();
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Десктопная версия - без изменений
             Row {
                 anchors.fill: parent
                 anchors.margins: 10
                 spacing: 15
+                visible: !isMobile
 
                 Text {
                     text: "Всего преподавателей: " + teachers.length
@@ -235,8 +305,8 @@ Item {
                     width: 100
                     height: 30
                     radius: 6
-                    color: refreshMouseArea.containsMouse ? "#2980b9" : "#3498db"
-                    border.color: refreshMouseArea.containsMouse ? "#1a5276" : "white"
+                    color: refreshMouseAreaDesktop.containsMouse ? "#2980b9" : "#3498db"
+                    border.color: refreshMouseAreaDesktop.containsMouse ? "#1a5276" : "white"
                     border.width: 2
 
                     Row {
@@ -259,7 +329,7 @@ Item {
                     }
 
                     MouseArea {
-                        id: refreshMouseArea
+                        id: refreshMouseAreaDesktop
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: refreshTeachers()
@@ -272,8 +342,8 @@ Item {
                     width: 180
                     height: 30
                     radius: 6
-                    color: addMouseArea.containsMouse ? "#2980b9" : "#3498db"
-                    border.color: addMouseArea.containsMouse ? "#1a5276" : "white"
+                    color: addMouseAreaDesktop.containsMouse ? "#2980b9" : "#3498db"
+                    border.color: addMouseAreaDesktop.containsMouse ? "#1a5276" : "white"
                     border.width: 2
 
                     Row {
@@ -296,7 +366,7 @@ Item {
                     }
 
                     MouseArea {
-                        id: addMouseArea
+                        id: addMouseAreaDesktop
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: {
@@ -357,7 +427,6 @@ Item {
             }
 
             onItemDoubleClicked: function(itemData) {
-                console.log("👨‍🏫 Двойной клик по преподавателю:", itemData);
                 if (teacherFormWindow.item) {
                     teacherFormWindow.openForEdit(itemData);
                 } else {

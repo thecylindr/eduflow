@@ -4,14 +4,15 @@ import QtQuick.Controls
 Rectangle {
     id: searchBox
     width: 300
-    height: 40
-    radius: 20
+    height: isMobile ? 36 : 40
+    radius: isMobile ? 18 : 20
     color: "#f5f5f5"
     border.color: "#ddd"
     border.width: 1
 
     property string placeholder: "Поиск..."
     property string searchText: ""
+    property bool isMobile: false
 
     signal searchRequested(string text)
 
@@ -21,15 +22,15 @@ Rectangle {
 
         // Лупа с отступом
         Rectangle {
-            width: 45
+            width: isMobile ? 35 : 45
             height: parent.height
             color: "transparent"
 
             Item {
                 id: searchIconContainer
                 anchors.centerIn: parent
-                width: 24
-                height: 24
+                width: isMobile ? 20 : 24
+                height: isMobile ? 20 : 24
 
                 AnimatedImage {
                     id: animatedSearchIcon
@@ -52,17 +53,17 @@ Rectangle {
 
         // Заменяем TextField на TextInput с кастомным оформлением
         Rectangle {
-            width: parent.width - 45 - (clearButton.visible ? 35 : 0)
+            width: parent.width - (isMobile ? 35 : 45) - (clearButton.visible ? (isMobile ? 25 : 35) : 0)
             height: parent.height
             color: "transparent"
 
             TextInput {
                 id: searchField
                 anchors.fill: parent
-                anchors.leftMargin: 5
-                anchors.rightMargin: 5
+                anchors.leftMargin: isMobile ? 3 : 5
+                anchors.rightMargin: isMobile ? 3 : 5
                 verticalAlignment: TextInput.AlignVCenter
-                font.pixelSize: 14
+                font.pixelSize: isMobile ? 12 : 14
                 color: "#2c3e50"
 
                 Text {
@@ -85,9 +86,9 @@ Rectangle {
         // Кнопка очистки
         Rectangle {
             id: clearButton
-            width: 30
-            height: 30
-            radius: 15
+            width: isMobile ? 22 : 30
+            height: isMobile ? 22 : 30
+            radius: isMobile ? 11 : 15
             anchors.verticalCenter: parent.verticalCenter
             color: clearMouseArea.containsMouse ? "#e0e0e0" : "transparent"
             visible: searchField.text.length > 0
@@ -95,8 +96,8 @@ Rectangle {
             Image {
                 anchors.centerIn: parent
                 source: "qrc:icons/cross.png"
-                width: 12
-                height: 12
+                width: isMobile ? 10 : 12
+                height: isMobile ? 10 : 12
                 fillMode: Image.PreserveAspectFit
             }
 

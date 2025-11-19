@@ -11,7 +11,6 @@ Rectangle {
     property var window: null
     property string currentView: ""
     property bool isWindowMaximized: false
-    property bool showGitflicButton: true
     property bool showWindowButtons: true
     property bool isMobile: false
     property bool authmenu: false
@@ -42,12 +41,11 @@ Rectangle {
             leftMargin: 10
             verticalCenter: parent.verticalCenter
         }
-        visible: showGitflicButton && !isMobile  // Скрываем на мобильных
 
         Image {
             anchors.centerIn: parent
             source: "qrc:/icons/git.png"
-            sourceSize: Qt.size(18, 18)
+            sourceSize: Qt.size(21, 21)
         }
 
         MouseArea {

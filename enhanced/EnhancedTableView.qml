@@ -10,6 +10,7 @@ Item {
     property var sortOptions: []
     property var sortRoles: []
     property bool isGridView: false
+    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" || Qt.platform.os === "tvos" || Qt.platform.os === "wasm"
 
     signal itemEditRequested(var itemData)
     signal itemDeleteRequested(var itemData)
@@ -48,7 +49,6 @@ Item {
                 var teacherName = (item.teacherName || "").toLowerCase();
                 return groupName.includes(searchLower) || teacherName.includes(searchLower);
             } else if (itemType === "event") {
-                // 🔥 ИСПРАВЛЕНИЕ: используем правильные поля для событий
                 var eventCategory = (item.eventCategory || item.category || "").toLowerCase();
                 var eventType = (item.eventType || "").toLowerCase();
                 var eventLocation = (item.location || "").toLowerCase();
@@ -76,87 +76,114 @@ Item {
             filtered.sort(function(a, b) {
                 var aVal = "";
                 var bVal = "";
+                var isNumeric = false;
 
                 // Обработка разных типов данных
                 if (itemType === "student") {
                     if (sortRole === "full_name") {
-                        aVal = ((a.last_name || a.lastName || "") + " " + (a.first_name || a.firstName || "") + " " + (a.middle_name || a.middleName || "")).toString().toLowerCase();
-                        bVal = ((b.last_name || b.lastName || "") + " " + (b.first_name || b.firstName || "") + " " + (b.middle_name || b.middleName || "")).toString().toLowerCase();
+                        aVal = ((a.last_name || a.lastName || "") + " " + (a.first_name || a.firstName || "") + " " + (a.middle_name || a.middleName || "")).toString();
+                        bVal = ((b.last_name || b.lastName || "") + " " + (b.first_name || b.firstName || "") + " " + (b.middle_name || b.middleName || "")).toString();
                     } else if (sortRole === "group_name") {
-                        aVal = (a.group_name || "").toString().toLowerCase();
-                        bVal = (b.group_name || "").toString().toLowerCase();
+                        aVal = (a.group_name || "").toString();
+                        bVal = (b.group_name || "").toString();
                     } else if (sortRole === "phone_number") {
-                        aVal = (a.phone_number || a.phoneNumber || "").toString().toLowerCase();
-                        bVal = (b.phone_number || b.phoneNumber || "").toString().toLowerCase();
+                        aVal = (a.phone_number || a.phoneNumber || "").toString();
+                        bVal = (b.phone_number || b.phoneNumber || "").toString();
                     } else if (sortRole === "email") {
-                        aVal = (a.email || "").toString().toLowerCase();
-                        bVal = (b.email || "").toString().toLowerCase();
+                        aVal = (a.email || "").toString();
+                        bVal = (b.email || "").toString();
                     } else {
-                        aVal = (a[sortRole] || "").toString().toLowerCase();
-                        bVal = (b[sortRole] || "").toString().toLowerCase();
+                        aVal = (a[sortRole] || "").toString();
+                        bVal = (b[sortRole] || "").toString();
                     }
                 }
                 else if (itemType === "teacher") {
                     if (sortRole === "full_name") {
-                        aVal = ((a.lastName || "") + " " + (a.firstName || "") + " " + (a.middleName || "")).toString().toLowerCase();
-                        bVal = ((b.lastName || "") + " " + (b.firstName || "") + " " + (b.middleName || "")).toString().toLowerCase();
+                        aVal = ((a.lastName || "") + " " + (a.firstName || "") + " " + (a.middleName || "")).toString();
+                        bVal = ((b.lastName || "") + " " + (b.firstName || "") + " " + (b.middleName || "")).toString();
+                    } else if (sortRole === "experience") {
+                        // ОСОБАЯ ОБРАБОТКА ДЛЯ ОПЫТА - ЧИСЛОВАЯ СОРТИРОВКА
+                        aVal = parseFloat(a.experience) || 0;
+                        bVal = parseFloat(b.experience) || 0;
+                        isNumeric = true;
                     } else {
-                        aVal = (a[sortRole] || "").toString().toLowerCase();
-                        bVal = (b[sortRole] || "").toString().toLowerCase();
+                        aVal = (a[sortRole] || "").toString();
+                        bVal = (b[sortRole] || "").toString();
                     }
                 }
                 else if (itemType === "group") {
-                    aVal = (a[sortRole] || "").toString().toLowerCase();
-                    bVal = (b[sortRole] || "").toString().toLowerCase();
+                    if (sortRole === "studentCount") {
+                        // ОСОБАЯ ОБРАБОТКА ДЛЯ КОЛИЧЕСТВА СТУДЕНТОВ - ЧИСЛОВАЯ СОРТИРОВКА
+                        aVal = parseFloat(a.studentCount) || 0;
+                        bVal = parseFloat(b.studentCount) || 0;
+                        isNumeric = true;
+                    } else {
+                        aVal = (a[sortRole] || "").toString();
+                        bVal = (b[sortRole] || "").toString();
+                    }
                 }
                 else if (itemType === "event") {
-                    // 🔥 ИСПРАВЛЕНИЕ: правильная обработка полей событий
-                    if (sortRole === "Category") {
-                        aVal = (a.eventCategory || a.category || "Без наименования").toString().toLowerCase();
-                        bVal = (b.eventCategory || b.category || "Без наименования").toString().toLowerCase();
+                    if (sortRole === "eventCategory") {
+                        aVal = (a.eventCategory || a.category || "Без наименования").toString();
+                        bVal = (b.eventCategory || b.category || "Без наименования").toString();
                     } else if (sortRole === "eventType") {
-                        aVal = (a.eventType || "Без типа").toString().toLowerCase();
-                        bVal = (b.eventType || "Без типа").toString().toLowerCase();
+                        aVal = (a.eventType || "Без типа").toString();
+                        bVal = (b.eventType || "Без типа").toString();
                     } else if (sortRole === "startDate") {
-                        aVal = (a.startDate || "").toString().toLowerCase();
-                        bVal = (b.startDate || "").toString().toLowerCase();
+                        aVal = (a.startDate || "").toString();
+                        bVal = (b.startDate || "").toString();
                     } else if (sortRole === "status") {
-                        aVal = (a.status || "active").toString().toLowerCase();
-                        bVal = (b.status || "active").toString().toLowerCase();
+                        aVal = (a.status || "active").toString();
+                        bVal = (b.status || "active").toString();
                     } else if (sortRole === "location") {
-                        aVal = (a.location || "").toString().toLowerCase();
-                        bVal = (b.location || "").toString().toLowerCase();
+                        aVal = (a.location || "").toString();
+                        bVal = (b.location || "").toString();
                     } else if (sortRole === "lore") {
-                        aVal = (a.lore || "").toString().toLowerCase();
-                        bVal = (b.lore || "").toString().toLowerCase();
+                        aVal = (a.lore || "").toString();
+                        bVal = (b.lore || "").toString();
+                    } else if (sortRole === "maxParticipants" || sortRole === "currentParticipants") {
+                        // ОСОБАЯ ОБРАБОТКА ДЛЯ ЧИСЛОВЫХ ПОЛЕЙ СОБЫТИЙ
+                        aVal = parseFloat(a[sortRole]) || 0;
+                        bVal = parseFloat(b[sortRole]) || 0;
+                        isNumeric = true;
                     } else {
-                        aVal = (a[sortRole] || "").toString().toLowerCase();
-                        bVal = (b[sortRole] || "").toString().toLowerCase();
+                        aVal = (a[sortRole] || "").toString();
+                        bVal = (b[sortRole] || "").toString();
                     }
                 }
                 else if (itemType === "portfolio") {
                     if (sortRole === "studentName") {
-                        aVal = (a.studentName || "").toString().toLowerCase();
-                        bVal = (b.studentName || "").toString().toLowerCase();
+                        aVal = (a.studentName || "").toString();
+                        bVal = (b.studentName || "").toString();
                     } else if (sortRole === "date") {
-                        aVal = (a.date || "").toString().toLowerCase();
-                        bVal = (b.date || "").toString().toLowerCase();
+                        aVal = (a.date || "").toString();
+                        bVal = (b.date || "").toString();
                     } else if (sortRole === "decree") {
-                        aVal = (a.decree || "").toString().toLowerCase();
-                        bVal = (b.decree || "").toString().toLowerCase();
+                        aVal = (a.decree || "").toString();
+                        bVal = (b.decree || "").toString();
                     } else {
-                        aVal = (a[sortRole] || "").toString().toLowerCase();
-                        bVal = (b[sortRole] || "").toString().toLowerCase();
+                        aVal = (a[sortRole] || "").toString();
+                        bVal = (b[sortRole] || "").toString();
                     }
                 }
                 else {
-                    aVal = (a[sortRole] || "").toString().toLowerCase();
-                    bVal = (b[sortRole] || "").toString().toLowerCase();
+                    aVal = (a[sortRole] || "").toString();
+                    bVal = (b[sortRole] || "").toString();
                 }
 
                 var result = 0;
-                if (aVal < bVal) result = -1;
-                else if (aVal > bVal) result = 1;
+
+                if (isNumeric) {
+                    // ЧИСЛОВАЯ СОРТИРОВКА
+                    if (aVal < bVal) result = -1;
+                    else if (aVal > bVal) result = 1;
+                } else {
+                    // СТРОКОВАЯ СОРТИРОВКА (с приведением к нижнему регистру)
+                    var aStr = aVal.toString().toLowerCase();
+                    var bStr = bVal.toString().toLowerCase();
+                    if (aStr < bStr) result = -1;
+                    else if (aStr > bStr) result = 1;
+                }
 
                 return sortAscending ? result : -result;
             });
@@ -166,50 +193,102 @@ Item {
         console.log("Displayed model length:", filteredModel.length);
     }
 
-    onSourceModelChanged: {
-        console.log("Source model changed, length:", sourceModel.length);
-        if (sourceModel.length > 0) {
-            console.log("First item:", JSON.stringify(sourceModel[0]));
-        }
-        updateDisplayedModel();
-    }
+    onSourceModelChanged: updateDisplayedModel()
     onSearchTextChanged: updateDisplayedModel()
     onSortIndexChanged: updateDisplayedModel()
     onSortAscendingChanged: updateDisplayedModel()
 
     ColumnLayout {
         anchors.fill: parent
-        spacing: 10
+        spacing: isMobile ? 4 : 10
 
-        // Панель управления
-        RowLayout {
+        // Панель управления - полностью адаптивная для мобильных
+        Item {
             Layout.fillWidth: true
-            spacing: 10
+            Layout.preferredHeight: isMobile ? 90 : 45
 
-            EnhancedSearchBox {
-                Layout.preferredWidth: 300
-                placeholder: enhancedTable.searchPlaceholder
-                onSearchRequested: function(text) {
-                    enhancedTable.searchText = text
+            // Мобильная версия - вертикальное расположение (поиск отдельно, кнопки под ним)
+            ColumnLayout {
+                anchors.fill: parent
+                spacing: 6
+                visible: isMobile
+
+                // Поисковая строка на всю ширину
+                EnhancedSearchBox {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 40
+                    placeholder: enhancedTable.searchPlaceholder
+                    isMobile: enhancedTable.isMobile
+                    onSearchRequested: function(text) {
+                        enhancedTable.searchText = text
+                    }
+                }
+
+                // Кнопки сортировки и переключения вида под поиском
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6 // Уменьшено с 8 до 6
+
+                    EnhancedSortComboBox {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 36
+                        sortOptions: enhancedTable.sortOptions
+                        sortRoles: enhancedTable.sortRoles
+                        isMobile: enhancedTable.isMobile
+                        onSortChanged: function(index, ascending) {
+                            enhancedTable.sortIndex = index
+                            enhancedTable.sortAscending = ascending
+                        }
+                    }
+
+                    EnhancedViewToggle {
+                        Layout.preferredHeight: 36
+                        Layout.preferredWidth: 80
+                        isMobile: enhancedTable.isMobile
+                        onViewToggled: function(gridView) {
+                            enhancedTable.isGridView = gridView
+                        }
+                    }
                 }
             }
 
-            EnhancedSortComboBox {
-                sortOptions: enhancedTable.sortOptions
-                sortRoles: enhancedTable.sortRoles
-                onSortChanged: function(index, ascending) {
-                    enhancedTable.sortIndex = index
-                    enhancedTable.sortAscending = ascending
+            // Компьютерная версия - горизонтальное расположение
+            RowLayout {
+                anchors.fill: parent
+                spacing: 10
+                visible: !isMobile
+
+                EnhancedSearchBox {
+                    Layout.fillWidth: true
+                    Layout.preferredHeight: 40
+                    placeholder: enhancedTable.searchPlaceholder
+                    isMobile: enhancedTable.isMobile
+                    onSearchRequested: function(text) {
+                        enhancedTable.searchText = text
+                    }
+                }
+
+                EnhancedSortComboBox {
+                    Layout.preferredWidth: 200
+                    Layout.preferredHeight: 35
+                    sortOptions: enhancedTable.sortOptions
+                    sortRoles: enhancedTable.sortRoles
+                    isMobile: enhancedTable.isMobile
+                    onSortChanged: function(index, ascending) {
+                        enhancedTable.sortIndex = index
+                        enhancedTable.sortAscending = ascending
+                    }
+                }
+
+                EnhancedViewToggle {
+                    Layout.preferredWidth: 80
+                    Layout.preferredHeight: 35
+                    isMobile: enhancedTable.isMobile
+                    onViewToggled: function(gridView) {
+                        enhancedTable.isGridView = gridView
+                    }
                 }
             }
-
-            EnhancedViewToggle {
-                onViewToggled: function(gridView) {
-                    enhancedTable.isGridView = gridView
-                }
-            }
-
-            Item { Layout.fillWidth: true }
         }
 
         // Область контента
@@ -235,15 +314,17 @@ Item {
                     Column {
                         id: listViewColumn
                         width: listScrollView.availableWidth
-                        spacing: 6
+                        spacing: isMobile ? 4 : 8
 
                         Repeater {
                             model: enhancedTable.filteredModel
 
                             delegate: EnhancedListItem {
-                                width: listViewColumn.width - 20
+                                width: listViewColumn.width - (isMobile ? 8 : 20)
+                                anchors.horizontalCenter: parent.horizontalCenter
                                 itemData: modelData
                                 itemType: enhancedTable.itemType
+                                isMobile: enhancedTable.isMobile
                                 onEditRequested: function(data) {
                                     enhancedTable.itemEditRequested(data)
                                 }
@@ -270,17 +351,26 @@ Item {
                     Flow {
                         id: gridViewLayout
                         width: gridScrollView.availableWidth
-                        spacing: 10
-                        padding: 10
+                        spacing: isMobile ? 8 : 12
+                        padding: isMobile ? 8 : 12
 
                         Repeater {
                             model: enhancedTable.filteredModel
 
                             delegate: EnhancedGridItem {
-                                width: 180
-                                height: 150
+                                width: {
+                                    if (isMobile) {
+                                        var availableWidth = gridViewLayout.width - gridViewLayout.padding * 2;
+                                        var columns = 2;
+                                        return (availableWidth - (columns - 1) * gridViewLayout.spacing) / columns;
+                                    } else {
+                                        return 180;
+                                    }
+                                }
+                                height: isMobile ? 130 : 160 // Уменьшено с 140 до 130 для мобильных
                                 itemData: modelData
                                 itemType: enhancedTable.itemType
+                                isMobile: enhancedTable.isMobile
                                 onEditRequested: function(data) {
                                     enhancedTable.itemEditRequested(data)
                                 }

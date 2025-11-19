@@ -9,6 +9,8 @@ Item {
     property var students: []
     property var groups: []
     property bool isLoading: false
+    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
+                           Qt.platform.os === "tvos" || Qt.platform.os === "wasm"
 
     function refreshStudents() {
         console.log("🔄 Загрузка студентов...");
@@ -25,7 +27,6 @@ Item {
                     var student = studentsData[i];
                     var processedStudent = {
                         studentCode: student.studentCode || student.student_code,
-                        // Исправлено: используем единообразные названия полей
                         first_name: student.firstName || student.first_name || "",
                         last_name: student.lastName || student.last_name || "",
                         middle_name: student.middleName || student.middle_name || "",
@@ -34,7 +35,7 @@ Item {
                         group_id: student.groupId || student.group_id || 0,
                         passportSeries: student.passportSeries || student.passport_series || "",
                         passportNumber: student.passportNumber || student.passport_number || "",
-                        group_name: getGroupName(student.groupId || student.group_id)  // Добавлено название группы
+                        group_name: getGroupName(student.groupId || student.group_id)
                     };
                     processedStudents.push(processedStudent);
                 }
@@ -80,7 +81,6 @@ Item {
         return "Не найдена";
     }
 
-    // Функции для работы со студентами через MainAPI
     function addStudent(studentData) {
         isLoading = true;
         mainWindow.mainApi.addStudent(studentData, function(response) {
@@ -198,10 +198,70 @@ Item {
             border.color: "#27ae60"
             border.width: 1
 
+            // Мобильная версия - центрированные большие кнопки
+            Row {
+                anchors.centerIn: parent
+                spacing: isMobile ? 30 : 15
+                visible: isMobile
+
+                // Кнопка обновления для мобильных
+                Rectangle {
+                    width: 50
+                    height: 50
+                    radius: 25
+                    color: refreshMouseAreaMobile.containsPress ? "#27ae60" : "transparent"
+
+                    Image {
+                        source: "qrc:/icons/refresh.png"
+                        sourceSize: Qt.size(28, 28)
+                        anchors.centerIn: parent
+                    }
+
+                    MouseArea {
+                        id: refreshMouseAreaMobile
+                        anchors.fill: parent
+                        onClicked: refreshStudents()
+                    }
+                }
+
+                // Текст счетчика для мобильных
+                Text {
+                    text: "Всего: " + students.length
+                    color: "white"
+                    font.pixelSize: 16
+                    font.bold: true
+                    anchors.verticalCenter: parent.verticalCenter
+                }
+
+                // Кнопка добавления для мобильных
+                Rectangle {
+                    width: 50
+                    height: 50
+                    radius: 25
+                    color: addMouseAreaMobile.containsPress ? "#27ae60" : "transparent"
+
+                    Text {
+                        text: "+"
+                        color: "white"
+                        font.pixelSize: 32
+                        font.bold: true
+                        anchors.centerIn: parent
+                    }
+
+                    MouseArea {
+                        id: addMouseAreaMobile
+                        anchors.fill: parent
+                        onClicked: studentFormWindow.openForAdd()
+                    }
+                }
+            }
+
+            // Десктопная версия - без изменений
             Row {
                 anchors.fill: parent
                 anchors.margins: 10
                 spacing: 15
+                visible: !isMobile
 
                 Text {
                     text: "Всего студентов: " + students.length
@@ -217,8 +277,8 @@ Item {
                     width: 100
                     height: 30
                     radius: 6
-                    color: refreshMouseArea.containsMouse ? "#27ae60" : "#2ecc71"
-                    border.color: refreshMouseArea.containsMouse ? "#219652" : "white"
+                    color: refreshMouseAreaDesktop.containsMouse ? "#27ae60" : "#2ecc71"
+                    border.color: refreshMouseAreaDesktop.containsMouse ? "#219652" : "white"
                     border.width: 2
 
                     Row {
@@ -241,7 +301,7 @@ Item {
                     }
 
                     MouseArea {
-                        id: refreshMouseArea
+                        id: refreshMouseAreaDesktop
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: refreshStudents()
@@ -254,8 +314,8 @@ Item {
                     width: 150
                     height: 30
                     radius: 6
-                    color: addMouseArea.containsMouse ? "#27ae60" : "#2ecc71"
-                    border.color: addMouseArea.containsMouse ? "#219652" : "white"
+                    color: addMouseAreaDesktop.containsMouse ? "#27ae60" : "#2ecc71"
+                    border.color: addMouseAreaDesktop.containsMouse ? "#219652" : "white"
                     border.width: 2
 
                     Row {
@@ -278,7 +338,7 @@ Item {
                     }
 
                     MouseArea {
-                        id: addMouseArea
+                        id: addMouseAreaDesktop
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: studentFormWindow.openForAdd()

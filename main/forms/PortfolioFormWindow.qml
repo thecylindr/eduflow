@@ -1,12 +1,13 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts 1.15
+import QtQuick.Controls.Material
 import "../../common" as Common
 
 Window {
     id: portfolioFormWindow
-    width: 450
-    height: 520
+    width: 420
+    height: 500
     flags: Qt.Dialog | Qt.FramelessWindowHint
     modality: Qt.ApplicationModal
     color: "transparent"
@@ -306,7 +307,7 @@ Window {
         // Белая форма
         Rectangle {
             id: whiteForm
-            width: 410
+            width: 370
             height: 400
             anchors {
                 top: titleBar.bottom
@@ -352,6 +353,78 @@ Window {
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 enabled: !isSaving && studentDisplayModel.count > 0
                                 font.pixelSize: 14
+
+                                // Белый стиль для ComboBox
+                                background: Rectangle {
+                                    radius: 6
+                                    color: "#ffffff"
+                                    border.color: studentComboBox.enabled ? "#e0e0e0" : "#f0f0f0"
+                                    border.width: 1
+                                }
+
+                                contentItem: Text {
+                                    text: studentComboBox.currentIndex >= 0 ?
+                                          studentDisplayModel.get(studentComboBox.currentIndex).displayName : ""
+                                    color: "#000000"
+                                    horizontalAlignment: Text.AlignLeft
+                                    verticalAlignment: Text.AlignVCenter
+                                    leftPadding: 10
+                                    rightPadding: studentComboBox.indicator.width + 10
+                                    font: studentComboBox.font
+                                }
+
+                                indicator: Rectangle {
+                                    x: studentComboBox.width - width - 5
+                                    y: studentComboBox.topPadding + (studentComboBox.height - height) / 2
+                                    width: 12
+                                    height: 8
+                                    color: "transparent"
+                                    Rectangle {
+                                        width: 8
+                                        height: 8
+                                        color: "#666666"
+                                        rotation: 45
+                                        anchors.centerIn: parent
+                                    }
+                                }
+
+                                popup: Popup {
+                                    y: studentComboBox.height - 1
+                                    width: studentComboBox.width
+                                    implicitHeight: contentItem.implicitHeight
+                                    padding: 1
+
+                                    contentItem: ListView {
+                                        clip: true
+                                        implicitHeight: contentHeight
+                                        model: studentComboBox.popup.visible ? studentComboBox.delegateModel : null
+                                        currentIndex: studentComboBox.highlightedIndex
+
+                                        ScrollIndicator.vertical: ScrollIndicator { }
+                                    }
+
+                                    background: Rectangle {
+                                        color: "#ffffff"
+                                        border.color: "#e0e0e0"
+                                        radius: 6
+                                    }
+                                }
+
+                                delegate: ItemDelegate {
+                                    width: studentComboBox.width
+                                    contentItem: Text {
+                                        text: model.displayName
+                                        color: "#000000"
+                                        font: studentComboBox.font
+                                        elide: Text.ElideRight
+                                        verticalAlignment: Text.AlignVCenter
+                                        leftPadding: 10
+                                    }
+                                    background: Rectangle {
+                                        color: highlighted ? "#e0e0e0" : "#ffffff"
+                                    }
+                                    highlighted: studentComboBox.highlightedIndex === index
+                                }
 
                                 // Используем отдельную модель для отображения
                                 model: studentDisplayModel

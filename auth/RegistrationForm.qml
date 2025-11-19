@@ -7,7 +7,7 @@ Rectangle {
     height: contentLayout.height + 25
     radius: 8
     color: "#f8f8f8"
-    opacity: 0.95
+    opacity: 0.925
     border.color: "#e0e0e0"
     border.width: 1
 
@@ -16,6 +16,9 @@ Rectangle {
 
     property bool hasValidFullName: false
     property string fullNameError: ""
+
+    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
+                           Qt.platform.os === "tvos" || Qt.platform.os === "wasm"
 
     function focusUsername() {
         usernameField.focus = true
@@ -196,7 +199,7 @@ Rectangle {
                 }
                 Text {
                     text: "Логин"
-                    font.pixelSize: 11
+                    font.pixelSize: isMobile ? 13 : 11
                     color: "#2c3e50"
                     anchors.verticalCenter: parent.verticalCenter
                 }
@@ -215,7 +218,7 @@ Rectangle {
                     anchors.fill: parent
                     anchors.margins: 8
                     verticalAlignment: TextInput.AlignVCenter
-                    font.pixelSize: 12
+                    font.pixelSize: isMobile ? 14 : 12
                     color: "#000000"
                     selectByMouse: true
 
@@ -243,7 +246,7 @@ Rectangle {
                     text: "Введите логин"
                     color: "#a0a0a0"
                     visible: !usernameField.text && !usernameField.activeFocus
-                    font.pixelSize: 12
+                    font.pixelSize: isMobile ? 14 : 12
                 }
             }
         }
@@ -264,7 +267,7 @@ Rectangle {
                 }
                 Text {
                     text: "Фамилия Имя Отчество"
-                    font.pixelSize: 11
+                    font.pixelSize: isMobile ? 13 : 11
                     color: "#2c3e50"
                     anchors.verticalCenter: parent.verticalCenter
                 }
@@ -284,7 +287,7 @@ Rectangle {
                     anchors.fill: parent
                     anchors.margins: 8
                     verticalAlignment: TextInput.AlignVCenter
-                    font.pixelSize: 12
+                    font.pixelSize: isMobile ? 14 : 12
                     color: "#000000"
                     selectByMouse: true
 
@@ -315,7 +318,7 @@ Rectangle {
                     text: "Фамилия Имя Отчество"
                     color: "#a0a0a0"
                     visible: !fullNameField.text && !fullNameField.activeFocus
-                    font.pixelSize: 12
+                    font.pixelSize: isMobile ? 14 : 12
                 }
             }
 
@@ -346,7 +349,7 @@ Rectangle {
                 }
                 Text {
                     text: "E-mail"
-                    font.pixelSize: 11
+                    font.pixelSize: isMobile ? 13 : 11
                     color: "#2c3e50"
                     anchors.verticalCenter: parent.verticalCenter
                 }
@@ -365,7 +368,7 @@ Rectangle {
                     anchors.fill: parent
                     anchors.margins: 8
                     verticalAlignment: TextInput.AlignVCenter
-                    font.pixelSize: 12
+                    font.pixelSize: isMobile ? 14 : 12
                     color: "#000000"
                     selectByMouse: true
 
@@ -393,7 +396,7 @@ Rectangle {
                     text: "Введите e-mail"
                     color: "#a0a0a0"
                     visible: !emailField.text && !emailField.activeFocus
-                    font.pixelSize: 12
+                    font.pixelSize: isMobile ? 14 : 12
                 }
             }
         }
@@ -413,7 +416,7 @@ Rectangle {
                 }
                 Text {
                     text: "Телефон (необязательно)"
-                    font.pixelSize: 11
+                    font.pixelSize: isMobile ? 13 : 11
                     color: "#2c3e50"
                     anchors.verticalCenter: parent.verticalCenter
                 }
@@ -432,7 +435,7 @@ Rectangle {
                     anchors.fill: parent
                     anchors.margins: 8
                     verticalAlignment: TextInput.AlignVCenter
-                    font.pixelSize: 12
+                    font.pixelSize: isMobile ? 14 : 12
                     color: "#000000"
                     selectByMouse: true
 
@@ -460,7 +463,7 @@ Rectangle {
                     text: "Введите номер телефона"
                     color: "#a0a0a0"
                     visible: !phoneField.text && !phoneField.activeFocus
-                    font.pixelSize: 12
+                    font.pixelSize: isMobile ? 14 : 12
                 }
             }
         }
@@ -481,7 +484,7 @@ Rectangle {
                 }
                 Text {
                     text: "Пароль"
-                    font.pixelSize: 11
+                    font.pixelSize: isMobile ? 13 : 11
                     color: "#2c3e50"
                     anchors.verticalCenter: parent.verticalCenter
                 }
@@ -504,7 +507,7 @@ Rectangle {
                         anchors.fill: parent
                         anchors.margins: 8
                         verticalAlignment: TextInput.AlignVCenter
-                        font.pixelSize: 12
+                        font.pixelSize: isMobile ? 14 : 12
                         echoMode: showPasswordButton.checked ? TextInput.Normal : TextInput.Password
                         color: "#000000"
                         selectByMouse: true
@@ -533,7 +536,7 @@ Rectangle {
                         text: "Введите пароль"
                         color: "#a0a0a0"
                         visible: !passwordField.text && !passwordField.activeFocus
-                        font.pixelSize: 12
+                        font.pixelSize: isMobile ? 14 : 12
                     }
                 }
 
@@ -581,7 +584,7 @@ Rectangle {
                 }
                 Text {
                     text: "Подтвердите пароль"
-                    font.pixelSize: 11
+                    font.pixelSize: isMobile ? 13 : 11
                     color: "#2c3e50"
                     anchors.verticalCenter: parent.verticalCenter
                 }
@@ -600,7 +603,7 @@ Rectangle {
                     anchors.fill: parent
                     anchors.margins: 8
                     verticalAlignment: TextInput.AlignVCenter
-                    font.pixelSize: 12
+                    font.pixelSize: isMobile ? 14 : 12
                     echoMode: showPasswordButton.checked ? TextInput.Normal : TextInput.Password
                     color: "#000000"
                     selectByMouse: true
@@ -629,7 +632,7 @@ Rectangle {
                     text: "Повторите пароль"
                     color: "#a0a0a0"
                     visible: !confirmPasswordField.text && !confirmPasswordField.activeFocus
-                    font.pixelSize: 12
+                    font.pixelSize: isMobile ? 14 : 12
                 }
             }
         }
@@ -654,7 +657,7 @@ Rectangle {
                 }
                 Text {
                     text: authWindow._isLoading ? "ЗАГРУЗКА..." : "ЗАРЕГИСТРИРОВАТЬСЯ"
-                    font.pixelSize: 12
+                    font.pixelSize: isMobile ? 14 : 12
                     font.bold: true
                     color: "white"
                     anchors.verticalCenter: parent.verticalCenter
@@ -676,7 +679,7 @@ Rectangle {
 
             Text {
                 text: "Уже есть аккаунт? Войти"
-                font.pixelSize: 12
+                font.pixelSize: isMobile ? 14 : 12
                 color: "#3498db"
                 opacity: 0.9
 

@@ -4,13 +4,17 @@ import QtQuick.Layouts 1.15
 Rectangle {
     id: serverConfigBox
     width: parent.width
-    height: settingsManager.useLocalServer ? 150 : 60
     radius: 8
     color: "#f8f8f8"
     opacity: 0.95
     border.color: "#e0e0e0"
     border.width: 1
     clip: true
+    height: settingsManager.useLocalServer ? 160 : 60
+
+    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
+                           Qt.platform.os === "tvos" || Qt.platform.os === "wasm"
+
 
     signal serverTypeToggled(bool useLocal)
     signal saveServerConfig(string serverAddress)
@@ -66,7 +70,7 @@ Rectangle {
 
                     Text {
                         text: "Официальный\nEduFlow"
-                        font.pixelSize: 11
+                        font.pixelSize: isMobile ? 13 : 11
                         color: !settingsManager.useLocalServer ? "#1976d2" : "#9e9e9e"
                         horizontalAlignment: Text.AlignHCenter
                         anchors.verticalCenter: parent.verticalCenter
@@ -77,7 +81,6 @@ Rectangle {
                     anchors.fill: parent
                     hoverEnabled: true
                     onClicked: {
-                        console.log("Выбран официальный сервер");
                         serverTypeToggled(false);
                     }
                 }
@@ -105,7 +108,7 @@ Rectangle {
 
                     Text {
                         text: "Локальный\nНастраиваемый"
-                        font.pixelSize: 11
+                        font.pixelSize: isMobile ? 13 : 11
                         color: settingsManager.useLocalServer ? "#2e7d32" : "#9e9e9e"
                         horizontalAlignment: Text.AlignHCenter
                         anchors.verticalCenter: parent.verticalCenter
@@ -116,7 +119,6 @@ Rectangle {
                     anchors.fill: parent
                     hoverEnabled: true
                     onClicked: {
-                        console.log("Выбран локальный сервер");
                         serverTypeToggled(true);
                     }
                 }
@@ -141,12 +143,12 @@ Rectangle {
                     spacing: 4
                     Image {
                         source: "qrc:/icons/ip.png"
-                        sourceSize: Qt.size(16, 16)
+                        sourceSize: Qt.size(20, 20)
                         anchors.verticalCenter: parent.verticalCenter
                     }
                     Text {
                         text: "Адрес сервера:"
-                        font.pixelSize: 11
+                        font.pixelSize: isMobile ? 13 : 11
                         color: "#2c3e50"
                         font.bold: true
                         anchors.verticalCenter: parent.verticalCenter
@@ -166,7 +168,7 @@ Rectangle {
                         anchors.fill: parent
                         anchors.margins: 8
                         verticalAlignment: TextInput.AlignVCenter
-                        font.pixelSize: 11
+                        font.pixelSize: isMobile ? 13 : 11
                         text: settingsManager.serverAddress
                         selectByMouse: true
                         onTextChanged: {
@@ -181,7 +183,7 @@ Rectangle {
                         text: "http://localhost:5000"
                         color: "#a0a0a0"
                         visible: !serverAddressField.text && !serverAddressField.activeFocus
-                        font.pixelSize: 11
+                        font.pixelSize: isMobile ? 13 : 11
                     }
                 }
             }
@@ -202,13 +204,13 @@ Rectangle {
                         spacing: 6
                         Image {
                             source: "qrc:/icons/save.png"
-                            sourceSize: Qt.size(16, 16)
+                            sourceSize: Qt.size(20, 20)
                             anchors.verticalCenter: parent.verticalCenter
                         }
                         Text {
                             text: "Сохранить"
                             color: "white"
-                            font.pixelSize: 11
+                            font.pixelSize: isMobile ? 13 : 11
                             font.bold: true
                             anchors.verticalCenter: parent.verticalCenter
                         }
@@ -219,7 +221,6 @@ Rectangle {
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: {
-                            console.log("Сохранение конфигурации сервера:", serverAddressField.text);
                             saveServerConfig(serverAddressField.text);
                         }
                     }
@@ -237,14 +238,14 @@ Rectangle {
                         spacing: 6
                         AnimatedImage {
                             source: resetMouseArea.containsMouse ? "qrc:/icons/refresh.png" : "qrc:/icons/refresh.png"
-                            sourceSize: Qt.size(16, 16)
+                            sourceSize: Qt.size(20, 20)
                             anchors.verticalCenter: parent.verticalCenter
                             playing: resetMouseArea.containsMouse
                         }
                         Text {
                             text: "Сбросить"
                             color: "white"
-                            font.pixelSize: 11
+                            font.pixelSize: isMobile ? 13 : 11
                             font.bold: true
                             anchors.verticalCenter: parent.verticalCenter
                         }
@@ -255,7 +256,6 @@ Rectangle {
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: {
-                            console.log("Сброс настроек сервера");
                             resetSettings();
                         }
                     }

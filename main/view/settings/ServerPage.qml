@@ -5,6 +5,7 @@ import QtQuick.Layouts 1.15
 Rectangle {
     id: serverPage
     color: "transparent"
+    property bool isMobile: false
 
     property string serverAddress: ""
     property string pingStatus: "not_checked"
@@ -35,33 +36,33 @@ Rectangle {
 
     ScrollView {
         anchors.fill: parent
-        anchors.margins: 10
+        anchors.margins: isMobile ? 5 : 10
         clip: true
 
         ColumnLayout {
             width: parent.width
-            spacing: 10
+            spacing: isMobile ? 8 : 10
 
             Rectangle {
                 Layout.fillWidth: true
-                height: 360
-                radius: 16
+                height: isMobile ? 300 : 360
+                radius: isMobile ? 12 : 16
                 color: "#ffffff"
                 border.color: "#e0e0e0"
                 border.width: 1
 
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.margins: 24
-                    spacing: 16
+                    anchors.margins: isMobile ? 16 : 24
+                    spacing: isMobile ? 12 : 16
 
                     Row {
                         Layout.alignment: Qt.AlignHCenter
-                        spacing: 8
+                        spacing: isMobile ? 6 : 8
 
                         Image {
                             source: "qrc:/icons/server.png"
-                            sourceSize: Qt.size(24, 24)
+                            sourceSize: Qt.size(isMobile ? 20 : 24, isMobile ? 20 : 24)
                             fillMode: Image.PreserveAspectFit
                             mipmap: true
                             antialiasing: true
@@ -70,7 +71,7 @@ Rectangle {
 
                         Text {
                             text: "Настройки сервера"
-                            font.pixelSize: 18
+                            font.pixelSize: isMobile ? 16 : 18
                             font.bold: true
                             color: "#2c3e50"
                             anchors.verticalCenter: parent.verticalCenter
@@ -80,8 +81,8 @@ Rectangle {
                     // Круговая диаграмма пинга
                     Item {
                         Layout.alignment: Qt.AlignHCenter
-                        Layout.preferredWidth: 220
-                        Layout.preferredHeight: 160
+                        Layout.preferredWidth: isMobile ? 180 : 220
+                        Layout.preferredHeight: isMobile ? 120 : 160
 
                         // Фон дуги
                         Canvas {
@@ -93,9 +94,9 @@ Rectangle {
 
                                 // Основная дуга (от левого края до правого)
                                 ctx.beginPath();
-                                ctx.arc(width/2, height/2 + 20, width/2 - 15, Math.PI, 2 * Math.PI, false);
+                                ctx.arc(width/2, height/2 + (isMobile ? 15 : 20), width/2 - (isMobile ? 12 : 15), Math.PI, 2 * Math.PI, false);
                                 ctx.strokeStyle = "#e0e0e0";
-                                ctx.lineWidth = 8;
+                                ctx.lineWidth = isMobile ? 6 : 8;
                                 ctx.stroke();
 
                                 // Активная часть дуги
@@ -104,15 +105,15 @@ Rectangle {
                                     // Масштабируем значение: 0-200ms = 0-100%, больше 200ms = 100%
                                     var progress = Math.min(Math.max(pingValue, 0), 200) / 200;
                                     var endAngle = Math.PI + progress * Math.PI;
-                                    ctx.arc(width/2, height/2 + 20, width/2 - 15, Math.PI, endAngle, false);
+                                    ctx.arc(width/2, height/2 + (isMobile ? 15 : 20), width/2 - (isMobile ? 12 : 15), Math.PI, endAngle, false);
                                     ctx.strokeStyle = getPingColor();
-                                    ctx.lineWidth = 8;
+                                    ctx.lineWidth = isMobile ? 6 : 8;
                                     ctx.stroke();
                                 }
 
                                 // Разметка с делениями
                                 ctx.fillStyle = "#6c757d";
-                                ctx.font = "10px Arial";
+                                ctx.font = (isMobile ? 8 : 10) + "px Arial";
                                 ctx.textAlign = "center";
                                 ctx.textBaseline = "middle";
 
@@ -126,13 +127,13 @@ Rectangle {
                                     var value = i * 50;
 
                                     // Длина деления
-                                    var innerRadius = width/2 - 25;
-                                    var outerRadius = width/2 - 10;
+                                    var innerRadius = width/2 - (isMobile ? 20 : 25);
+                                    var outerRadius = width/2 - (isMobile ? 8 : 10);
 
                                     var x1 = width/2 + innerRadius * Math.cos(angle);
-                                    var y1 = height/2 + 20 + innerRadius * Math.sin(angle);
+                                    var y1 = height/2 + (isMobile ? 15 : 20) + innerRadius * Math.sin(angle);
                                     var x2 = width/2 + outerRadius * Math.cos(angle);
-                                    var y2 = height/2 + 20 + outerRadius * Math.sin(angle);
+                                    var y2 = height/2 + (isMobile ? 15 : 20) + outerRadius * Math.sin(angle);
 
                                     ctx.beginPath();
                                     ctx.moveTo(x1, y1);
@@ -140,9 +141,9 @@ Rectangle {
                                     ctx.stroke();
 
                                     // Текст меток
-                                    var textRadius = width/2 - 35;
+                                    var textRadius = width/2 - (isMobile ? 28 : 35);
                                     var textX = width/2 + textRadius * Math.cos(angle);
-                                    var textY = height/2 + 20 + textRadius * Math.sin(angle);
+                                    var textY = height/2 + (isMobile ? 15 : 20) + textRadius * Math.sin(angle);
 
                                     ctx.fillText(value + (i === 4 ? "+" : "") + " мс", textX, textY);
                                 }
@@ -152,7 +153,7 @@ Rectangle {
                         // Текущее значение пинга
                         Row {
                             anchors.top: parent.top
-                            anchors.topMargin: 50
+                            anchors.topMargin: isMobile ? 35 : 50
                             anchors.horizontalCenter: parent.horizontalCenter
                             spacing: 2
 
@@ -162,7 +163,7 @@ Rectangle {
                                     if (pingStatus === "success") return pingValue.toFixed(0) + " мс"
                                     return "—"
                                 }
-                                font.pixelSize: 28
+                                font.pixelSize: isMobile ? 22 : 28
                                 font.bold: true
                                 color: pingStatus === "success" ? getPingColor() :
                                        pingStatus === "checking" ? "#3498db" : "#bdc3c7"
@@ -172,10 +173,10 @@ Rectangle {
                         // Статус под значением
                         Text {
                             anchors.top: parent.top
-                            anchors.topMargin: 85
+                            anchors.topMargin: isMobile ? 65 : 85
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: getStatusText()
-                            font.pixelSize: 12
+                            font.pixelSize: isMobile ? 10 : 12
                             color: pingStatus === "success" ? getPingColor() :
                                    pingStatus === "checking" ? "#3498db" : "#6c757d"
                         }
@@ -183,22 +184,22 @@ Rectangle {
 
                     ColumnLayout {
                         Layout.fillWidth: true
-                        spacing: 12
+                        spacing: isMobile ? 8 : 12
 
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: 12
+                            spacing: isMobile ? 8 : 12
 
                             Text {
                                 text: "Адрес сервера:"
-                                font.pixelSize: 14
+                                font.pixelSize: isMobile ? 12 : 14
                                 color: "#6c757d"
-                                Layout.preferredWidth: 120
+                                Layout.preferredWidth: isMobile ? 100 : 120
                             }
 
                             Text {
                                 text: serverAddress
-                                font.pixelSize: 14
+                                font.pixelSize: isMobile ? 12 : 14
                                 color: "#2c3e50"
                                 font.bold: true
                                 Layout.fillWidth: true
@@ -208,18 +209,18 @@ Rectangle {
 
                         RowLayout {
                             Layout.fillWidth: true
-                            spacing: 12
+                            spacing: isMobile ? 8 : 12
 
                             Text {
                                 text: "Статус:"
-                                font.pixelSize: 14
+                                font.pixelSize: isMobile ? 12 : 14
                                 color: "#6c757d"
-                                Layout.preferredWidth: 120
+                                Layout.preferredWidth: isMobile ? 100 : 120
                             }
 
                             Text {
                                 text: getStatusText()
-                                font.pixelSize: 14
+                                font.pixelSize: isMobile ? 12 : 14
                                 color: pingStatus === "success" ? "#27ae60" :
                                        pingStatus === "checking" ? "#3498db" : "#e74c3c"
                                 font.bold: true
@@ -229,20 +230,20 @@ Rectangle {
                     }
 
                     Rectangle {
-                        Layout.preferredWidth: 160
-                        Layout.preferredHeight: 44
+                        Layout.preferredWidth: isMobile ? 140 : 160
+                        Layout.preferredHeight: isMobile ? 40 : 44
                         Layout.alignment: Qt.AlignHCenter
-                        radius: 10
+                        radius: isMobile ? 8 : 10
                         color: pingMouseArea.containsMouse && (pingStatus !== "checking") ? "#2980b9" :
                                (pingStatus === "checking") ? "#95a5a6" : "#3498db"
 
                         Row {
                             anchors.centerIn: parent
-                            spacing: 8
+                            spacing: isMobile ? 6 : 8
 
                             Image {
                                 source: pingStatus === "checking" ? "qrc:/icons/loading.png" : "qrc:/icons/ping.png"
-                                sourceSize: Qt.size(24, 24)
+                                sourceSize: Qt.size(isMobile ? 20 : 24, isMobile ? 20 : 24)
                                 fillMode: Image.PreserveAspectFit
                                 mipmap: true
                                 antialiasing: true
@@ -252,7 +253,7 @@ Rectangle {
                             Text {
                                 text: pingStatus === "checking" ? "Измерение..." : "Проверить ping"
                                 color: "white"
-                                font.pixelSize: 14
+                                font.pixelSize: isMobile ? 12 : 14
                                 font.bold: true
                                 anchors.verticalCenter: parent.verticalCenter
                             }
@@ -275,22 +276,22 @@ Rectangle {
 
             Rectangle {
                 Layout.fillWidth: true
-                height: 140
-                radius: 16
+                height: isMobile ? 120 : 140
+                radius: isMobile ? 12 : 16
                 color: "#e8f4f8"
                 border.color: "#b3e5fc"
                 border.width: 1
 
                 ColumnLayout {
                     anchors.fill: parent
-                    anchors.margins: 20
-                    spacing: 8
+                    anchors.margins: isMobile ? 12 : 20
+                    spacing: isMobile ? 6 : 8
 
                     Row {
-                        spacing: 6
+                        spacing: isMobile ? 4 : 6
                         Image {
                             source: "qrc:/icons/info.png"
-                            sourceSize: Qt.size(18, 18)
+                            sourceSize: Qt.size(isMobile ? 16 : 18, isMobile ? 16 : 18)
                             fillMode: Image.PreserveAspectFit
                             mipmap: true
                             antialiasing: true
@@ -298,7 +299,7 @@ Rectangle {
                         }
                         Text {
                             text: "Информация о подключении"
-                            font.pixelSize: 14
+                            font.pixelSize: isMobile ? 12 : 14
                             font.bold: true
                             color: "#0277bd"
                             anchors.verticalCenter: parent.verticalCenter
@@ -307,7 +308,7 @@ Rectangle {
 
                     Text {
                         text: "• Ping показывает время отклика сервера\n• Рекомендуемое время: менее 120 мс\n• При высоких значениях проверьте интернет-соединение\n• Убедитесь, что сервер доступен и работает"
-                        font.pixelSize: 12
+                        font.pixelSize: isMobile ? 11 : 12
                         color: "#0288d1"
                         lineHeight: 1.4
                     }

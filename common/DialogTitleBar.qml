@@ -46,7 +46,12 @@ Rectangle {
             id: closeMouseArea
             anchors.fill: parent
             hoverEnabled: true
-            onClicked: dialogTitleBar.close()
+            onClicked: {
+                // Добавляем небольшую задержку перед закрытием
+                Qt.callLater(function() {
+                    dialogTitleBar.close()
+                })
+            }
         }
     }
 

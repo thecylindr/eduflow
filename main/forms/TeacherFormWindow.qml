@@ -1,12 +1,13 @@
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Controls.Material
 import QtQuick.Layouts 1.15
 import "../../common" as Common
 
 Window {
     id: teacherFormWindow
-    width: 600
-    height: 700
+    width: 450
+    height: 600
     flags: Qt.Dialog | Qt.FramelessWindowHint
     modality: Qt.ApplicationModal
     color: "transparent"
@@ -154,12 +155,12 @@ Window {
     function handleSaveResponse(response) {
         isSaving = false
         if (response.success) {
-            var message = response.message || (isEditMode ? "✅ Преподаватель успешно обновлен!" : "✅ Преподаватель успешно добавлен!")
+            var message = response.message || (isEditMode ? "Преподаватель успешно обновлен!" : "Преподаватель успешно добавлен!")
             showMessage(message, "success")
             saveCompleted(true, message)
             closeWindow()
         } else {
-            var errorMsg = "❌ " + (response.error || "Неизвестная ошибка")
+            var errorMsg = (response.error || "Неизвестная ошибка")
             showMessage(errorMsg, "error")
             saveCompleted(false, errorMsg)
         }
@@ -259,8 +260,8 @@ Window {
         // Белая форма
         Rectangle {
             id: whiteForm
-            width: 560
-            height: 620
+            width: 420
+            height: 530
             anchors {
                 top: titleBar.bottom
                 topMargin: 20
@@ -272,8 +273,8 @@ Window {
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 20
-                spacing: 15
+                anchors.margins: 15
+                spacing: 12
 
                 // Прокручиваемая область с контентом
                 ScrollView {
@@ -283,9 +284,8 @@ Window {
 
                     Column {
                         width: parent.width
-                        spacing: 15
+                        spacing: 12
 
-                        // ГОРИЗОНТАЛЬНОЕ РАСПОЛОЖЕНИЕ ФИО
                         Column {
                             width: parent.width
                             spacing: 5
@@ -293,92 +293,62 @@ Window {
                             Text {
                                 text: "Фамилия, Имя, Отчество:"
                                 color: "#2c3e50"
-                                font.pixelSize: 14
+                                font.pixelSize: 13
                                 font.bold: true
                                 anchors.horizontalCenter: parent.horizontalCenter
                             }
 
                             Row {
                                 width: parent.width
-                                spacing: 10
+                                spacing: 8  // Уменьшен промежуток
                                 anchors.horizontalCenter: parent.horizontalCenter
 
                                 // Фамилия
-                                Column {
-                                    width: (parent.width - 20) / 3
-                                    spacing: 2
-
-                                    Text {
-                                        text: "Фамилия*"
-                                        color: "#2c3e50"
-                                        font.pixelSize: 11
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                    }
-
-                                    TextField {
-                                        id: lastNameField
-                                        width: parent.width
-                                        placeholderText: "Фамилия"
-                                        horizontalAlignment: Text.AlignHCenter
-                                        enabled: !isSaving
-                                        KeyNavigation.tab: firstNameField
-                                        Keys.onReturnPressed: navigateToNextField(lastNameField)
-                                        Keys.onEnterPressed: navigateToNextField(lastNameField)
-                                        Keys.onUpPressed: navigateToPreviousField(lastNameField)
-                                        Keys.onDownPressed: navigateToNextField(lastNameField)
-                                    }
+                                TextField {
+                                    id: lastNameField
+                                    width: (parent.width - 16) / 3
+                                    height: 32  // Уменьшена высота
+                                    placeholderText: "Фамилия*"
+                                    horizontalAlignment: Text.AlignHCenter
+                                    enabled: !isSaving
+                                    font.pixelSize: 12
+                                    KeyNavigation.tab: firstNameField
+                                    Keys.onReturnPressed: navigateToNextField(lastNameField)
+                                    Keys.onEnterPressed: navigateToNextField(lastNameField)
+                                    Keys.onUpPressed: navigateToPreviousField(lastNameField)
+                                    Keys.onDownPressed: navigateToNextField(lastNameField)
                                 }
 
                                 // Имя
-                                Column {
-                                    width: (parent.width - 20) / 3
-                                    spacing: 2
-
-                                    Text {
-                                        text: "Имя*"
-                                        color: "#2c3e50"
-                                        font.pixelSize: 11
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                    }
-
-                                    TextField {
-                                        id: firstNameField
-                                        width: parent.width
-                                        placeholderText: "Имя"
-                                        horizontalAlignment: Text.AlignHCenter
-                                        enabled: !isSaving
-                                        KeyNavigation.tab: middleNameField
-                                        Keys.onReturnPressed: navigateToNextField(firstNameField)
-                                        Keys.onEnterPressed: navigateToNextField(firstNameField)
-                                        Keys.onUpPressed: navigateToPreviousField(firstNameField)
-                                        Keys.onDownPressed: navigateToNextField(firstNameField)
-                                    }
+                                TextField {
+                                    id: firstNameField
+                                    width: (parent.width - 16) / 3
+                                    height: 32  // Уменьшена высота
+                                    placeholderText: "Имя*"
+                                    horizontalAlignment: Text.AlignHCenter
+                                    enabled: !isSaving
+                                    font.pixelSize: 12
+                                    KeyNavigation.tab: middleNameField
+                                    Keys.onReturnPressed: navigateToNextField(firstNameField)
+                                    Keys.onEnterPressed: navigateToNextField(firstNameField)
+                                    Keys.onUpPressed: navigateToPreviousField(firstNameField)
+                                    Keys.onDownPressed: navigateToNextField(firstNameField)
                                 }
 
                                 // Отчество
-                                Column {
-                                    width: (parent.width - 20) / 3
-                                    spacing: 2
-
-                                    Text {
-                                        text: "Отчество"
-                                        color: "#2c3e50"
-                                        font.pixelSize: 11
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                    }
-
-                                    TextField {
-                                        id: middleNameField
-                                        width: parent.width
-                                        placeholderText: "Отчество"
-                                        horizontalAlignment: Text.AlignHCenter
-                                        enabled: !isSaving
-                                        KeyNavigation.tab: emailField
-                                        Keys.onReturnPressed: navigateToNextField(middleNameField)
-                                        Keys.onEnterPressed: navigateToNextField(middleNameField)
-                                        Keys.onUpPressed: navigateToPreviousField(middleNameField)
-                                        Keys.onDownPressed: navigateToNextField(middleNameField)
-                                    }
+                                TextField {
+                                    id: middleNameField
+                                    width: (parent.width - 16) / 3
+                                    height: 32  // Уменьшена высота
+                                    placeholderText: "Отчество"
+                                    horizontalAlignment: Text.AlignHCenter
+                                    enabled: !isSaving
+                                    font.pixelSize: 12
+                                    KeyNavigation.tab: emailField
+                                    Keys.onReturnPressed: navigateToNextField(middleNameField)
+                                    Keys.onEnterPressed: navigateToNextField(middleNameField)
+                                    Keys.onUpPressed: navigateToPreviousField(middleNameField)
+                                    Keys.onDownPressed: navigateToNextField(middleNameField)
                                 }
                             }
                         }
@@ -386,22 +356,18 @@ Window {
                         // Остальные поля в вертикальном расположении
                         GridLayout {
                             columns: 2
-                            columnSpacing: 15
-                            rowSpacing: 10
+                            columnSpacing: 10
+                            rowSpacing: 8
                             width: parent.width
 
-                            Text {
-                                text: "Email:"
-                                color: "#2c3e50"
-                                font.pixelSize: 12
-                                Layout.alignment: Qt.AlignRight
-                            }
                             TextField {
                                 id: emailField
                                 Layout.fillWidth: true
-                                placeholderText: "Введите email (опционально)"
+                                height: 32  // Уменьшена высота
+                                placeholderText: "Email (опционально)"
                                 horizontalAlignment: Text.AlignHCenter
                                 enabled: !isSaving
+                                font.pixelSize: 12
                                 KeyNavigation.tab: phoneField
                                 Keys.onReturnPressed: navigateToNextField(emailField)
                                 Keys.onEnterPressed: navigateToNextField(emailField)
@@ -409,39 +375,45 @@ Window {
                                 Keys.onDownPressed: navigateToNextField(emailField)
                             }
 
-                            Text {
-                                text: "Телефон:"
-                                color: "#2c3e50"
-                                font.pixelSize: 12
-                                Layout.alignment: Qt.AlignRight
-                            }
+
                             TextField {
                                 id: phoneField
                                 Layout.fillWidth: true
-                                placeholderText: "Введите номер телефона (опционально)"
+                                height: 32  // Уменьшена высота
+                                placeholderText: "Телефон (опционально)"
                                 horizontalAlignment: Text.AlignHCenter
                                 enabled: !isSaving
+                                font.pixelSize: 12
                                 KeyNavigation.tab: experienceField
                                 Keys.onReturnPressed: navigateToNextField(phoneField)
                                 Keys.onEnterPressed: navigateToNextField(phoneField)
                                 Keys.onUpPressed: navigateToPreviousField(phoneField)
                                 Keys.onDownPressed: navigateToNextField(phoneField)
                             }
+                        }
+
+                        RowLayout {
+                            width: parent.width
+                            spacing: 10
 
                             Text {
                                 text: "Стаж (лет):"
                                 color: "#2c3e50"
-                                font.pixelSize: 12
-                                Layout.alignment: Qt.AlignRight
+                                font.pixelSize: 11
+                                Layout.alignment: Qt.AlignLeft
+                                Layout.preferredWidth: 70
                             }
+
                             SpinBox {
                                 id: experienceField
                                 Layout.fillWidth: true
+                                height: 32
                                 from: 0
                                 to: 100
                                 value: 0
                                 editable: true
                                 enabled: !isSaving
+                                font.pixelSize: 12
                                 KeyNavigation.tab: existingSpecializationsCombo
                                 Keys.onReturnPressed: navigateToNextField(experienceField)
                                 Keys.onEnterPressed: navigateToNextField(experienceField)
@@ -451,16 +423,16 @@ Window {
                         }
 
                         // Блок специализаций
+
+                        // Блок специализаций
                         Column {
                             width: parent.width
-                            spacing: 10
+                            spacing: 8
 
                             Text {
-                                text: isEditMode ?
-                                    "Текущие специализации этого преподавателя (можно редактировать):" :
-                                    "Специализации преподавателя:"
+                                text: "Специализации преподавателя:"
                                 color: "#2c3e50"
-                                font.pixelSize: 14
+                                font.pixelSize: 13
                                 font.bold: true
                                 anchors.horizontalCenter: parent.horizontalCenter
                             }
@@ -468,7 +440,7 @@ Window {
                             // Список ВСЕХ специализаций текущего преподавателя
                             Rectangle {
                                 width: parent.width
-                                height: 150
+                                height: 120
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 color: "#f8f9fa"
                                 radius: 6
@@ -478,18 +450,19 @@ Window {
                                 ListView {
                                     id: specializationList
                                     anchors.fill: parent
-                                    anchors.margins: 5
+                                    anchors.margins: 4
                                     model: ListModel { id: specializationModel }
                                     clip: true
-                                    spacing: 5
+                                    spacing: 3
 
                                     delegate: Row {
                                         width: parent.width
-                                        spacing: 10
+                                        spacing: 8
+                                        height: 26
 
                                         Rectangle {
-                                            width: parent.width - 30
-                                            height: 30
+                                            width: parent.width - 48
+                                            height: 26
                                             color: "white"
                                             radius: 4
                                             border.color: "#e9ecef"
@@ -497,27 +470,35 @@ Window {
 
                                             Text {
                                                 anchors.fill: parent
+                                                anchors.margins: 2
                                                 text: name
                                                 verticalAlignment: Text.AlignVCenter
                                                 horizontalAlignment: Text.AlignHCenter
-                                                font.pixelSize: 11
+                                                font.pixelSize: 10
                                                 color: "#2c3e50"
                                                 elide: Text.ElideRight
                                             }
                                         }
 
                                         Button {
-                                            width: 20
-                                            height: 20
+                                            width: 26
+                                            height: 26
                                             enabled: !isSaving
 
                                             background: Rectangle {
-                                                color: "transparent"
+                                                color: "#e74c3c"
+                                                radius: 4
+                                                border.color: "#c0392b"
+                                                border.width: 1
                                             }
 
-                                            contentItem: Image {
-                                                source: "qrc:/icons/cross.png"
-                                                sourceSize: Qt.size(12, 12)
+                                            contentItem: Text {
+                                                text: "×"
+                                                color: "white"
+                                                font.pixelSize: 16
+                                                font.bold: true
+                                                horizontalAlignment: Text.AlignHCenter
+                                                verticalAlignment: Text.AlignVCenter
                                                 anchors.centerIn: parent
                                             }
 
@@ -530,6 +511,7 @@ Window {
                                         text: "Нет специализаций"
                                         color: "#7f8c8d"
                                         font.italic: true
+                                        font.pixelSize: 11
                                         visible: specializationModel.count === 0
                                     }
                                 }
@@ -538,25 +520,56 @@ Window {
                             // Выбор из существующих специализаций ДРУГИХ преподавателей
                             Column {
                                 width: parent.width
-                                spacing: 5
+                                spacing: 4
 
                                 Text {
-                                    text: "Существующие специализации (других преподавателей):"
+                                    text: "Существующие специализации:"
                                     color: "#2c3e50"
-                                    font.pixelSize: 12
+                                    font.pixelSize: 11
                                     anchors.horizontalCenter: parent.horizontalCenter
                                 }
 
                                 Row {
                                     width: parent.width
-                                    spacing: 10
+                                    spacing: 8
                                     anchors.horizontalCenter: parent.horizontalCenter
 
                                     ComboBox {
                                         id: existingSpecializationsCombo
-                                        width: parent.width - 50
+                                        width: parent.width - 45
+                                        height: 36
                                         model: teacherFormWindow.existingSpecializations
                                         enabled: !isSaving && teacherFormWindow.existingSpecializations.length > 0
+
+                                        // ФИКС: Добавляем отображение элементов списка
+                                        delegate: ItemDelegate {
+                                            width: existingSpecializationsCombo.width
+                                            text: modelData
+                                            font.pixelSize: 11
+                                            highlighted: existingSpecializationsCombo.highlightedIndex === index
+                                        }
+
+                                        // ФИКС: Добавляем popup для отображения списка
+                                        popup: Popup {
+                                            y: existingSpecializationsCombo.height
+                                            width: existingSpecializationsCombo.width
+                                            implicitHeight: contentItem.implicitHeight
+                                            padding: 1
+
+                                            contentItem: ListView {
+                                                clip: true
+                                                implicitHeight: contentHeight
+                                                model: existingSpecializationsCombo.popup.visible ? existingSpecializationsCombo.delegateModel : null
+                                                currentIndex: existingSpecializationsCombo.highlightedIndex
+
+                                                ScrollIndicator.vertical: ScrollIndicator { }
+                                            }
+
+                                            background: Rectangle {
+                                                border.color: "#dee2e6"
+                                                radius: 4
+                                            }
+                                        }
 
                                         property string placeholderText: teacherFormWindow.existingSpecializations.length > 0 ?
                                             "Выберите специализацию (" + teacherFormWindow.existingSpecializations.length + " доступно)" :
@@ -588,10 +601,9 @@ Window {
                                     }
 
                                     Button {
-                                        width: 40
-                                        height: 40
-                                        enabled: !isSaving && existingSpecializationsCombo.currentText !== "" &&
-                                                existingSpecializationsCombo.currentText !== existingSpecializationsCombo.placeholderText
+                                        width: 36
+                                        height: 36
+                                        enabled: !isSaving && existingSpecializationsCombo.currentIndex >= 0
 
                                         background: Rectangle {
                                             radius: 4
@@ -603,8 +615,9 @@ Window {
                                             color: "white"
                                             horizontalAlignment: Text.AlignHCenter
                                             verticalAlignment: Text.AlignVCenter
-                                            font.pixelSize: 16
+                                            font.pixelSize: 18
                                             font.bold: true
+                                            anchors.centerIn: parent
                                         }
 
                                         onClicked: addExistingSpecialization()
@@ -615,26 +628,21 @@ Window {
                             // Добавление новой специализации
                             Column {
                                 width: parent.width
-                                spacing: 5
-
-                                Text {
-                                    text: "Добавить новую специализацию:"
-                                    color: "#2c3e50"
-                                    font.pixelSize: 12
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                }
+                                spacing: 4
 
                                 Row {
                                     width: parent.width
-                                    spacing: 10
+                                    spacing: 8
                                     anchors.horizontalCenter: parent.horizontalCenter
 
                                     TextField {
                                         id: newSpecializationField
-                                        width: parent.width - 50
+                                        width: parent.width - 45
+                                        height: 32
                                         placeholderText: "Введите новую специализацию"
                                         horizontalAlignment: Text.AlignHCenter
                                         enabled: !isSaving
+                                        font.pixelSize: 12
                                         KeyNavigation.tab: saveButton
                                         Keys.onReturnPressed: addSpecialization()
                                         Keys.onEnterPressed: addSpecialization()
@@ -643,8 +651,8 @@ Window {
                                     }
 
                                     Button {
-                                        width: 40
-                                        height: 40
+                                        width: 36
+                                        height: 32
                                         enabled: !isSaving && newSpecializationField.text.trim() !== ""
 
                                         background: Rectangle {
@@ -657,8 +665,9 @@ Window {
                                             color: "white"
                                             horizontalAlignment: Text.AlignHCenter
                                             verticalAlignment: Text.AlignVCenter
-                                            font.pixelSize: 16
+                                            font.pixelSize: 18
                                             font.bold: true
+                                            anchors.centerIn: parent
                                         }
 
                                         onClicked: addSpecialization()
@@ -671,19 +680,19 @@ Window {
 
                 // Кнопки действий
                 Row {
-                    spacing: 20
+                    spacing: 15
                     anchors.horizontalCenter: parent.horizontalCenter
 
                     Button {
                         id: saveButton
-                        implicitWidth: 140
-                        implicitHeight: 40
+                        implicitWidth: 130
+                        implicitHeight: 36
                         enabled: !isSaving && lastNameField.text.trim() !== "" && firstNameField.text.trim() !== ""
-                        font.pixelSize: 14
+                        font.pixelSize: 13
                         font.bold: true
 
                         background: Rectangle {
-                            radius: 20
+                            radius: 18
                             color: saveButton.enabled ? "#27ae60" : "#95a5a6"
                             border.color: saveButton.enabled ? "#219a52" : "transparent"
                             border.width: 2
@@ -694,11 +703,11 @@ Window {
 
                             Row {
                                 anchors.centerIn: parent
-                                spacing: 6
+                                spacing: 5
 
                                 Image {
                                     source: isSaving ? "qrc:/icons/loading.png" : "qrc:/icons/save.png"
-                                    sourceSize: Qt.size(16, 16)
+                                    sourceSize: Qt.size(14, 14)
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
 
@@ -723,7 +732,7 @@ Window {
 
                         onClicked: {
                             if (lastNameField.text.trim() === "" || firstNameField.text.trim() === "") {
-                                showMessage("❌ Заполните обязательные поля (Фамилия и Имя)", "error")
+                                showMessage("Заполните обязательные поля (Фамилия и Имя)", "error")
                                 return
                             }
                             isSaving = true
@@ -733,14 +742,14 @@ Window {
 
                     Button {
                         id: cancelButton
-                        implicitWidth: 140
-                        implicitHeight: 40
+                        implicitWidth: 130
+                        implicitHeight: 36
                         enabled: !isSaving
-                        font.pixelSize: 14
+                        font.pixelSize: 13
                         font.bold: true
 
                         background: Rectangle {
-                            radius: 20
+                            radius: 18
                             color: "#e74c3c"
                             border.color: "#c0392b"
                             border.width: 2
@@ -751,11 +760,11 @@ Window {
 
                             Row {
                                 anchors.centerIn: parent
-                                spacing: 6
+                                spacing: 5
 
                                 Image {
                                     source: "qrc:/icons/cross.png"
-                                    sourceSize: Qt.size(16, 16)
+                                    sourceSize: Qt.size(14, 14)
                                     anchors.verticalCenter: parent.verticalCenter
                                 }
 

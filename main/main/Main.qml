@@ -18,8 +18,7 @@ Window {
     property string currentView: "dashboard"
 
     property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
-                           Qt.platform.os === "tvos" || Qt.platform.os === "wasm" ||
-                           Screen.width < 768 || Screen.height < 768
+                           Qt.platform.os === "tvos" || Qt.platform.os === "wasm"
 
     // Отступы для Android системных кнопок
     property int androidTopMargin: (Qt.platform.os === "android") ? 24 : 0
@@ -39,6 +38,24 @@ Window {
     // Мобильное меню
     property bool mobileMenuOpen: false
 
+    // Обработчик кнопки "Назад" для Android
+    onClosing: (close) => {
+        if (isMobile) {
+            close.accepted = false
+            handleBackButton()
+        }
+    }
+
+    // Вспомогательные функции
+    function handleBackButton() {
+        showExitDialog()
+    }
+
+    function showExitDialog() {
+        var dialog = exitDialogComponent.createObject(mainWindow);
+        dialog.open();
+    }
+
     function showAuthWindow() {
             // Если окно авторизации не существует, создаем его
             var component = Qt.createComponent("../../auth/Auth.qml");
@@ -52,7 +69,7 @@ Window {
 
     function navigateTo(view) {
         currentView = view;
-        mobileMenuOpen = false; // Закрываем меню при переходе
+        mobileMenuOpen = false;
 
         // Автоматически загружаем данные при переходе
         if (view === "students") {
@@ -208,6 +225,22 @@ Window {
             radius: 20
         }
 
+        Common.PolygonBackground {
+            anchors.fill: parent
+            polygonCount: 4
+            isMobile: mainWindow.isMobile
+            z: 1
+        }
+
+        // Искры на фоне
+        Common.SparksBackground {
+            anchors.fill: parent
+            isMobile: mainWindow.isMobile
+            sparkCount: 24
+            z: 1
+
+        }
+
         Common.BottomBlur {
             id: bottomBlur
             anchors {
@@ -295,7 +328,6 @@ Window {
                 anchors {
                     top: parent.top
                     bottom: parent.bottom
-                    topMargin: 10
                 }
                 width: Math.min(parent.width * 0.8, 300)
                 currentView: mainWindow.currentView
@@ -350,6 +382,12 @@ Window {
                             return components[currentView] || "../view/DashboardView.qml"
                     }
                     z: 3
+
+                    onLoaded: {
+                        if (item && item.hasOwnProperty("isMobile")) {
+                            item.isMobile = mainWindow.isMobile;
+                        }
+                    }
                 }
             }
         }
