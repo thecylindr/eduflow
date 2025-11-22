@@ -20,6 +20,11 @@ Popup {
     signal confirmed()
     signal cancelled()
 
+    // Автоматически захватываем фокус при открытии
+    onOpened: {
+        cancelButton.forceActiveFocus()
+    }
+
     background: Rectangle {
         radius: 16
         color: "#ffffff"
@@ -55,6 +60,7 @@ Popup {
             spacing: 12
 
             Button {
+                id: cancelButton // Добавлен ID для управления фокусом
                 text: root.cancelText
                 font.pixelSize: 14
                 implicitWidth: 120

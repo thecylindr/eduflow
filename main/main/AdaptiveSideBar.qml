@@ -28,11 +28,13 @@ Rectangle {
 
     property var menuItems: [
         {icon: "qrc:/icons/home.png", name: "Главная панель", view: "dashboard"},
+        {icon: "qrc:/icons/faq.png", name: "Справочник", view: "faq"},
         {icon: "qrc:/icons/teachers.png", name: "Преподаватели", view: "teachers"},
         {icon: "qrc:/icons/students.png", name: "Студенты", view: "students"},
         {icon: "qrc:/icons/groups.png", name: "Группы", view: "groups"},
         {icon: "qrc:/icons/portfolio.png", name: "Портфолио", view: "portfolio"},
-        {icon: "qrc:/icons/events.png", name: "События", view: "events"}
+        {icon: "qrc:/icons/events.png", name: "События", view: "events"},
+        {icon: "qrc:/icons/news.png", name: "Новости", view: "news"}
     ]
 
     ColumnLayout {
@@ -189,7 +191,7 @@ Rectangle {
 
                         Image {
                             source: modelData.icon
-                            sourceSize: Qt.size(20, 20)
+                            sourceSize: Qt.size(24, 24)
                             anchors.verticalCenter: parent.verticalCenter
                             fillMode: Image.PreserveAspectFit
                             mipmap: true
@@ -199,7 +201,7 @@ Rectangle {
                         Text {
                             text: modelData.name
                             color: adaptiveSideBar.currentView === modelData.view ? "#1976d2" : "#5f6368"
-                            font.pixelSize: 14
+                            font.pixelSize: 15
                             font.bold: adaptiveSideBar.currentView === modelData.view
                             anchors.verticalCenter: parent.verticalCenter
                             visible: textVisible

@@ -21,8 +21,8 @@ Rectangle {
 
         // Кнопка меню с анимацией поворота - отцентрирована
         Rectangle {
-            Layout.preferredWidth: 28
-            Layout.preferredHeight: 28
+            Layout.preferredWidth: 24
+            Layout.preferredHeight: 24
             Layout.alignment: Qt.AlignVCenter
             radius: 10
             color: menuMouseArea.containsMouse ? "#f1f3f4" : "transparent"
@@ -71,8 +71,8 @@ Rectangle {
 
         // Кнопка Gitflic - отцентрирована
         Rectangle {
-            Layout.preferredWidth: 28
-            Layout.preferredHeight: 28
+            Layout.preferredWidth: 24
+            Layout.preferredHeight: 24
             Layout.alignment: Qt.AlignVCenter
             radius: 10
             color: gitflicMouseArea.containsMouse ? "#4CAF50" : "transparent"

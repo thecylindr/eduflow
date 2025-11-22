@@ -10,33 +10,33 @@ Rectangle {
     opacity: 0.925
     border.color: "#e0e0e0"
     border.width: 1
-    z: 5
+    z: 1000 // ВЫСОКИЙ ПРИОРИТЕТ - ПОВЕРХ ВСЕГО
 
     property string currentView: "dashboard"
-    property bool isOpen: false // Управление извне
-
-    // Добавляем свойство для отступа сверху
+    property bool isOpen: false
     property int topMargin: 0
+    property bool swipeEnabled: true
 
     property var menuItems: [
         {icon: "qrc:/icons/home.png", name: "Главная панель", view: "dashboard"},
+        {icon: "qrc:/icons/faq.png", name: "Справочник", view: "faq"},
         {icon: "qrc:/icons/teachers.png", name: "Преподаватели", view: "teachers"},
         {icon: "qrc:/icons/students.png", name: "Студенты", view: "students"},
         {icon: "qrc:/icons/groups.png", name: "Группы", view: "groups"},
         {icon: "qrc:/icons/portfolio.png", name: "Портфолио", view: "portfolio"},
-        {icon: "qrc:/icons/events.png", name: "События", view: "events"}
+        {icon: "qrc:/icons/events.png", name: "События", view: "events"},
+        {icon: "qrc:/icons/news.png", name: "Новости", view: "news"}
     ]
 
-    // Управление через свойство isOpen с учетом отступа
     x: isOpen ? 0 : -width - 10
     visible: isOpen
-    y: topMargin // Добавляем отступ сверху
+    y: topMargin
 
     Behavior on x {
         NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
     }
 
-    signal closeRequested() // Сигнал для закрытия меню
+    signal closeRequested()
 
     ColumnLayout {
         anchors.fill: parent
@@ -84,7 +84,7 @@ Rectangle {
 
                     Text {
                         text: "Меню"
-                        font.pixelSize: 12
+                        font.pixelSize: 14
                         color: "#7f8c8d"
                     }
                 }
@@ -135,7 +135,7 @@ Rectangle {
                         Text {
                             text: modelData.name
                             color: adaptiveSideBar.currentView === modelData.view ? "#1976d2" : "#5f6368"
-                            font.pixelSize: 12
+                            font.pixelSize: 14
                             font.bold: adaptiveSideBar.currentView === modelData.view
                             anchors.verticalCenter: parent.verticalCenter
                         }
@@ -163,7 +163,7 @@ Rectangle {
                         onClicked: {
                             if (mainWindow) {
                                 mainWindow.navigateTo(modelData.view)
-                                adaptiveSideBar.closeRequested() // Закрываем меню при выборе
+                                adaptiveSideBar.closeRequested()
                             }
                         }
                     }
@@ -189,7 +189,7 @@ Rectangle {
                 spacing: 12
 
                 AnimatedImage {
-                    sourceSize: Qt.size(18,18)
+                    sourceSize: Qt.size(20,20)
                     source: settingsMouseArea.containsMouse ? "qrc:/icons/settings.gif" : "qrc:/icons/settings.png"
                     fillMode: Image.PreserveAspectFit
                     speed: 0.7
@@ -201,7 +201,7 @@ Rectangle {
                 Text {
                     text: "Настройки"
                     color: adaptiveSideBar.currentView === "settings" ? "#1976d2" : "#5f6368"
-                    font.pixelSize: 12
+                    font.pixelSize: 14
                     font.bold: adaptiveSideBar.currentView === "settings"
                     anchors.verticalCenter: parent.verticalCenter
                 }
@@ -215,32 +215,10 @@ Rectangle {
                 onClicked: {
                     if (mainWindow) {
                         mainWindow.navigateTo("settings")
-                        adaptiveSideBar.closeRequested() // Закрываем меню при выборе
+                        adaptiveSideBar.closeRequested()
                     }
                 }
             }
-        }
-    }
-
-    // Затемнение фона - обновляем привязки с учетом отступа
-    Rectangle {
-        anchors {
-            left: parent.right
-            top: parent.top
-            bottom: parent.bottom
-            right: parent.parent.right
-        }
-        color: "#000000"
-        opacity: adaptiveSideBar.isOpen ? 0.3 : 0
-
-        Behavior on opacity {
-            NumberAnimation { duration: 300 }
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            enabled: adaptiveSideBar.isOpen
-            onClicked: adaptiveSideBar.closeRequested()
         }
     }
 }

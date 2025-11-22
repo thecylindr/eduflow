@@ -645,6 +645,8 @@ Window {
     }
 
     function showExitDialog() {
+        // Снимаем фокус с любых активных элементов
+        windowContainer.forceActiveFocus()
         var dialog = exitDialogComponent.createObject(authWindow);
         dialog.open();
     }

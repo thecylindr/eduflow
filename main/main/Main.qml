@@ -1,3 +1,4 @@
+// Main.qml
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts 1.15
@@ -20,9 +21,9 @@ Window {
     property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
                            Qt.platform.os === "tvos" || Qt.platform.os === "wasm"
 
-    // Отступы для Android системных кнопок
-    property int androidTopMargin: (Qt.platform.os === "android") ? 24 : 0
-    property int androidBottomMargin: (Qt.platform.os === "android") ? 48 : 0
+    // УПРОЩЕННЫЕ ОТСТУПЫ - безопасные значения по умолчанию
+    property int mobileTopMargin: isMobile ? 24 : 0
+    property int mobileBottomMargin: isMobile ? 48 : 0
 
     // Данные
     property var teachers: []
@@ -52,6 +53,8 @@ Window {
     }
 
     function showExitDialog() {
+        // Снимаем фокус с любых активных элементов
+        windowContainer.forceActiveFocus()
         var dialog = exitDialogComponent.createObject(mainWindow);
         dialog.open();
     }
@@ -89,7 +92,9 @@ Window {
             case "groups": return "Группы";
             case "portfolio": return "Портфолио";
             case "events": return "События";
+            case "news": return "Новости";
             case "settings": return "Настройки";
+            case "faq": return "Справочник"
             default: return "Главная панель";
         }
     }
@@ -202,6 +207,72 @@ Window {
         id: mainApiObject
     }
 
+    // УЛУЧШЕННАЯ зона жестов для открытия меню
+    Rectangle {
+        id: globalSwipeArea
+        anchors.fill: parent
+        color: "transparent"
+        enabled: isMobile && !mobileMenuOpen
+        z: 3 // ПОД ЗАТЕМНЕНИЕМ
+
+        property real startX: 0
+        property real startY: 0
+        property bool tracking: false
+        property bool isHorizontalSwipe: false
+
+        MouseArea {
+            anchors {
+                left: parent.left
+                top: parent.top
+                bottom: parent.bottom
+            }
+            width: 60 // УВЕЛИЧЕНА зона жестов до 60px
+            propagateComposedEvents: true
+
+            onPressed: (mouse) => {
+                globalSwipeArea.startX = mouse.x
+                globalSwipeArea.startY = mouse.y
+                globalSwipeArea.tracking = true
+                globalSwipeArea.isHorizontalSwipe = false
+                mouse.accepted = true
+            }
+
+            onPositionChanged: (mouse) => {
+                if (!globalSwipeArea.tracking) return
+
+                var deltaX = mouse.x - globalSwipeArea.startX
+                var deltaY = mouse.y - globalSwipeArea.startY
+
+                // Определяем, это горизонтальный или вертикальный свайп
+                if (!globalSwipeArea.isHorizontalSwipe) {
+                    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 10) {
+                        globalSwipeArea.isHorizontalSwipe = true
+                    } else if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 10) {
+                        globalSwipeArea.tracking = false // Вертикальный свайп - игнорируем
+                        return
+                    }
+                }
+
+                if (globalSwipeArea.isHorizontalSwipe && deltaX > 50) { // Свайп вправо для открытия
+                    mobileMenuOpen = true
+                    globalSwipeArea.tracking = false
+                }
+            }
+
+            onReleased: {
+                globalSwipeArea.tracking = false
+            }
+
+            // Визуальный индикатор зоны жестов (только для отладки)
+            Rectangle {
+                anchors.fill: parent
+                color: "#3498db"
+                opacity: 0.1
+                visible: false // Установите true для отладки зоны жестов
+            }
+        }
+    }
+
     // Основной интерфейс
     Rectangle {
         id: windowContainer
@@ -210,7 +281,7 @@ Window {
             bottom: parent.bottom
             left: parent.left
             right: parent.right
-            topMargin: isMobile ? 15 + androidTopMargin : 0
+            topMargin: isMobile ? 15 + mobileTopMargin : 0
         }
         radius: 21
         color: "#f0f0f0"
@@ -282,11 +353,13 @@ Window {
                 right: parent.right
                 leftMargin: 10
                 rightMargin: 10
+                topMargin: mobileTopMargin
             }
             currentView: getCurrentViewTitle()
             menuOpen: mobileMenuOpen
             onToggleMenu: toggleMobileMenu()
             visible: isMobile
+            z: 2
         }
 
         // Контейнер для сообщений
@@ -329,11 +402,14 @@ Window {
                     top: parent.top
                     bottom: parent.bottom
                 }
-                width: Math.min(parent.width * 0.8, 300)
+                width: Math.min(parent.width * 0.7, 300)
                 currentView: mainWindow.currentView
                 isOpen: mobileMenuOpen
                 onCloseRequested: mobileMenuOpen = false
                 visible: isMobile
+                topMargin: mobileTopMargin
+                swipeEnabled: true
+                z: 1000
             }
 
             // Область контента
@@ -350,21 +426,6 @@ Window {
                 radius: 12
                 opacity: 0.925
 
-                // Затемнение фона при открытом мобильном меню
-                Rectangle {
-                    anchors.fill: parent
-                    color: "#000000"
-                    opacity: mobileMenuOpen ? 0.3 : 0
-                    visible: isMobile
-                    z: 4
-
-                    MouseArea {
-                        anchors.fill: parent
-                        enabled: mobileMenuOpen
-                        onClicked: mobileMenuOpen = false
-                    }
-                }
-
                 Loader {
                     id: contentLoader
                     anchors.fill: parent
@@ -377,7 +438,9 @@ Window {
                                 "groups": "../view/GroupsView.qml",
                                 "portfolio": "../view/PortfolioView.qml",
                                 "events": "../view/EventsView.qml",
-                                "settings": "../view/SettingsView.qml"
+                                "news": "../view/NewsView.qml",
+                                "settings": "../view/SettingsView.qml",
+                                "faq": "../view/FAQView.qml"
                             }
                             return components[currentView] || "../view/DashboardView.qml"
                     }
@@ -391,19 +454,61 @@ Window {
                 }
             }
         }
+
+        // ЗОНА СВАЙПА ДЛЯ ЗАКРЫТИЯ САЙДБАРА - работает когда меню открыто
+        Rectangle {
+            id: swipeCloseArea
+            anchors.fill: parent
+            color: "transparent"
+            enabled: isMobile && mobileMenuOpen
+            z: 950 // МЕЖДУ САЙДБАРОМ И ЗАТЕМНЕНИЕМ
+
+            property real startX: 0
+            property bool tracking: false
+
+            MouseArea {
+                anchors.fill: parent
+                propagateComposedEvents: true
+
+                onPressed: (mouse) => {
+                    swipeCloseArea.startX = mouse.x
+                    swipeCloseArea.tracking = true
+                    mouse.accepted = true
+                }
+
+                onPositionChanged: (mouse) => {
+                    if (!swipeCloseArea.tracking) return
+
+                    var dragDistance = mouse.x - swipeCloseArea.startX
+                    // Свайп влево для закрытия меню
+                    if (dragDistance < -50) {
+                        mobileMenuOpen = false
+                        swipeCloseArea.tracking = false
+                    }
+                }
+
+                onReleased: {
+                    swipeCloseArea.tracking = false
+                }
+            }
+        }
     }
 
     Component.onCompleted: {
-        // Проверяем, есть ли сохраненный токен в настройках
-            var savedToken = settingsManager.authToken || "";
+        console.log("🚀 Main window initialized - Mobile:", isMobile, "Platform:", Qt.platform.os);
 
-            if (savedToken && savedToken.length > 0) {
-                initializeProfile(savedToken, null);
-            } else {
-                var baseUrl = settingsManager.useLocalServer ?
-                    settingsManager.serverAddress :
-                    mainApi.remoteApiBaseUrl + ":" + mainApi.remotePort;
-                initializeProfile("", baseUrl);
-            }
+        // Проверяем, есть ли сохраненный токен в настройках
+        var savedToken = settingsManager.authToken || "";
+
+        if (savedToken && savedToken.length > 0) {
+            console.log("🔑 Using saved token");
+            initializeProfile(savedToken, null);
+        } else {
+            console.log("🔑 No saved token, showing auth window");
+            var baseUrl = settingsManager.useLocalServer ?
+                settingsManager.serverAddress :
+                mainApi.remoteApiBaseUrl + ":" + mainApi.remotePort;
+            initializeProfile("", baseUrl);
+        }
     }
 }

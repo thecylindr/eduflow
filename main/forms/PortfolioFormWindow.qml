@@ -500,13 +500,6 @@ Window {
                                         text = text.substring(0, 10)
                                     }
                                 }
-
-                                background: Rectangle {
-                                    radius: 6
-                                    color: "#ffffff"
-                                    border.color: validateDate(dateField.text) ? "#e0e0e0" : "#e74c3c"
-                                    border.width: 2
-                                }
                             }
 
                             Text {

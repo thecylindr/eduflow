@@ -51,6 +51,45 @@ QtObject {
         });
     }
 
+    function getNewsList(callback) {
+        sendRequest("GET", "/news", null, function(response) {
+            console.log("📰 News list response:", response);
+            if (callback) callback(response);
+        });
+    }
+
+    function getNews(filename, callback) {
+        // Кодируем имя файла для правильной передачи русских символов
+        var encodedFilename = encodeURIComponent(filename);
+        console.log("📖 Загрузка новости (закодировано):", encodedFilename);
+
+        sendRequest("GET", "/news/" + encodedFilename, null, function(response) {
+            console.log("📖 News content response:", response);
+            if (callback) callback(response);
+        });
+    }
+
+    function addNews(newsData, callback) {
+        sendRequest("POST", "/news", newsData, function(response) {
+            console.log("📝 Add news response:", response);
+            if (callback) callback(response);
+        });
+    }
+
+    function updateNews(filename, newsData, callback) {
+        sendRequest("PUT", "/news/" + filename, newsData, function(response) {
+            console.log("✏️ Update news response:", response);
+            if (callback) callback(response);
+        });
+    }
+
+    function deleteNews(filename, callback) {
+        sendRequest("DELETE", "/news/" + filename, null, function(response) {
+            console.log("🗑️ Delete news response:", response);
+            if (callback) callback(response);
+        });
+    }
+
     function initialize(token, url) {
         authToken = token && token.length > 0 ? token : settingsManager.authToken || "";
 

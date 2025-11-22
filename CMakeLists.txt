@@ -4,14 +4,32 @@ set(QT_ANDROID_NO_STYLE_WARNINGS ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Quick Core QuickControls2)
+find_package(Qt6 REQUIRED COMPONENTS Quick Core Gui QuickControls2)
+
 qt_standard_project_setup(REQUIRES 6.8)
+
 # Добавляем файлы настроек
 qt_add_executable(EduFlow
     main.cpp
     settings_manager.cpp
     settings_manager.h
 )
+
+if(ANDROID)
+    set_target_properties(EduFlow PROPERTIES
+        QT_ANDROID_APP_ORIENTATION "portrait"
+        ANDROID_MANIFEST_SCREEN_ORIENTATION "portrait"
+        ANDROID_MANIFEST "${CMAKE_CURRENT_SOURCE_DIR}/android/AndroidManifest.xml"
+        QT_ANDROID_APP_NAME "EduFlow"
+        QT_ANDROID_COMPILE_SDK_VERSION 36
+        #QT_ANDROID_APP_ICON "@mipmap/app_icon"
+    )
+
+    qt_android_generate_deployment_settings(EduFlow)
+    qt_android_add_apk_target(EduFlow)
+
+endif()
+
 qt_add_qml_module(EduFlow
     URI testing
     VERSION 1.0
@@ -72,12 +90,18 @@ qt_add_qml_module(EduFlow
                 main/main/AdaptiveSideBarMobile.qml
                 common/MobileCloseApp.qml
                 common/BottomBlur.qml
+                main/view/NewsView.qml
+                main/view/FormattedText.qml
+                main/view/FAQView.qml
+                QML_FILES common/DisplayUtils.qml
 )
 qt_add_resources(EduFlow "resources"
     PREFIX "/"
     FILES
         # Основные иконки
         icons/app_icon.png
+        icons/faq.png
+        icons/copy.png
         icons/check.png
         icons/events.png
         icons/groups.png
@@ -105,7 +129,13 @@ qt_add_resources(EduFlow "resources"
         icons/language.png
         icons/link.png
         icons/logout.png
+
+        icons/windows.png
+        icons/android.png
+        icons/linux.gif
+        icons/linux.png
         icons/os.png
+
         icons/organization.png
         icons/phone.png
         icons/phone.gif
@@ -138,9 +168,11 @@ qt_add_resources(EduFlow "resources"
         icons/search.png
         icons/sidebar.png
         icons/add.png
+        icons/news.png
         # Добавляем файл конфигурации стилей
         qtquickcontrols2.conf  # <-- НОВАЯ СТРОКА: Добавьте этот файл в проект!
 )
+
 set_target_properties(EduFlow PROPERTIES
     MACOSX_BUNDLE_GUI_IDENTIFIER "com.securesystems.EduFlow"
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
@@ -148,10 +180,15 @@ set_target_properties(EduFlow PROPERTIES
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
 )
+
 target_link_libraries(EduFlow
     PRIVATE Qt6::Quick
     PRIVATE Qt6::Core
 )
+
+#set_target_properties(${target} PROPERTIES
+#    QT_ANDROID_APP_ICON "@drawable"
+#)
 
 include(GNUInstallDirs)
 install(TARGETS EduFlow

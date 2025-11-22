@@ -25,8 +25,6 @@ int main(int argc, char *argv[])
 {
     qputenv("QT_QUICK_CONTROLS_STYLE", "Material");
     qputenv("QSG_RENDER_LOOP", "basic");
-    qputenv("QT_QUICK_CONTROLS_MATERIAL_THEME", "Light");  // Или "Dark"
-    qputenv("QT_QUICK_CONTROLS_MATERIAL_VARIANT", "Dense");  // Для мобильных устройств, делает элементы компактнее
 
     QGuiApplication app(argc, argv);
 
@@ -37,7 +35,7 @@ int main(int argc, char *argv[])
 
     app.setWindowIcon(QIcon(":/icons/app_icon.png"));
     app.setApplicationName("EduFlow");
-    app.setApplicationVersion("0.0.25");
+    app.setApplicationVersion("0.0.31");
     app.setOrganizationName("NameLess Club");
     app.setOrganizationDomain("securesystems.com");
 

@@ -227,7 +227,7 @@ Item {
                 // Кнопки сортировки и переключения вида под поиском
                 RowLayout {
                     Layout.fillWidth: true
-                    spacing: 6 // Уменьшено с 8 до 6
+                    spacing: 6
 
                     EnhancedSortComboBox {
                         Layout.fillWidth: true
@@ -310,6 +310,9 @@ Item {
                     anchors.fill: parent
                     clip: true
                     ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                    contentWidth: availableWidth
+                    contentHeight: listViewColumn.height
 
                     Column {
                         id: listViewColumn
@@ -347,6 +350,9 @@ Item {
                     anchors.fill: parent
                     clip: true
                     ScrollBar.vertical.policy: ScrollBar.AsNeeded
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                    contentWidth: availableWidth
+                    contentHeight: gridViewLayout.height
 
                     Flow {
                         id: gridViewLayout
@@ -367,7 +373,7 @@ Item {
                                         return 180;
                                     }
                                 }
-                                height: isMobile ? 130 : 160 // Уменьшено с 140 до 130 для мобильных
+                                height: isMobile ? 130 : 160
                                 itemData: modelData
                                 itemType: enhancedTable.itemType
                                 isMobile: enhancedTable.isMobile

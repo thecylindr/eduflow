@@ -29,7 +29,6 @@ Item {
             if (response.success) {
                 var data = response.data
 
-                // ИСПРАВЛЕНИЕ: Правильно извлекаем данные из вложенной структуры
                 var dashboardData = data.data || {}
                 var stats = dashboardData.stats || {}
                 var user = dashboardData.user || {}
@@ -194,7 +193,7 @@ Item {
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/teachers.png"
-                                sourceSize: Qt.size(isMobile ? 20 : 26, isMobile ? 20 : 26)
+                                sourceSize: Qt.size(isMobile ? 24 : 28, isMobile ? 24 : 28)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -212,7 +211,7 @@ Item {
 
                             Text {
                                 text: "Преподаватели"
-                                font.pixelSize: isMobile ? 9 : 10
+                                font.pixelSize: isMobile ? 11 : 12
                                 color: "#7f8c8d"
                             }
                         }
@@ -258,7 +257,7 @@ Item {
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/students.png"
-                                sourceSize: Qt.size(isMobile ? 20 : 26, isMobile ? 20 : 26)
+                                sourceSize: Qt.size(isMobile ? 24 : 28, isMobile ? 24 : 28)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -276,7 +275,7 @@ Item {
 
                             Text {
                                 text: "Студенты"
-                                font.pixelSize: isMobile ? 9 : 10
+                                font.pixelSize: isMobile ? 11 : 12
                                 color: "#7f8c8d"
                             }
                         }
@@ -322,7 +321,7 @@ Item {
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/groups.png"
-                                sourceSize: Qt.size(isMobile ? 20 : 26, isMobile ? 20 : 26)
+                                sourceSize: Qt.size(isMobile ? 24 : 28, isMobile ? 24 : 28)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -340,7 +339,7 @@ Item {
 
                             Text {
                                 text: "Группы"
-                                font.pixelSize: isMobile ? 9 : 10
+                                font.pixelSize: isMobile ? 11 : 12
                                 color: "#7f8c8d"
                             }
                         }
@@ -386,7 +385,7 @@ Item {
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/portfolio.png"
-                                sourceSize: Qt.size(isMobile ? 20 : 26, isMobile ? 20 : 26)
+                                sourceSize: Qt.size(isMobile ? 24 : 28, isMobile ? 24 : 28)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -404,7 +403,7 @@ Item {
 
                             Text {
                                 text: "Портфолио"
-                                font.pixelSize: isMobile ? 9 : 10
+                                font.pixelSize: isMobile ? 11 : 12
                                 color: "#7f8c8d"
                             }
                         }
@@ -450,7 +449,7 @@ Item {
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/events.png"
-                                sourceSize: Qt.size(isMobile ? 20 : 26, isMobile ? 20 : 26)
+                                sourceSize: Qt.size(isMobile ? 24 : 28, isMobile ? 24 : 28)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -468,7 +467,7 @@ Item {
 
                             Text {
                                 text: "События"
-                                font.pixelSize: isMobile ? 9 : 10
+                                font.pixelSize: isMobile ? 11 : 12
                                 color: "#7f8c8d"
                             }
                         }
@@ -514,7 +513,7 @@ Item {
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/settings.png"
-                                sourceSize: Qt.size(isMobile ? 20 : 26, isMobile ? 20 : 26)
+                                sourceSize: Qt.size(isMobile ? 24 : 28, isMobile ? 24 : 28)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -531,8 +530,8 @@ Item {
                             }
 
                             Text {
-                                text: "системы"
-                                font.pixelSize: isMobile ? 9 : 10
+                                text: "Системы, вашего профиля и т.д."
+                                font.pixelSize: isMobile ? 11 : 12
                                 color: "#7f8c8d"
                             }
                         }

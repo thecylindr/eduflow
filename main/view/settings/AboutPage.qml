@@ -263,7 +263,7 @@ Rectangle {
 
                         Rectangle {
                             Layout.fillWidth: true
-                            height: isMobile ? 90 : 100
+                            height: 110
                             radius: isMobile ? 6 : 8
                             color: "#f8f9fa"
                             border.color: "#e9ecef"
@@ -279,14 +279,17 @@ Rectangle {
                                     font.pixelSize: isMobile ? 11 : 12
                                     font.bold: true
                                     color: "#6c757d"
+                                    Layout.alignment: Qt.AlignHCenter
                                 }
 
-                                Column {
-                                    spacing: isMobile ? 6 : 8
+                                Row {
+                                    Layout.alignment: Qt.AlignHCenter
+                                    spacing: isMobile ? 8 : 12
+                                    layoutDirection: Qt.LeftToRight
 
                                     Rectangle {
-                                        width: isMobile ? parent.width : 150
-                                        height: isMobile ? 32 : 36
+                                        width: isMobile ? 140 : 150
+                                        height: isMobile ? 36 : 40
                                         radius: isMobile ? 5 : 6
                                         color: clientMouseArea.containsMouse ? "#3498db" : "#e3f2fd"
                                         border.color: clientMouseArea.containsMouse ? "#2980b9" : "#b3e5fc"
@@ -306,7 +309,7 @@ Rectangle {
                                             }
 
                                             Text {
-                                                text: "Клиентская часть"
+                                                text: "Клиент"
                                                 color: clientMouseArea.containsMouse ? "white" : "#3498db"
                                                 font.pixelSize: isMobile ? 10 : 11
                                                 font.bold: true
@@ -324,8 +327,8 @@ Rectangle {
                                     }
 
                                     Rectangle {
-                                        width: isMobile ? parent.width : 150
-                                        height: isMobile ? 32 : 36
+                                        width: isMobile ? 140 : 150
+                                        height: isMobile ? 36 : 40
                                         radius: isMobile ? 5 : 6
                                         color: serverMouseArea.containsMouse ? "#27ae60" : "#e8f5e8"
                                         border.color: serverMouseArea.containsMouse ? "#219653" : "#c8e6c9"
@@ -345,7 +348,7 @@ Rectangle {
                                             }
 
                                             Text {
-                                                text: "Серверная часть"
+                                                text: "Сервер"
                                                 color: serverMouseArea.containsMouse ? "white" : "#27ae60"
                                                 font.pixelSize: isMobile ? 10 : 11
                                                 font.bold: true
@@ -364,6 +367,7 @@ Rectangle {
                                 }
 
                                 Row {
+                                    Layout.alignment: Qt.AlignHCenter
                                     spacing: 4
                                     Image {
                                         source: "qrc:/icons/info.png"

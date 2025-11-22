@@ -28,6 +28,18 @@ Page {
         return current.concat(others);
     }
 
+    // Функция для получения иконки ОС
+    function getOSIcon(os, hovered) {
+        if (!os) return "qrc:/icons/os.png";
+        var osLower = os.toLowerCase();
+        if (osLower.indexOf("linux") >= 0) {
+            return hovered ? "qrc:/icons/linux.gif" : "qrc:/icons/linux.png";
+        }
+        if (osLower.indexOf("android") >= 0 || osLower.indexOf("ios") >= 0) return "qrc:/icons/android.png";
+        if (osLower.indexOf("windows") >= 0) return "qrc:/icons/windows.png";
+        return "qrc:/icons/os.png";
+    }
+
     ColumnLayout {
         anchors.fill: parent
         anchors.margins: isMobile ? 8 : 15
@@ -72,6 +84,7 @@ Page {
         ScrollView {
             Layout.fillWidth: true
             Layout.fillHeight: true
+            ScrollBar.vertical.policy: ScrollBar.AsNeeded
             clip: true
 
             Column {
@@ -89,9 +102,25 @@ Page {
                         anchors.horizontalCenter: parent.horizontalCenter
                         height: isMobile ? 120 : 100
                         radius: isMobile ? 8 : 12
-                        color: modelData.isCurrent ? "#e3f2fd" : "#ffffff"
+                        color: {
+                            if (hoverHandler.hovered && !isMobile) {
+                                return modelData.isCurrent ? "#d8ebff" : "#f5f5f5";
+                            }
+                            return modelData.isCurrent ? "#e3f2fd" : "#ffffff";
+                        }
                         border.color: modelData.isCurrent ? "#2196f3" : "#e0e0e0"
-                        border.width: 2
+                        border.width: modelData.isCurrent ? 2 : 1
+
+                        // Плавное изменение цвета при наведении
+                        Behavior on color {
+                            ColorAnimation { duration: 200 }
+                        }
+
+                        // Обработчик наведения (только для ПК)
+                        HoverHandler {
+                            id: hoverHandler
+                            enabled: !isMobile
+                        }
 
                         RowLayout {
                             anchors.fill: parent
@@ -163,7 +192,8 @@ Page {
                                 Row {
                                     spacing: isMobile ? 3 : 4
                                     Image {
-                                        source: "qrc:/icons/os.png"
+                                        id: osIcon
+                                        source: getOSIcon(modelData.userOS, hoverHandler.hovered)
                                         sourceSize: Qt.size(isMobile ? 14 : 16, isMobile ? 14 : 16)
                                         fillMode: Image.PreserveAspectFit
                                         mipmap: true
@@ -303,7 +333,7 @@ Page {
                                         spacing: isMobile ? 3 : 4
                                         Image {
                                             source: "qrc:/icons/revoke.png"
-                                            sourceSize: Qt.size(isMobile ? 16 : 24, isMobile ? 16 : 24)
+                                            sourceSize: Qt.size(isMobile ? 12 : 16, isMobile ? 12 : 16)
                                             fillMode: Image.PreserveAspectFit
                                             mipmap: true
                                             antialiasing: true
@@ -399,7 +429,7 @@ Page {
             }
 
             Text {
-                text: "Здесь отображаются все сессии вашего аккаунта."
+                text: isMobile ? "Нажмите для отзыва сессии" : "Наведите на сессию для просмотра деталей"
                 font.pixelSize: isMobile ? 10 : 11
                 color: "#7f8c8d"
                 font.italic: true
