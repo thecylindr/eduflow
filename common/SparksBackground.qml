@@ -46,7 +46,7 @@ Repeater {
             ParallelAnimation {
                 NumberAnimation {
                     target: spark; property: "opacity"; from: 0; to: isMobile ? 0.6 : 0.8;
-                    duration: isMobile ? 900 : 500; easing.type: Easing.InOutQuad }
+                    duration: isMobile ? 700 : 500; easing.type: Easing.InOutQuad }
                 NumberAnimation {
                     target: spark; property: "x"; from: startX; to: targetX; duration: speed; easing.type: Easing.InOutQuad }
                 NumberAnimation {
@@ -61,7 +61,7 @@ Repeater {
                     spark.targetX = Math.random() * parent.width;
                     spark.targetY = Math.random() * parent.height;
                     spark.color = colors[Math.floor(Math.random() * colors.length)];
-                    spark.speed = isMobile ? (2100 + Math.random() * 1500) : (1000 + Math.random() * 2000);
+                    spark.speed = isMobile ? (1800 + Math.random() * 1500) : (1000 + Math.random() * 2000);
                 }
             }
         }

@@ -245,7 +245,7 @@ Rectangle {
                     }
 
                     Rectangle {
-                        Layout.preferredWidth: isMobile ? 140 : 160
+                        Layout.preferredWidth: isMobile ? 140 : 180
                         Layout.preferredHeight: isMobile ? 40 : 44
                         Layout.alignment: Qt.AlignHCenter
                         radius: isMobile ? 8 : 10

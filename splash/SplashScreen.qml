@@ -1,6 +1,6 @@
 import QtQuick
 import Qt5Compat.GraphicalEffects
-import "common" as Common
+import "../common" as Common
 
 Window {
     id: splashWindow
@@ -12,8 +12,7 @@ Window {
     visible: true
 
     // Определение мобильного устройства по ОС
-    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
-                           Qt.platform.os === "tvos" || Qt.platform.os === "wasm"
+    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
 
 
     // Масштабирующий коэффициент для мобильных
@@ -40,14 +39,14 @@ Window {
     // ---- Фоновые многоугольники
     Common.PolygonBackground {
         anchors.fill: parent
-        polygonCount: isMobile ? 4 : 15
+        polygonCount: 15
         isMobile: isMobile
     }
 
     // ---- Быстрые искры
     Common.SparksBackground {
         anchors.fill: parent
-        sparkCount: isMobile ? 4 : 32
+        sparkCount: 32
         isMobile: isMobile
         colors: circleColors
     }
@@ -370,7 +369,7 @@ Window {
     Loader {
         id: authLoader
         active: false
-        source: "auth/Auth.qml"
+        source: "../auth/Auth.qml"
         onLoaded: if (item) item.show()
     }
 }

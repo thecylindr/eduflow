@@ -1,4 +1,3 @@
-// Main.qml
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts 1.15
@@ -21,9 +20,9 @@ Window {
     property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
                            Qt.platform.os === "tvos" || Qt.platform.os === "wasm"
 
-    // УПРОЩЕННЫЕ ОТСТУПЫ - безопасные значения по умолчанию
-    property int mobileTopMargin: isMobile ? 24 : 0
-    property int mobileBottomMargin: isMobile ? 48 : 0
+    // Отступы для Android системных кнопок
+    property int androidTopMargin: (Qt.platform.os === "android") ? 16 : 0
+    property int androidBottomMargin: (Qt.platform.os === "android" &&  parent.width < parent.height) ? 28 : 0
 
     // Данные
     property var teachers: []
@@ -213,7 +212,7 @@ Window {
         anchors.fill: parent
         color: "transparent"
         enabled: isMobile && !mobileMenuOpen
-        z: 3 // ПОД ЗАТЕМНЕНИЕМ
+        z: 3
 
         property real startX: 0
         property real startY: 0
@@ -262,14 +261,6 @@ Window {
             onReleased: {
                 globalSwipeArea.tracking = false
             }
-
-            // Визуальный индикатор зоны жестов (только для отладки)
-            Rectangle {
-                anchors.fill: parent
-                color: "#3498db"
-                opacity: 0.1
-                visible: false // Установите true для отладки зоны жестов
-            }
         }
     }
 
@@ -281,7 +272,7 @@ Window {
             bottom: parent.bottom
             left: parent.left
             right: parent.right
-            topMargin: isMobile ? 15 + mobileTopMargin : 0
+            topMargin: isMobile ? 15 + androidTopMargin : 0
         }
         radius: 21
         color: "#f0f0f0"
@@ -319,7 +310,7 @@ Window {
                 right: parent.right
                 bottom: parent.bottom
             }
-            blurHeight: 48
+            blurHeight: androidBottomMargin
             blurOpacity: 0.8
             z: 2
             isMobile: mainWindow.isMobile
@@ -353,7 +344,6 @@ Window {
                 right: parent.right
                 leftMargin: 10
                 rightMargin: 10
-                topMargin: mobileTopMargin
             }
             currentView: getCurrentViewTitle()
             menuOpen: mobileMenuOpen
@@ -407,7 +397,7 @@ Window {
                 isOpen: mobileMenuOpen
                 onCloseRequested: mobileMenuOpen = false
                 visible: isMobile
-                topMargin: mobileTopMargin
+                topMargin: androidTopMargin
                 swipeEnabled: true
                 z: 1000
             }
@@ -495,20 +485,16 @@ Window {
     }
 
     Component.onCompleted: {
-        console.log("🚀 Main window initialized - Mobile:", isMobile, "Platform:", Qt.platform.os);
-
         // Проверяем, есть ли сохраненный токен в настройках
-        var savedToken = settingsManager.authToken || "";
+            var savedToken = settingsManager.authToken || "";
 
-        if (savedToken && savedToken.length > 0) {
-            console.log("🔑 Using saved token");
-            initializeProfile(savedToken, null);
-        } else {
-            console.log("🔑 No saved token, showing auth window");
-            var baseUrl = settingsManager.useLocalServer ?
-                settingsManager.serverAddress :
-                mainApi.remoteApiBaseUrl + ":" + mainApi.remotePort;
-            initializeProfile("", baseUrl);
-        }
+            if (savedToken && savedToken.length > 0) {
+                initializeProfile(savedToken, null);
+            } else {
+                var baseUrl = settingsManager.useLocalServer ?
+                    settingsManager.serverAddress :
+                    mainApi.remoteApiBaseUrl + ":" + mainApi.remotePort;
+                initializeProfile("", baseUrl);
+            }
     }
 }

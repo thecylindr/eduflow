@@ -6,23 +6,26 @@
 #include <QJsonObject>
 #include <QDebug>
 #include <QCoreApplication>
+
 SettingsManager::SettingsManager(QObject *parent)
     : QObject(parent)
     , m_useLocalServer(false)
     , m_serverAddress("http://localhost:5000")
     , m_apiPath("/api")
     , m_authToken("")
+    , m_firstRun(true)
 {
-    // Устанавливаем правильные имена приложения ДО загрузки настроек
     QCoreApplication::setApplicationName("EduFlow");
     QCoreApplication::setOrganizationName("EduFlow");
     QCoreApplication::setOrganizationDomain("eduflow.com");
     loadSettings();
 }
+
 bool SettingsManager::useLocalServer() const
 {
     return m_useLocalServer;
 }
+
 void SettingsManager::setUseLocalServer(bool useLocalServer)
 {
     if (m_useLocalServer != useLocalServer) {
@@ -32,10 +35,12 @@ void SettingsManager::setUseLocalServer(bool useLocalServer)
         saveSettings();
     }
 }
+
 QString SettingsManager::serverAddress() const
 {
     return m_serverAddress;
 }
+
 void SettingsManager::setServerAddress(const QString &serverAddress)
 {
     if (m_serverAddress != serverAddress) {
@@ -45,10 +50,12 @@ void SettingsManager::setServerAddress(const QString &serverAddress)
         saveSettings();
     }
 }
+
 QString SettingsManager::apiPath() const
 {
     return m_apiPath;
 }
+
 void SettingsManager::setApiPath(const QString &apiPath)
 {
     if (m_apiPath != apiPath) {
@@ -57,10 +64,12 @@ void SettingsManager::setApiPath(const QString &apiPath)
         saveSettings();
     }
 }
+
 QString SettingsManager::authToken() const
 {
     return m_authToken;
 }
+
 void SettingsManager::setAuthToken(const QString &authToken)
 {
     if (m_authToken != authToken) {
@@ -73,11 +82,28 @@ void SettingsManager::setAuthToken(const QString &authToken)
         saveSettings();
     }
 }
+
 bool SettingsManager::hasValidToken() const
 {
     // Токен считается валидным если он не пустой и имеет достаточную длину (сессионные токены обычно 64 символа)
     return !m_authToken.isEmpty() && m_authToken.length() >= 32;
 }
+
+// Методы для первого запуска
+bool SettingsManager::getFirstRun() const
+{
+    return m_firstRun;
+}
+
+void SettingsManager::setFirstRun(bool firstRun)
+{
+    if (m_firstRun != firstRun) {
+        m_firstRun = firstRun;
+        qDebug() << "Setting firstRun to:" << m_firstRun;
+        saveSettings();
+    }
+}
+
 QString SettingsManager::getConfigPath() const
 {
     QString configDir;
@@ -102,6 +128,7 @@ QString SettingsManager::getConfigPath() const
     qDebug() << "Config file path:" << configFile;
     return configFile;
 }
+
 void SettingsManager::loadSettings()
 {
     QString configFile = getConfigPath();
@@ -118,10 +145,12 @@ void SettingsManager::loadSettings()
                 m_serverAddress = obj.value("serverAddress").toString("http://localhost:5000");
                 m_apiPath = obj.value("apiPath").toString("/api");
                 m_authToken = obj.value("authToken").toString("");
+                m_firstRun = obj.value("firstRun").toBool(true);
                 qDebug() << "Config loaded successfully:";
                 qDebug() << "  useLocalServer:" << m_useLocalServer;
                 qDebug() << "  serverAddress:" << m_serverAddress;
                 qDebug() << "  authToken length:" << m_authToken.length();
+                qDebug() << "  firstRun:" << m_firstRun;
                 if (m_authToken.length() > 0) {
                     qDebug() << "  authToken (first 10):" << m_authToken.left(10) + "...";
                 }
@@ -136,6 +165,7 @@ void SettingsManager::loadSettings()
         saveSettings(); // Create with default values
     }
 }
+
 void SettingsManager::saveSettings()
 {
     QString configFile = getConfigPath();
@@ -146,12 +176,14 @@ void SettingsManager::saveSettings()
         obj["serverAddress"] = m_serverAddress;
         obj["apiPath"] = m_apiPath;
         obj["authToken"] = m_authToken;
+        obj["firstRun"] = m_firstRun;
         QJsonDocument doc(obj);
         QByteArray data = doc.toJson(QJsonDocument::Indented);
         qint64 bytesWritten = file.write(data);
         file.close();
         qDebug() << "Settings saved to:" << configFile;
         qDebug() << "  authToken length:" << m_authToken.length();
+        qDebug() << "  firstRun:" << m_firstRun;
         if (m_authToken.length() > 0) {
             qDebug() << "  authToken (first 10):" << m_authToken.left(10) + "...";
         }

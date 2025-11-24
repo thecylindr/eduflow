@@ -10,7 +10,7 @@ Rectangle {
     opacity: 0.925
     border.color: "#e0e0e0"
     border.width: 1
-    z: 1000 // ВЫСОКИЙ ПРИОРИТЕТ - ПОВЕРХ ВСЕГО
+    z: 1000
 
     property string currentView: "dashboard"
     property bool isOpen: false

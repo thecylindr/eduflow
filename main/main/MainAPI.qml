@@ -471,28 +471,32 @@ QtObject {
             console.log("📨 СЫРОЙ ОТВЕТ событий:", JSON.stringify(response));
 
             if (response.success) {
-                // 🔥 ИСПРАВЛЕНИЕ: response.data уже содержит массив событий
-                var eventsData = response.data || [];
+                var eventsData = response.data || {};
                 var eventsArray = [];
 
                 console.log("📊 Анализ структуры данных событий:");
                 console.log("   Тип данных:", typeof eventsData);
                 console.log("   Это массив?", Array.isArray(eventsData));
+                console.log("   Ключи объекта:", eventsData ? Object.keys(eventsData) : "null");
 
-                if (Array.isArray(eventsData)) {
-                    eventsArray = eventsData;
-                    console.log("✅ Формат 1: response.data - массив, длина:", eventsArray.length);
-                } else if (eventsData && eventsData.data && Array.isArray(eventsData.data)) {
+                // 🔥 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: правильная обработка вложенной структуры
+                if (eventsData && eventsData.data && Array.isArray(eventsData.data)) {
                     eventsArray = eventsData.data;
-                    console.log("✅ Формат 2: response.data.data - массив, длина:", eventsArray.length);
+                    console.log("✅ Формат 1: response.data.data - массив, длина:", eventsArray.length);
+                } else if (Array.isArray(eventsData)) {
+                    eventsArray = eventsData;
+                    console.log("✅ Формат 2: response.data - массив, длина:", eventsArray.length);
+                } else if (eventsData && Array.isArray(eventsData.events)) {
+                    eventsArray = eventsData.events;
+                    console.log("✅ Формат 3: response.data.events - массив, длина:", eventsArray.length);
                 } else {
                     console.log("❌ Неизвестный формат данных событий");
+                    console.log("🔍 Полная структура eventsData:", JSON.stringify(eventsData, null, 2));
                     eventsArray = [];
                 }
 
                 console.log("📊 Получено событий с сервера:", eventsArray.length);
 
-                // 🔥 ДЕБАГ: выводим структуру первого события
                 if (eventsArray.length > 0) {
                     console.log("🔍 Структура первого события:", JSON.stringify(eventsArray[0]));
                     console.log("🏷️ Категория первого события:", eventsArray[0].category);
@@ -502,23 +506,20 @@ QtObject {
                 var formattedEvents = eventsArray.map(function(event) {
                     var formattedEvent = {
                         id: event.id || 0,
-                        eventId: event.event_id || 0,
-                        eventType: event.event_type || "",
-                        // 🔥 ИСПРАВЛЕНИЕ: используем category из ответа сервера
-                        category: event.category || "", // Наименование категории
-                        startDate: event.start_date || "",
-                        endDate: event.end_date || "",
+                        eventId: event.event_id || event.eventId || 0,
+                        eventType: event.event_type || event.eventType || "",
+                        category: event.category || "", // 🔥 ЭТО поле должно сохраняться!
+                        startDate: event.start_date || event.startDate || "",
+                        endDate: event.end_date || event.endDate || "",
                         location: event.location || "",
                         lore: event.lore || "",
-                        maxParticipants: event.max_participants || 0,
-                        currentParticipants: event.current_participants || 0,
+                        maxParticipants: event.max_participants || event.maxParticipants || 0,
+                        currentParticipants: event.current_participants || event.currentParticipants || 0,
                         status: event.status || "active"
                     };
 
-                    console.log("🔄 Преобразовано событие:", formattedEvent.id,
-                              "Категория:", formattedEvent.category,
-                              "Тип:", formattedEvent.eventType);
-
+                    console.log("🔍 Форматированное событие - ID:", formattedEvent.id,
+                              "Категория:", formattedEvent.category);
                     return formattedEvent;
                 });
 
@@ -566,7 +567,6 @@ QtObject {
     }
 
     function getStudentsByGroup(groupId, callback) {
-        console.log("👥 Запрос студентов группы ID:", groupId);
 
         var endpoint = "/groups/" + groupId + "/students";
         sendRequest("GET", endpoint, null, function(response) {
@@ -601,8 +601,6 @@ QtObject {
     }
 
     function getAllTeachersSpecializations(excludeTeacherId, callback) {
-        console.log("📚 Загрузка всех специализаций преподавателей, исключая ID:", excludeTeacherId);
-
         getTeachers(function(response) {
             if (response.success) {
                 var allSpecs = [];
@@ -663,8 +661,6 @@ QtObject {
                     }
                 }
 
-                console.log("✅ Уникальных специализаций найдено (исключая преподавателя", excludeTeacherId, "):", uniqueSpecs.length);
-
                 if (callback) {
                     callback({
                         success: true,
@@ -672,7 +668,6 @@ QtObject {
                     });
                 }
             } else {
-                console.log("❌ Ошибка загрузки преподавателей:", response.error);
                 if (callback) {
                     callback({
                         success: false,
@@ -717,11 +712,10 @@ QtObject {
     function addEvent(eventData, callback) {
         console.log("➕ Добавление события через /events:", JSON.stringify(eventData));
 
-        // 🔥 ИСПРАВЛЕНИЕ: Убедитесь, что measureCode передается
         var cleanEventData = {
             event_type: eventData.eventType,
             category: eventData.category,
-            measureCode: eventData.measureCode, // 🔥 Передаем measureCode
+            measureCode: eventData.measureCode,
             start_date: eventData.startDate,
             end_date: eventData.endDate,
             location: eventData.location,
@@ -740,19 +734,15 @@ QtObject {
         console.log("🔄 Обновление события ID:", eventId, "через /events");
         var endpoint = "/events/" + eventId;
 
-        // 🔥 КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ: Передаем measure_code для обновления связки
         var updateData = {
             event_type: eventData.eventType,
-            category: eventData.eventCategory,
-            measure_code: eventData.measureCode, // 🔥 ОБЯЗАТЕЛЬНО передаем measure_code
+            category: eventData.category,
+            measure_code: eventData.measureCode,
             start_date: eventData.startDate,
             end_date: eventData.endDate,
             location: eventData.location,
             lore: eventData.lore
         };
-
-        console.log("📦 Данные для обновления события:", JSON.stringify(updateData));
-        console.log("🔑 measure_code для обновления:", updateData.measure_code);
 
         sendRequest("PUT", endpoint, updateData, function(response) {
             console.log("📨 Ответ обновления события:", response);
@@ -800,14 +790,12 @@ QtObject {
 
                 // Фильтруем и форматируем данные
                 var validPortfolios = portfolioData.filter(function(portfolio) {
-                    // 🔥 ИСПРАВЛЕНИЕ: используем portfolio_id как measure_code
                     var isValid = portfolio && (portfolio.portfolio_id || portfolio.id) && (portfolio.portfolio_id || portfolio.id) > 0;
                     if (!isValid) {
                         console.log("⚠️ Отфильтровано невалидное портфолио:", portfolio);
                     }
                     return isValid;
                 }).map(function(portfolio) {
-                    // 🔥 ИСПРАВЛЕНИЕ: используем portfolio_id как measure_code
                     var measureCode = portfolio.portfolio_id || portfolio.id;
                     return {
                         measure_code: measureCode,
@@ -815,7 +803,7 @@ QtObject {
                         student_code: portfolio.student_code || 0,
                         student_name: portfolio.student_name || "Студент #" + (portfolio.student_code || "?"),
                         date: portfolio.date || "",
-                        portfolio_id: measureCode // Сохраняем оригинальный ID
+                        portfolio_id: measureCode
                     };
                 });
 

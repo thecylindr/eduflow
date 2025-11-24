@@ -47,8 +47,8 @@ Window {
     property bool disableResize: isMobile
 
     // Отступы для Android системных кнопок
-    property int androidTopMargin: (Qt.platform.os === "android") ? 24 : 0
-    property int androidBottomMargin: (Qt.platform.os === "android") ? 48 : 0
+    property int androidTopMargin: (Qt.platform.os === "android") ? 16 : 0
+    property int androidBottomMargin: (Qt.platform.os === "android" &&  parent.width < parent.height) ? 28 : 0
 
     signal loginSuccessful(string token, var userData)
 
@@ -459,7 +459,7 @@ Window {
                 right: parent.right
                 bottom: parent.bottom
             }
-            blurHeight: 48
+            blurHeight: androidBottomMargin
             blurOpacity: 0.8
             z: 2
             isMobile: authWindow.isMobile
@@ -539,12 +539,12 @@ Window {
 
             onSaveServerConfig: function(serverAddress) {
                 authWindow.saveServerConfig(serverAddress);
-                updateAuthAPI(); // Обновляем AuthAPI после сохранения настроек
+                updateAuthAPI();
             }
 
             onResetSettings: {
                 authWindow.resetSettings();
-                updateAuthAPI(); // Обновляем AuthAPI после сброса настроек
+                updateAuthAPI();
             }
         }
 

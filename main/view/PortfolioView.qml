@@ -18,7 +18,6 @@ Item {
         mainWindow.mainApi.getPortfolio(function(response) {
             isLoading = false;
             if (response && response.success) {
-                console.log("✅ Данные портфолио получены:", JSON.stringify(response.data));
 
                 var responseData = response.data;
                 var portfoliosData = [];
@@ -31,7 +30,6 @@ Item {
                     portfoliosData = responseData.data;
                 }
 
-                console.log("📊 Извлечено портфолио:", portfoliosData.length);
                 var processedPortfolios = [];
 
                 for (var i = 0; i < portfoliosData.length; i++) {
@@ -51,10 +49,9 @@ Item {
                 }
 
                 portfolioView.portfolios = processedPortfolios;
-                console.log("✅ Портфолио обработаны:", portfolioView.portfolios.length);
             } else {
                 var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
-                showMessage("❌ Ошибка загрузки портфолио: " + errorMsg, "error");
+                showMessage("Ошибка загрузки портфолио: " + errorMsg, "error");
             }
         });
     }
@@ -63,25 +60,22 @@ Item {
         mainWindow.mainApi.getStudents(function(response) {
             if (response && response.success) {
                 portfolioView.students = response.data || [];
-                console.log("✅ Студенты загружены для портфолио:", portfolioView.students.length);
                 refreshEvents();
             } else {
                 var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
-                showMessage("❌ Ошибка загрузки студентов: " + errorMsg, "error");
+                showMessage("Ошибка загрузки студентов: " + errorMsg, "error");
             }
         });
     }
 
     function refreshEvents() {
-        console.log("📅 Загрузка событий для портфолио...");
         mainWindow.mainApi.getEvents(function(response) {
             if (response && response.success) {
                 portfolioView.events = response.data || [];
-                console.log("✅ События загружены для портфолио:", portfolioView.events.length);
                 refreshPortfolios();
             } else {
                 var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
-                showMessage("❌ Ошибка загрузки событий: " + errorMsg, "error");
+                showMessage("Ошибка загрузки событий: " + errorMsg, "error");
             }
         });
     }
@@ -133,24 +127,23 @@ Item {
 
     function addPortfolio(portfolioData) {
         if (!portfolioData) {
-            showMessage("❌ Данные портфолио не указаны", "error");
+            showMessage("Данные портфолио не указаны", "error");
             return;
         }
 
         isLoading = true;
-        console.log("➕ Добавление портфолио:", JSON.stringify(portfolioData));
 
         mainWindow.mainApi.addPortfolio(portfolioData, function(response) {
             isLoading = false;
             if (response && response.success) {
-                showMessage("✅ " + ((response.message || response.data && response.data.message) || "Портфолио успешно добавлено"), "success");
+                showMessage(((response.message || response.data && response.data.message) || "Портфолио успешно добавлено"), "success");
                 if (portfolioFormWindow.item) {
                     portfolioFormWindow.close();
                 }
                 refreshPortfolios();
             } else {
                 var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
-                showMessage("❌ Ошибка добавления портфолио: " + errorMsg, "error");
+                showMessage("Ошибка добавления портфолио: " + errorMsg, "error");
                 if (portfolioFormWindow.item) {
                     portfolioFormWindow.item.isSaving = false;
                 }
@@ -160,30 +153,29 @@ Item {
 
     function updatePortfolio(portfolioData) {
         if (!portfolioData) {
-            showMessage("❌ Данные портфолио не указаны", "error");
+            showMessage("Данные портфолио не указаны", "error");
             return;
         }
 
         var portfolioId = portfolioData.portfolio_id || portfolioData.portfolioId;
         if (!portfolioId) {
-            showMessage("❌ ID портфолио не указан", "error");
+            showMessage("ID портфолио не указан", "error");
             return;
         }
 
         isLoading = true;
-        console.log("🔄 Обновление портфолио ID:", portfolioId, "Данные:", JSON.stringify(portfolioData));
 
         mainWindow.mainApi.updatePortfolio(portfolioId, portfolioData, function(response) {
             isLoading = false;
             if (response && response.success) {
-                showMessage("✅ " + ((response.message || response.data && response.data.message) || "Портфолио успешно обновлено"), "success");
+                showMessage(((response.message || response.data && response.data.message) || "Портфолио успешно обновлено"), "success");
                 if (portfolioFormWindow.item) {
                     portfolioFormWindow.close();
                 }
                 refreshPortfolios();
             } else {
                 var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
-                showMessage("❌ Ошибка обновления портфолио: " + errorMsg, "error");
+                showMessage("Ошибка обновления портфолио: " + errorMsg, "error");
                 if (portfolioFormWindow.item) {
                     portfolioFormWindow.item.isSaving = false;
                 }
@@ -193,7 +185,7 @@ Item {
 
     function deletePortfolio(portfolioId, portfolioDescription) {
         if (!portfolioId) {
-            showMessage("❌ ID портфолио не указан", "error");
+            showMessage("ID портфолио не указан", "error");
             return;
         }
 
@@ -202,11 +194,11 @@ Item {
             mainWindow.mainApi.deletePortfolio(portfolioId, function(response) {
                 isLoading = false;
                 if (response && response.success) {
-                    showMessage("✅ " + ((response.message || response.data && response.data.message) || "Портфолио успешно удалено"), "success");
+                    showMessage(((response.message || response.data && response.data.message) || "Портфолио успешно удалено"), "success");
                     refreshPortfolios();
                 } else {
                     var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
-                    showMessage("❌ Ошибка удаления портфолио: " + errorMsg, "error");
+                    showMessage("Ошибка удаления портфолио: " + errorMsg, "error");
                 }
             });
         }
@@ -465,7 +457,6 @@ Item {
 
             onItemEditRequested: function(itemData) {
                 if (!itemData) return;
-                console.log("✏️ PortfolioView: редактирование запрошено для", itemData);
                 if (portfolioFormWindow.item) {
                     portfolioFormWindow.openForEdit(itemData);
                 } else {
@@ -474,7 +465,6 @@ Item {
             }
 
             onItemDoubleClicked: function(itemData) {
-                console.log("📚 Двойной клик по портфолио:", itemData);
                 if (portfolioFormWindow.item) {
                     portfolioFormWindow.openForEdit(itemData);
                 } else {
@@ -486,7 +476,6 @@ Item {
                 if (!itemData) return;
                 var portfolioId = itemData.portfolioId;
                 var description = itemData.description || "Без описания";
-                console.log("🗑️ PortfolioView: удаление запрошено для", description, "ID:", portfolioId);
                 deletePortfolio(portfolioId, description);
             }
         }
@@ -501,7 +490,6 @@ Item {
         onLoaded: {
             if (item) {
                 item.saved.connect(function(portfolioData) {
-                    console.log("💾 Сохранение портфолио:", JSON.stringify(portfolioData));
                     if (!portfolioData) return;
 
                     if (portfolioData.portfolio_id && portfolioData.portfolio_id !== 0) {
@@ -512,7 +500,6 @@ Item {
                 });
 
                 item.cancelled.connect(function() {
-                    console.log("❌ Отмена редактирования портфолио");
                     if (item) {
                         item.closeWindow();
                     }

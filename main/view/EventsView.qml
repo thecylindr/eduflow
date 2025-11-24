@@ -135,9 +135,6 @@ Item {
         }
 
         isLoading = true
-        console.log("🔄 ОБНОВЛЕНИЕ События - ДЕТАЛИ:")
-        console.log("   Уникальный ID события:", uniqueEventId)
-        console.log("   Данные для обновления:", JSON.stringify(eventData))
 
         var updateData = {
             eventType: eventData.eventType,
@@ -146,14 +143,11 @@ Item {
             endDate: eventData.endDate,
             location: eventData.location,
             lore: eventData.lore,
-            category: eventData.eventCategory
+            category: eventData.category
         }
-
-        console.log("   Данные для отправки:", JSON.stringify(updateData))
 
         mainWindow.mainApi.updateEvent(uniqueEventId, updateData, function(response) {
             isLoading = false
-            console.log("📨 ОТВЕТ ОБНОВЛЕНИЯ:", JSON.stringify(response))
 
             if (response && response.success) {
                 showMessage("✅ " + ((response.message || response.data && response.data.message) || "Событие успешно обновлено"), "success")
@@ -163,7 +157,6 @@ Item {
                 refreshEvents()
             } else {
                 var errorMsg = response && response.error ? response.error : "Неизвестная ошибка"
-                console.log("❌ ОШИБКА ОБНОВЛЕНИЯ:", errorMsg)
                 showMessage("❌ Ошибка обновления события: " + errorMsg, "error")
                 if (eventFormWindow.item) {
                     eventFormWindow.item.isSaving = false
@@ -180,8 +173,6 @@ Item {
 
         var uniqueEventId = eventId;
 
-        console.log("🗑️ Удаление события:", "Уникальный ID:", uniqueEventId, "Название:", eventName);
-
         if (confirm("Вы уверены, что хотите удалить событие:\n" + (eventName || "Без названия") + "?")) {
             isLoading = true;
 
@@ -192,7 +183,6 @@ Item {
                     refreshEvents();
                 } else {
                     var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
-                    console.log("❌ Ошибка удаления события:", errorMsg);
                     showMessage("❌ Ошибка удаления события: " + errorMsg, "error");
                 }
             });
@@ -200,12 +190,10 @@ Item {
     }
 
     function confirm(message) {
-        console.log("Подтверждение:", message);
         return true;
     }
 
     Component.onCompleted: {
-        console.log("EventsView: Component.onCompleted");
         refreshEventCategories();
     }
 
@@ -473,7 +461,6 @@ Item {
             })
 
             onItemDoubleClicked: function(itemData) {
-                console.log("📅 Двойной клик по событию:", itemData);
                 if (eventFormWindow.item) {
                     eventFormWindow.openForEdit(itemData);
                 } else {
@@ -483,9 +470,6 @@ Item {
 
             onItemEditRequested: function(itemData) {
                 if (!itemData) return;
-                console.log("✏️ EventsView: редактирование запрошено для", itemData);
-                console.log("🏷️ Категория события:", itemData.category);
-                console.log("🏷️ eventCategory события:", itemData.eventCategory);
 
                 if (eventFormWindow.item) {
                     eventFormWindow.openForEdit(itemData);
@@ -498,7 +482,6 @@ Item {
                 if (!itemData) return;
                 var uniqueEventId = itemData.id;
                 var eventName = itemData.eventType || itemData.category || "Без названия";
-                console.log("🗑️ EventsView: удаление запрошено для", eventName, "Уникальный ID:", uniqueEventId);
                 deleteEvent(uniqueEventId, eventName);
             }
         }
@@ -511,24 +494,19 @@ Item {
         active: true
 
         onLoaded: {
-            console.log("✅ EventFormWindow загружен")
 
             if (item) {
                 item.saved.connect(function(eventData) {
-                    console.log("💾 Сохранение события:", JSON.stringify(eventData));
                     if (!eventData) return;
 
                     if (eventData.id && eventData.id !== 0) {
-                        console.log("🔧 Режим редактирования, ID:", eventData.id);
                         updateEvent(eventData);
                     } else {
-                        console.log("➕ Режим добавления нового события");
                         addEvent(eventData);
                     }
                 });
 
                 item.cancelled.connect(function() {
-                    console.log("❌ Отмена редактирования события");
                     if (item) {
                         item.closeWindow();
                     }

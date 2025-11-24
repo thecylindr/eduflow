@@ -96,14 +96,12 @@ Window {
             return
         }
 
-        // 🔥 УЛУЧШЕННАЯ ЛОГИКА: пробуем разные возможные поля для measure_code
         var measureCode = eventData.measureCode || eventData.portfolio_id || eventData.event_id || 0
-        console.log("🔍 Ищем портфолио с measure_code:", measureCode, "в списке из", portfolioList.length, "элементов")
+        console.log("🔍 Ищем портфолио с measure_code:", measureCode)
 
         if (measureCode > 0) {
             var foundIndex = -1
             for (var i = 0; i < portfolioList.length; i++) {
-                console.log("   Сравниваем с portfolioList[", i, "]:", portfolioList[i].measure_code)
                 if (portfolioList[i].measure_code === measureCode) {
                     foundIndex = i
                     console.log("✅ Найдено портфолио, индекс:", i)
@@ -113,21 +111,25 @@ Window {
 
             if (foundIndex >= 0) {
                 portfolioComboBox.currentIndex = foundIndex
-                console.log("✅ Портфолио выбрано в комбобоксе")
             } else {
-                console.log("⚠️ Портфолио с measure_code", measureCode, "не найдено в списке")
-                console.log("📋 Доступные measure_codes:", portfolioList.map(function(p) { return p.measure_code; }))
+                console.log("⚠️ Портфолио с measure_code", measureCode, "не найдено")
             }
-        } else {
-            console.log("⚠️ measure_code не указан или равен 0")
         }
 
+        // 🔥 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: правильное заполнение всех полей
         eventTypeField.text = eventData.eventType || eventData.event_type || ""
-        categoryField.text = eventData.category || ""
+
+        // 🔥 ВАЖНО: категория должна браться из formattedEvent.category
+        var categoryValue = eventData.category || ""
+        categoryField.text = categoryValue
+        console.log("🏷️ Заполнено поле категории:", categoryValue)
+
         startDateField.text = eventData.startDate || eventData.start_date || ""
         endDateField.text = eventData.endDate || eventData.end_date || ""
         locationField.text = eventData.location || ""
         loreField.text = eventData.lore || ""
+
+        console.log("✅ Форма заполнена. Категория:", categoryField.text)
     }
 
     function getEventData() {
@@ -146,7 +148,7 @@ Window {
         var eventData = {
             eventType: eventTypeField.text.trim(),
             category: categoryField.text.trim(),
-            measureCode: selectedPortfolio.measure_code, // 🔥 Ключевое исправление
+            measureCode: selectedPortfolio.measure_code,
             startDate: startDateField.text.trim(),
             endDate: endDateField.text.trim(),
             location: locationField.text.trim(),
@@ -160,6 +162,8 @@ Window {
 
         console.log("📦 Сформированные данные события:", JSON.stringify(eventData))
         console.log("🔑 measureCode:", eventData.measureCode)
+        console.log("🏷️ Категория для сохранения:", eventData.category)
+        console.log("✏️ Режим редактирования:", isEditMode)
         return eventData
     }
 

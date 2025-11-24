@@ -3,23 +3,6 @@
 #include <QIcon>
 #include <QQmlContext>
 #include "settings_manager.h"
-#include <QLoggingCategory>
-#include <QCoreApplication>
-#include <QtGlobal>
-
-typedef void (*QtMessageHandler)(QtMsgType, const QMessageLogContext &, const QString &);
-
-QtMessageHandler defaultHandler = nullptr;
-
-void messageHandler(QtMsgType type, const QMessageLogContext &context, const QString &msg) {
-    if (type == QtWarningMsg && msg.contains("QML import could not be resolved")) {
-        return; // Suppress specific warnings
-    }
-    // Call the default handler for other messages
-    if (defaultHandler) {
-        defaultHandler(type, context, msg);
-    }
-}
 
 int main(int argc, char *argv[])
 {
@@ -27,8 +10,6 @@ int main(int argc, char *argv[])
     qputenv("QSG_RENDER_LOOP", "basic");
 
     QGuiApplication app(argc, argv);
-
-    defaultHandler = qInstallMessageHandler(messageHandler);
 
     SettingsManager settingsManager;
     QQmlApplicationEngine engine;
@@ -44,15 +25,23 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("organizationName", app.organizationName());
     engine.rootContext()->setContextProperty("settingsManager", &settingsManager);
 
-    QObject::connect(
-        &engine,
-        &QQmlApplicationEngine::objectCreationFailed,
-        &app,
-        [](const QUrl &) { QCoreApplication::exit(-1); },
-        Qt::QueuedConnection);
+    QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed,
+                     &app, []() { QCoreApplication::exit(-1); },
+                     Qt::QueuedConnection);
 
-    // Загружаем SplashScreen
-    engine.loadFromModule("testing", "SplashScreen");
+    // Определяем стартовый экран
+    QString startScreen;
+    bool isMobile = (QGuiApplication::platformName() == "android" ||
+                     QGuiApplication::platformName() == "ios");
+
+    if (isMobile) {
+        startScreen = "SplashScreenMobile";
+    } else {
+        startScreen = "SplashScreen";
+    }
+
+    // Загружаем соответствующий QML
+    engine.loadFromModule("EduFlow", startScreen);
 
     return app.exec();
 }

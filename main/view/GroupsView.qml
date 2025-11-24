@@ -409,7 +409,6 @@ Item {
 
             onItemDoubleClicked: function(itemData) {
                 if (!itemData) return;
-                console.log("👥 Двойной клик по группе:", itemData.name);
                 openGroupView(itemData);
             }
         }
@@ -436,7 +435,6 @@ Item {
                 });
 
                 item.cancelled.connect(function() {
-                    console.log("❌ Отмена редактирования группы");
                     if (item) {
                         item.closeWindow();
                     }
@@ -460,8 +458,6 @@ Item {
     }
 
     function openGroupView(groupData) {
-        console.log("👥 Открытие окна просмотра группы:", groupData);
-
         if (groupViewWindow.status === Loader.Ready) {
             groupViewWindow.item.openForGroup(groupData);
         } else {
