@@ -60,66 +60,76 @@ Window {
 
         // Декоративный элемент под текстом
         Rectangle {
-            width: 100 * scaleFactor
-            height: 2 * scaleFactor
+            width: 120 * scaleFactor
+            height: 3 * scaleFactor
             anchors.horizontalCenter: parent.horizontalCenter
             color: "white"
             opacity: 0.5
-            radius: 1 * scaleFactor
+            radius: 1.5 * scaleFactor
         }
     }
 
-    // Нижняя панель с инструкцией
+    // Нижняя панель с инструкцией - ПОДНЯТА ВЫШЕ
     Column {
         id: bottomPanel
         anchors {
             horizontalCenter: parent.horizontalCenter
             bottom: parent.bottom
-            bottomMargin: 60 * scaleFactor
+            bottomMargin: 120 * scaleFactor  // Увеличен отступ снизу
         }
-        spacing: 15 * scaleFactor
+        spacing: 20 * scaleFactor  // Увеличен spacing
         width: parent.width * 0.8
 
-        // Стрелка, указывающая вверх на текст
+        // Стрелка, указывающая вверх на текст - ПОДНЯТА ВЫШЕ
         Text {
             id: arrow
             anchors.horizontalCenter: parent.horizontalCenter
             text: "↑"
-            font.pixelSize: 24 * scaleFactor
+            font.pixelSize: 32 * scaleFactor  // Увеличен размер стрелки
             color: "white"
             opacity: 0
 
-            // Плавающая анимация
+            // Плавающая анимация с увеличенной амплитудой
             SequentialAnimation on y {
                 id: arrowFloat
                 running: false
                 loops: Animation.Infinite
                 NumberAnimation {
-                    to: arrow.y - 10 * scaleFactor;
+                    to: arrow.y - 15 * scaleFactor;  // Увеличенная амплитуда
                     duration: 1000;
                     easing.type: Easing.InOutQuad
                 }
                 NumberAnimation {
-                    to: arrow.y + 10 * scaleFactor;
+                    to: arrow.y + 15 * scaleFactor;  // Увеличенная амплитуда
                     duration: 1000;
                     easing.type: Easing.InOutQuad
                 }
             }
         }
 
-        // Текст инструкции
+        // Текст инструкции - УВЕЛИЧЕН
         Text {
             id: instructionText
             width: parent.width
             horizontalAlignment: Text.AlignHCenter
-            text: "Коснитесь экрана в любом месте\nдля продолжения"
+            text: "Коснитесь экрана в любом месте\nдля продолжения работы с приложением"
             color: "white"
-            font.pixelSize: 16 * scaleFactor
+            font.pixelSize: 20 * scaleFactor  // Увеличен размер шрифта
             font.family: "Segoe Script, Comic Sans MS, cursive"
             font.weight: Font.Normal
-            lineHeight: 1.3
+            lineHeight: 1.4  // Увеличен межстрочный интервал
             wrapMode: Text.WordWrap
             opacity: 0
+        }
+
+        // Дополнительный декоративный элемент
+        Rectangle {
+            width: 80 * scaleFactor
+            height: 2 * scaleFactor
+            anchors.horizontalCenter: parent.horizontalCenter
+            color: "white"
+            opacity: 0.3
+            radius: 1 * scaleFactor
         }
     }
 
@@ -152,7 +162,7 @@ Window {
                 target: arrow
                 property: "opacity"
                 from: 0
-                to: 0.8
+                to: 0.9  // Увеличена непрозрачность
                 duration: 800
                 easing.type: Easing.InOutQuad
             }
@@ -160,7 +170,7 @@ Window {
                 target: instructionText
                 property: "opacity"
                 from: 0
-                to: 0.9
+                to: 1.0  // Увеличена непрозрачность
                 duration: 800
                 easing.type: Easing.InOutQuad
             }
@@ -241,10 +251,10 @@ Window {
             leftMargin: 20 * scaleFactor
             rightMargin: 20 * scaleFactor
         }
-        height: 3 * scaleFactor
+        height: 4 * scaleFactor  // Увеличенная высота
         color: "white"
         opacity: 0.2
-        radius: 1.5 * scaleFactor
+        radius: 2 * scaleFactor
 
         Rectangle {
             id: progressFill
@@ -255,8 +265,8 @@ Window {
             }
             width: 0
             color: "white"
-            opacity: 0.6
-            radius: 1.5 * scaleFactor
+            opacity: 0.8  // Увеличена непрозрачность
+            radius: 2 * scaleFactor
         }
     }
 

@@ -20,6 +20,8 @@ int main(int argc, char *argv[])
     app.setOrganizationName("NameLess Club");
     app.setOrganizationDomain("securesystems.com");
 
+    app.setQuitOnLastWindowClosed(true);
+
     engine.rootContext()->setContextProperty("appName", app.applicationName());
     engine.rootContext()->setContextProperty("appVersion", app.applicationVersion());
     engine.rootContext()->setContextProperty("organizationName", app.organizationName());

@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Controls.Material
+import QtQuick.Controls.Universal
 import QtQuick.Layouts 1.15
 import "../../common" as Common
 
@@ -22,12 +23,10 @@ Window {
     signal cancelled()
     signal saveCompleted(bool success, string message)
 
-    // Порядок навигации между полями
     property var fieldNavigation: [
         nameField, teacherComboBox
     ]
 
-    // Модель для отображения преподавателей
     ListModel {
         id: teacherDisplayModel
     }
@@ -47,7 +46,6 @@ Window {
             })
         }
 
-        // Восстанавливаем выбранного преподавателя после обновления модели
         if (isEditMode && currentGroup) {
             restoreSelectedTeacher()
         }
@@ -183,12 +181,10 @@ Window {
         }
     }
 
-    // Обновляем модель при изменении списка преподавателей
     onTeachersChanged: {
         updateTeacherModel()
     }
 
-    // Основной контейнер с градиентом
     Rectangle {
         id: windowContainer
         anchors.fill: parent
@@ -196,7 +192,6 @@ Window {
         color: "transparent"
         clip: true
 
-        // Градиентный фон
         Rectangle {
             anchors.fill: parent
             gradient: Gradient {
@@ -206,12 +201,10 @@ Window {
             radius: 15
         }
 
-        // Полигоны
         Common.PolygonBackground {
             anchors.fill: parent
         }
 
-        // TitleBar за белой формой
         Common.DialogTitleBar {
             id: titleBar
             anchors {
@@ -229,7 +222,6 @@ Window {
             }
         }
 
-        // Белая форма
         Rectangle {
             id: whiteForm
             width: 360
@@ -248,13 +240,11 @@ Window {
                 anchors.margins: 20
                 spacing: 16
 
-                // Контент формы
                 Column {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
                     spacing: 20
 
-                    // Название группы
                     Column {
                         width: parent.width
                         spacing: 8
@@ -276,7 +266,6 @@ Window {
                         }
                     }
 
-                    // Преподаватель (куратор)
                     Column {
                         width: parent.width
                         spacing: 8
@@ -297,7 +286,6 @@ Window {
                             enabled: !isSaving && teacherDisplayModel.count > 0
                             font.pixelSize: 14
 
-                            // Используем отдельную модель для отображения
                             model: teacherDisplayModel
                             textRole: "displayName"
 
@@ -315,7 +303,6 @@ Window {
                             }
                         }
 
-                        // Сообщение если нет преподавателей
                         Text {
                             visible: teacherDisplayModel.count === 0
                             text: teachers.length === 0 ? "Нет доступных преподавателей" : "Загрузка преподавателей..."
@@ -324,7 +311,6 @@ Window {
                             anchors.horizontalCenter: parent.horizontalCenter
                         }
 
-                        // Информация о количестве
                         Text {
                             visible: teacherDisplayModel.count > 0
                             text: "Доступно преподавателей: " + teacherDisplayModel.count
@@ -334,7 +320,6 @@ Window {
                         }
                     }
 
-                    // Информация
                     Rectangle {
                         width: parent.width - 40
                         height: 70
@@ -380,7 +365,6 @@ Window {
                     }
                 }
 
-                // Кнопки действий
                 RowLayout {
                     Layout.alignment: Qt.AlignHCenter
                     spacing: 20

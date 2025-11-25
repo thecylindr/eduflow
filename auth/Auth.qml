@@ -35,11 +35,15 @@ Window {
     property var _loginResult: null
 
     property bool _showingRegistration: false
+    property bool _isGoodClosing: false
     property string authToken: ""
 
     // Фиксированные приращения для масштабирования
     property int widthIncrement: 90
     property int heightIncrement: 120
+
+    // Защита от рекурсии
+    property bool _updatingWindowHeight: false
 
     // Определение мобильного устройства по ОС
     property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
@@ -72,7 +76,6 @@ Window {
         active: false
         asynchronous: true
         source: "../main/main/Main.qml"
-
         onLoaded: if (item) item.show()
     }
 
@@ -83,6 +86,12 @@ Window {
             var savedToken = settingsManager.authToken || "";
             checkSavedToken(savedToken);
         }
+    }
+
+    Timer {
+        id: safeUpdateHeightTimer
+        interval: 16
+        onTriggered: updateWindowHeight()
     }
 
     Component.onCompleted: {
@@ -115,11 +124,13 @@ Window {
         });
     }
 
-    // Обработчик кнопки "Назад" для Android
+    // Обработчик кнопки "Назад" для Android и Десктопа
     onClosing: (close) => {
         if (isMobile) {
             close.accepted = false
             handleBackButton()
+        } else if (!_isGoodClosing) {
+            Qt.quit()
         }
     }
 
@@ -157,21 +168,29 @@ Window {
         }
     }
 
-    function showMinimized() {
-        authWindow.showMinimized()
-    }
-
     // Функция для обновления высоты окна с анимацией
     function updateWindowHeight() {
         // На мобильных устройствах игнорируем изменение высоты
         if (disableResize) return;
+        if (_updatingWindowHeight) return;
+
+        _updatingWindowHeight = true;
+
+        var targetHeight = calculateBaseHeight();
 
         if (!isWindowMaximized) {
-            authWindow.height = calculateBaseHeight();
+            if (Math.abs(authWindow.height - targetHeight) > 1) {
+                authWindow.height = targetHeight;
+            }
         } else {
             var baseHeightValue = calculateBaseHeight();
-            authWindow.height = Math.min(maximumHeight, baseHeightValue + heightIncrement);
+            var maximizedHeight = Math.min(maximumHeight, baseHeightValue + heightIncrement);
+            if (Math.abs(authWindow.height - maximizedHeight) > 1) {
+                authWindow.height = maximizedHeight;
+            }
         }
+
+        _updatingWindowHeight = false;
     }
 
     // Расчет базовой высоты
@@ -197,6 +216,7 @@ Window {
         try {
             settingsManager.serverAddress = serverAddress;
             serverConfig.updateFromSettings();
+            updateAuthAPI(); // Добавляем обновление API
             showSuccess("Настройки сервера успешно сохранены.");
         } catch (error) {
             showError("Ошибка сохранения настроек");
@@ -206,10 +226,12 @@ Window {
     function resetSettings() {
         try {
             settingsManager.serverAddress = "http://localhost:5000";
+            settingsManager.useLocalServer = true; // Сбрасываем тип сервера
             serverConfig.updateFromSettings();
+            updateAuthAPI(); // Добавляем обновление API
             showSuccess("Настройки сброшены к значениям по умолчанию.");
         } catch (error) {
-            showError("Ошибка сброса настроек");
+            showError("Ошибка сброса настроек: " + error);
         }
     }
 
@@ -226,6 +248,7 @@ Window {
             hideLoading();
 
             if (result.success && result.valid) {
+                _isGoodClosing = true;
                 authToken = token;
                 settingsManager.authToken = token;
                 mainWindowLoader.active = true;
@@ -241,14 +264,51 @@ Window {
 
     function showRegistrationForm() {
         _showingRegistration = true;
-        updateWindowHeight();
+        safeUpdateHeightTimer.start();
         windowContainer.forceActiveFocus();
     }
 
     function showLoginForm() {
         _showingRegistration = false;
-        updateWindowHeight();
+        safeUpdateHeightTimer.start();
         windowContainer.forceActiveFocus();
+    }
+
+    function normalizePhoneNumber(phone) {
+        // Проверяем, что phone не undefined или null
+        if (!phone) {
+            return ""
+        }
+
+        // Преобразуем в строку на случай, если передано число
+        var phoneString = String(phone);
+
+        // Удаляем все нецифровые символы
+        var digits = phoneString.replace(/\D/g, '')
+
+        // Если номер пустой, возвращаем пустую строку
+        if (digits.length === 0) {
+            return ""
+        }
+
+        // Если номер начинается с 8, заменяем на 7
+        if (digits.startsWith('8')) {
+            digits = '7' + digits.substring(1)
+        }
+        // Если номер начинается не с 7 и не с 8, добавляем 7 в начало
+        else if (!digits.startsWith('7')) {
+            digits = '7' + digits
+        }
+
+        // Ограничиваем длину до 11 цифр
+        digits = digits.substring(0, 11)
+
+        // Если осталась только одна цифра 7, возвращаем пустую строку
+        if (digits === '7') {
+            return ""
+        }
+
+        return digits
     }
 
     function attemptRegistration() {
@@ -266,7 +326,7 @@ Window {
                 firstName: nameData.firstName,
                 lastName: nameData.lastName,
                 middleName: nameData.middleName,
-                phoneNumber: registrationForm.phoneField.text
+                phoneNumber: normalizePhoneNumber(registrationForm.phoneField.text)
             };
 
             authAPI.sendRegistrationRequest(userData, function(result) {
@@ -291,6 +351,7 @@ Window {
                 showLoginForm();
                 setLoginEmail(registeredEmail);
                 registrationForm.clearAllFields();
+                showSuccess("Регистрация прошла успешно! Теперь вы можете войти в систему.")
             } else {
                 showError(result.message || result.error);
             }
@@ -362,9 +423,9 @@ Window {
 
         if (_showingError) {
             errorAutoHideTimer.restart();
-            updateWindowHeight();
+            safeUpdateHeightTimer.start();
         } else {
-            updateWindowHeight();
+            safeUpdateHeightTimer.start();
         }
     }
 
@@ -532,19 +593,16 @@ Window {
 
             onServerTypeToggled: function(useLocal) {
                 settingsManager.useLocalServer = useLocal;
-                authWindow.updateWindowHeight();
+                safeUpdateHeightTimer.start();
                 updateAuthAPI();
             }
 
-
             onSaveServerConfig: function(serverAddress) {
                 authWindow.saveServerConfig(serverAddress);
-                updateAuthAPI();
             }
 
             onResetSettings: {
                 authWindow.resetSettings();
-                updateAuthAPI();
             }
         }
 
@@ -603,6 +661,7 @@ Window {
                 _isLoading = false;
                 if (_loginResult) {
                     if (_loginResult.success) {
+                        _isGoodClosing = true;
                         showSuccess(_loginResult.message || "Вход выполнен успешно");
                         mainWindowLoader.active = true;
                         authWindow.close();
@@ -631,7 +690,8 @@ Window {
     Connections {
         target: settingsManager
         function onUseLocalServerChanged() {
-            updateWindowHeight();
+            safeUpdateHeightTimer.start();
+            updateAuthAPI();
         }
     }
 

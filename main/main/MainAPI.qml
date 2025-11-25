@@ -26,8 +26,6 @@ QtObject {
         // Используем токен в URL вместо тела запроса
         var endpoint = "/sessions/" + encodeURIComponent(token);
 
-        console.log("🎯 Endpoint для отзыва:", endpoint)
-
         // Отправляем DELETE запрос без тела
         sendRequest("DELETE", endpoint, null, function(response) {
             console.log("📨 Ответ отзыва сессии:", JSON.stringify(response))
@@ -53,7 +51,6 @@ QtObject {
 
     function getNewsList(callback) {
         sendRequest("GET", "/news", null, function(response) {
-            console.log("📰 News list response:", response);
             if (callback) callback(response);
         });
     }
@@ -61,31 +58,26 @@ QtObject {
     function getNews(filename, callback) {
         // Кодируем имя файла для правильной передачи русских символов
         var encodedFilename = encodeURIComponent(filename);
-        console.log("📖 Загрузка новости (закодировано):", encodedFilename);
 
         sendRequest("GET", "/news/" + encodedFilename, null, function(response) {
-            console.log("📖 News content response:", response);
             if (callback) callback(response);
         });
     }
 
     function addNews(newsData, callback) {
         sendRequest("POST", "/news", newsData, function(response) {
-            console.log("📝 Add news response:", response);
             if (callback) callback(response);
         });
     }
 
     function updateNews(filename, newsData, callback) {
         sendRequest("PUT", "/news/" + filename, newsData, function(response) {
-            console.log("✏️ Update news response:", response);
             if (callback) callback(response);
         });
     }
 
     function deleteNews(filename, callback) {
         sendRequest("DELETE", "/news/" + filename, null, function(response) {
-            console.log("🗑️ Delete news response:", response);
             if (callback) callback(response);
         });
     }
@@ -127,7 +119,7 @@ QtObject {
                 tokenStatus = response.success ? "валиден" : "невалиден";
 
                 if (!response.success) {
-                    console.log("❌ Токен невалиден, очищаем...");
+                    console.log("Токен невалиден, очищаем...");
                 }
             });
         }
@@ -142,23 +134,23 @@ QtObject {
             if (testXhr.readyState === XMLHttpRequest.DONE) {
                 var success = testXhr.status === 200 || testXhr.status === 404;
                 // 404 тоже считается успехом, так как сервер отвечает
-                console.log("🔗 Тест соединения с", baseUrl, ":", success ? "УСПЕХ" : "НЕУДАЧА");
+                console.log("Тест соединения с", baseUrl, ":", success ? "УСПЕХ" : "НЕУДАЧА");
                 if (callback) callback(success);
             }
         };
 
         testXhr.ontimeout = function() {
-            console.log("⏰ Таймаут теста соединения с", baseUrl);
+            console.log("Таймаут теста соединения с", baseUrl);
             if (callback) callback(false);
         };
 
         testXhr.onerror = function() {
-            console.log("❌ Ошибка теста соединения с", baseUrl);
+            console.log("Ошибка теста соединения с", baseUrl);
             if (callback) callback(false);
         };
 
         try {
-            var testUrl = baseUrl + "/api/status";
+            var testUrl = baseUrl + "/status";
             testXhr.open("GET", testUrl, true);
 
             // Кросс-платформенные заголовки
@@ -172,16 +164,13 @@ QtObject {
 
             testXhr.send();
         } catch (error) {
-            console.log("💥 Ошибка теста соединения:", error);
+            console.log("Ошибка теста соединения:", error);
             if (callback) callback(false);
         }
     }
 
     function getDashboard(callback) {
-        console.log("📊 Запрос данных дашборда...")
-
         sendRequest("GET", "/dashboard", null, function(response) {
-            console.log("📨 Ответ дашборда:", JSON.stringify(response))
 
             if (callback) {
                 if (response.success) {
@@ -229,7 +218,6 @@ QtObject {
         };
 
         sendRequest("POST", "/change-password", passwordData, function(response) {
-            console.log("📨 Ответ смены пароля:", response);
 
             if (callback) {
                 if (response.success) {
@@ -267,7 +255,7 @@ QtObject {
                     status: response.status
                 });
             } else {
-                console.log("❌ Ошибка загрузки преподавателей, возвращаем пустой массив");
+                console.log("Ошибка загрузки преподавателей, возвращаем пустой массив");
                 callback({
                     success: false,
                     error: response.error,
@@ -295,7 +283,7 @@ QtObject {
                     status: response.status
                 });
             } else {
-                console.log("❌ Ошибка загрузки студентов, возвращаем пустой массив");
+                console.log("Ошибка загрузки студентов, возвращаем пустой массив");
                 callback({
                     success: false,
                     error: response.error,
@@ -323,7 +311,7 @@ QtObject {
                     status: response.status
                 });
             } else {
-                console.log("❌ Ошибка загрузки групп, возвращаем пустой массив");
+                console.log("Ошибка загрузки групп, возвращаем пустой массив");
                 callback({
                     success: false,
                     error: response.error,
@@ -335,18 +323,16 @@ QtObject {
     }
 
     function clearAuth() {
-        console.log("🧹 Очистка аутентификации...");
         authToken = "";
         baseUrl = "";
         tokenValid = false;
         tokenStatus = "очищен";
         settingsManager.authToken = "";
-        console.log("✅ Аутентификация очищена");
+        console.log("Аутентификация очищена");
     }
 
     function getPortfolio(callback) {
         sendRequest("GET", "/portfolio", null, function(response) {
-            console.log("📊 Ответ портфолио:", JSON.stringify(response));
             if (response.success) {
                 var responseData = response.data;
                 var portfolioData = [];
@@ -386,7 +372,6 @@ QtObject {
 
     // В функции addPortfolio
     function addPortfolio(portfolioData, callback) {
-        console.log("➕ Добавление портфолио:", JSON.stringify(portfolioData));
 
         // Согласуем с серверными требованиями
         var cleanPortfolioData = {
@@ -396,7 +381,6 @@ QtObject {
         };
 
         sendRequest("POST", "/portfolio", cleanPortfolioData, function(response) {
-            console.log("📨 Ответ добавления портфолио:", response);
 
             if (callback) {
                 if (response.success) {
@@ -419,11 +403,9 @@ QtObject {
 
     // В функции updatePortfolio
     function updatePortfolio(portfolioId, portfolioData, callback) {
-        console.log("🔄 Обновление портфолио ID:", portfolioId, "Данные:", JSON.stringify(portfolioData));
 
         var endpoint = "/portfolio/" + portfolioId;
         sendRequest("PUT", endpoint, portfolioData, function(response) {
-            console.log("📨 Ответ обновления портфолио:", response);
 
             if (callback) {
                 if (response.success) {
@@ -468,38 +450,19 @@ QtObject {
 
     function getEvents(callback) {
         sendRequest("GET", "/events", null, function(response) {
-            console.log("📨 СЫРОЙ ОТВЕТ событий:", JSON.stringify(response));
 
             if (response.success) {
                 var eventsData = response.data || {};
                 var eventsArray = [];
 
-                console.log("📊 Анализ структуры данных событий:");
-                console.log("   Тип данных:", typeof eventsData);
-                console.log("   Это массив?", Array.isArray(eventsData));
-                console.log("   Ключи объекта:", eventsData ? Object.keys(eventsData) : "null");
-
-                // 🔥 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: правильная обработка вложенной структуры
                 if (eventsData && eventsData.data && Array.isArray(eventsData.data)) {
                     eventsArray = eventsData.data;
-                    console.log("✅ Формат 1: response.data.data - массив, длина:", eventsArray.length);
                 } else if (Array.isArray(eventsData)) {
                     eventsArray = eventsData;
-                    console.log("✅ Формат 2: response.data - массив, длина:", eventsArray.length);
                 } else if (eventsData && Array.isArray(eventsData.events)) {
                     eventsArray = eventsData.events;
-                    console.log("✅ Формат 3: response.data.events - массив, длина:", eventsArray.length);
                 } else {
-                    console.log("❌ Неизвестный формат данных событий");
-                    console.log("🔍 Полная структура eventsData:", JSON.stringify(eventsData, null, 2));
                     eventsArray = [];
-                }
-
-                console.log("📊 Получено событий с сервера:", eventsArray.length);
-
-                if (eventsArray.length > 0) {
-                    console.log("🔍 Структура первого события:", JSON.stringify(eventsArray[0]));
-                    console.log("🏷️ Категория первого события:", eventsArray[0].category);
                 }
 
                 // ПРЕОБРАЗУЕМ ПОЛЯ ДЛЯ СОВМЕСТИМОСТИ
@@ -518,8 +481,6 @@ QtObject {
                         status: event.status || "active"
                     };
 
-                    console.log("🔍 Форматированное событие - ID:", formattedEvent.id,
-                              "Категория:", formattedEvent.category);
                     return formattedEvent;
                 });
 
@@ -529,7 +490,6 @@ QtObject {
                     status: response.status
                 });
             } else {
-                console.log("❌ Ошибка загрузки событий:", response.error);
                 callback({
                     success: false,
                     error: response.error,
@@ -547,8 +507,7 @@ QtObject {
                 portfolioFormWindow.students = response.data;
                 portfolioFormWindow.openForAdd();
             } else {
-                console.log("❌ Ошибка загрузки студентов:", response.error);
-                showMessage("❌ Не удалось загрузить список студентов", "error");
+                showMessage("Не удалось загрузить список студентов", "error");
             }
         });
     }
@@ -560,8 +519,8 @@ QtObject {
                 portfolioFormWindow.students = response.data;
                 portfolioFormWindow.openForEdit(portfolioData);
             } else {
-                console.log("❌ Ошибка загрузки студентов:", response.error);
-                showMessage("❌ Не удалось загрузить список студентов", "error");
+                console.log("Ошибка загрузки студентов:", response.error);
+                showMessage("Не удалось загрузить список студентов", "error");
             }
         });
     }
@@ -570,7 +529,6 @@ QtObject {
 
         var endpoint = "/groups/" + groupId + "/students";
         sendRequest("GET", endpoint, null, function(response) {
-            console.log("📨 Ответ студентов группы:", response);
 
             if (callback) {
                 if (response.success) {
@@ -606,33 +564,25 @@ QtObject {
                 var allSpecs = [];
                 var teachers = response.data || [];
 
-                console.log("👨‍🏫 Загружено преподавателей:", teachers.length);
-
                 // Собираем ВСЕ специализации всех преподавателей, кроме исключенного
                 for (var i = 0; i < teachers.length; i++) {
                     var teacher = teachers[i];
 
                     // Если это преподаватель, которого нужно исключить, пропускаем
                     if (excludeTeacherId && teacher.teacher_id === excludeTeacherId) {
-                        console.log("🚫 Пропускаем преподавателя с ID:", excludeTeacherId);
                         continue;
                     }
 
-                    console.log("🔍 Анализ преподавателя:", teacher.first_name, teacher.last_name);
-
                     // Обрабатываем разные форматы специализаций
                     if (teacher.specializations && Array.isArray(teacher.specializations)) {
-                        console.log("📋 Формат 1: teacher.specializations - массив");
                         for (var j = 0; j < teacher.specializations.length; j++) {
                             var specObj = teacher.specializations[j];
                             var specName = specObj.name || specObj;
                             if (specName && specName.trim() !== "") {
                                 allSpecs.push(specName.trim());
-                                console.log("   ➕ Специализация:", specName.trim());
                             }
                         }
                     } else if (teacher.specialization && typeof teacher.specialization === 'string') {
-                        console.log("📋 Формат 2: teacher.specialization - строка:", teacher.specialization);
                         var specArray = teacher.specialization.split(",").map(function(s) {
                             return s.trim();
                         }).filter(function(s) {
@@ -642,11 +592,9 @@ QtObject {
                         for (var k = 0; k < specArray.length; k++) {
                             if (specArray[k].trim() !== "") {
                                 allSpecs.push(specArray[k].trim());
-                                console.log("   ➕ Специализация:", specArray[k].trim());
                             }
                         }
                     } else {
-                        console.log("⚠️ Неизвестный формат специализаций:", teacher.specialization, teacher.specializations);
                     }
                 }
 
@@ -690,15 +638,12 @@ QtObject {
                         categoriesArray = categoriesData;
                     }
 
-                    console.log("📊 Получено категорий событий:", categoriesArray.length);
-
                     callback({
                         success: true,
                         data: categoriesArray,
                         status: response.status
                     });
                 } else {
-                    console.log("❌ Ошибка загрузки категорий событий, возвращаем пустой массив");
                     callback({
                         success: false,
                         error: response.error,
@@ -710,7 +655,6 @@ QtObject {
         }
 
     function addEvent(eventData, callback) {
-        console.log("➕ Добавление события через /events:", JSON.stringify(eventData));
 
         var cleanEventData = {
             event_type: eventData.eventType,
@@ -722,16 +666,12 @@ QtObject {
             lore: eventData.lore
         };
 
-        console.log("🔑 Отправляемый measureCode:", cleanEventData.measureCode);
-
         sendRequest("POST", "/events", cleanEventData, function(response) {
-            console.log("📨 Ответ добавления события:", response);
             if (callback) callback(response);
         });
     }
 
     function updateEvent(eventId, eventData, callback) {
-        console.log("🔄 Обновление события ID:", eventId, "через /events");
         var endpoint = "/events/" + eventId;
 
         var updateData = {
@@ -745,55 +685,41 @@ QtObject {
         };
 
         sendRequest("PUT", endpoint, updateData, function(response) {
-            console.log("📨 Ответ обновления события:", response);
             if (callback) callback(response);
         });
     }
 
     function deleteEvent(eventId, callback) {
-        console.log("🗑️ Удаление события ID:", eventId, "через /events");
         var endpoint = "/events/" + eventId;
 
         sendRequest("DELETE", endpoint, null, function(response) {
-            console.log("📨 Ответ удаления события:", response);
             if (callback) callback(response);
         });
     }
 
     function getPortfolioForEvents(callback) {
-        console.log("📚 Загрузка списка портфолио для событий...");
 
         sendRequest("GET", "/portfolio", null, function(response) {
-            console.log("📦 Получен ответ портфолио для событий:", JSON.stringify(response));
 
             if (response.success) {
                 var portfolioData = [];
 
                 // Анализируем структуру ответа
                 if (response.data && response.data.data && Array.isArray(response.data.data)) {
-                    console.log("✅ Формат 1: response.data.data - массив");
                     portfolioData = response.data.data;
                 } else if (response.data && Array.isArray(response.data)) {
-                    console.log("✅ Формат 2: response.data - массив");
                     portfolioData = response.data;
                 } else if (response.data && typeof response.data === 'object') {
-                    console.log("✅ Формат 3: response.data - объект, преобразуем в массив");
                     portfolioData = Object.keys(response.data).map(function(key) {
                         return response.data[key];
                     });
                 } else {
-                    console.log("❌ Неизвестный формат данных:", typeof response.data);
                     portfolioData = [];
                 }
-
-                console.log("📊 Извлечено записей портфолио:", portfolioData.length);
 
                 // Фильтруем и форматируем данные
                 var validPortfolios = portfolioData.filter(function(portfolio) {
                     var isValid = portfolio && (portfolio.portfolio_id || portfolio.id) && (portfolio.portfolio_id || portfolio.id) > 0;
-                    if (!isValid) {
-                        console.log("⚠️ Отфильтровано невалидное портфолио:", portfolio);
-                    }
                     return isValid;
                 }).map(function(portfolio) {
                     var measureCode = portfolio.portfolio_id || portfolio.id;
@@ -807,25 +733,13 @@ QtObject {
                     };
                 });
 
-                console.log("✅ Валидных портфолио после фильтрации:", validPortfolios.length);
-
-                if (validPortfolios.length > 0) {
-                    console.log("📋 Примеры валидных портфолио:");
-                    for (var i = 0; i < Math.min(3, validPortfolios.length); i++) {
-                        var p = validPortfolios[i];
-                        console.log("   " + p.measure_code + " - Приказ №" + p.decree + " - " + p.student_name);
-                    }
-                } else {
-                    console.log("⚠️ Нет валидных портфолио для отображения");
-                }
-
                 callback({
                     success: true,
                     data: validPortfolios,
                     status: response.status
                 });
             } else {
-                console.log("❌ Ошибка загрузки портфолио:", response.error);
+                console.log("Ошибка загрузки портфолио:", response.error);
                 callback({
                     success: false,
                     error: response.error || "Неизвестная ошибка при загрузке портфолио",
@@ -836,47 +750,11 @@ QtObject {
         });
     }
 
-    function debugGetPortfolio(callback) {
-        console.log("🔍 Дебаг: Запрос портфолио...");
-        sendRequest("GET", "/portfolio", null, function(response) {
-            console.log("🔍 Дебаг: Полный ответ портфолио:", JSON.stringify(response, null, 2));
-
-            if (response.success) {
-                console.log("🔍 Дебаг: Успешный ответ, анализируем структуру...");
-                console.log("🔍 Дебаг: Тип response.data:", typeof response.data);
-                console.log("🔍 Дебаг: response.data keys:", response.data ? Object.keys(response.data) : "null");
-
-                if (Array.isArray(response.data)) {
-                    console.log("🔍 Дебаг: response.data - массив, длина:", response.data.length);
-                    if (response.data.length > 0) {
-                        console.log("🔍 Дебаг: Первый элемент:", JSON.stringify(response.data[0], null, 2));
-                    }
-                } else if (response.data && response.data.data) {
-                    console.log("🔍 Дебаг: response.data.data - массив, длина:", response.data.data.length);
-                    if (response.data.data.length > 0) {
-                        console.log("🔍 Дебаг: Первый элемент data:", JSON.stringify(response.data.data[0], null, 2));
-                    }
-                }
-            }
-
-            if (callback) callback(response);
-        });
-    }
-
     function getProfile(callback) {
         sendRequest("GET", "/profile", null, function(response) {
-            console.log("🔍 Полный ответ профиля:", JSON.stringify(response))
 
             if (response.success) {
                 var profileData = response.data || {}
-
-                console.log("📊 Анализ данных профиля:")
-                console.log("   - Логин:", profileData.login || "Отсутствует")
-                console.log("   - Имя:", profileData.firstName || "Отсутствует")
-                console.log("   - Фамилия:", profileData.lastName || "Отсутствует")
-                console.log("   - Email:", profileData.email || "Отсутствует")
-                console.log("   - Телефон:", profileData.phoneNumber || "Отсутствует")
-                console.log("   - Сессии:", profileData.sessions ? profileData.sessions.length : 0)
 
                 if (callback) {
                     callback({
@@ -886,7 +764,6 @@ QtObject {
                     });
                 }
             } else {
-                console.log("❌ Ошибка загрузки профиля:", response.error)
                 if (callback) {
                     callback({
                         success: false,
@@ -898,40 +775,20 @@ QtObject {
         });
     }
 
-    function debugProfileStructure(callback) {
-        sendRequest("GET", "/profile", null, function(response) {
-            console.log("🔧 ДЕБАГ СТРУКТУРЫ ПРОФИЛЯ:")
-            console.log("   Полный ответ:", JSON.stringify(response, null, 2))
-            console.log("   Уровень data:", JSON.stringify(response.data, null, 2))
-
-            if (response.data) {
-                console.log("   Ключи в data:", Object.keys(response.data))
-                if (response.data.user) {
-                    console.log("   Ключи в user:", Object.keys(response.data.user))
-                }
-            }
-
-            if (callback) callback(response)
-        })
-    }
-
     function validateToken(callback) {
         var requestData = {
             token: authToken
         };
 
         sendRequest("POST", "/verify-token", requestData, function(response) {
-            console.log("🔐 Ответ проверки токена:", response);
             if (callback) callback(response);
         });
     }
 
     function addTeacher(teacherData, callback) {
-        console.log("➕ Добавление преподавателя Данные:", JSON.stringify(teacherData));
 
         var endpoint = "/teachers";
         sendRequest("POST", endpoint, teacherData, function(response) {
-            console.log("📨 Ответ добавления преподавателя:", response);
 
             if (callback) {
                 if (response.success) {
@@ -950,11 +807,9 @@ QtObject {
     }
 
     function addStudent(studentData, callback) {
-        console.log("➕ Добавление студента Данные:", JSON.stringify(studentData));
 
         var endpoint = "/students";
         sendRequest("POST", endpoint, studentData, function(response) {
-            console.log("📨 Ответ добавления студента:", response);
 
             if (callback) {
                 if (response.success) {
@@ -973,11 +828,9 @@ QtObject {
     }
 
     function updateStudent(studentCode, studentData, callback) {
-        console.log("🔄 Обновление студента ID:", studentCode, "Данные:", JSON.stringify(studentData));
 
         var endpoint = "/students/" + studentCode;
         sendRequest("PUT", endpoint, studentData, function(response) {
-            console.log("📨 Ответ обновления студента:", response);
 
             if (callback) {
                 if (response.success) {
@@ -1000,11 +853,9 @@ QtObject {
     }
 
     function deleteStudent(studentCode, callback) {
-        console.log("🗑️ Удаление студента ID:", studentCode);
 
         var endpoint = "/students/" + studentCode;
         sendRequest("DELETE", endpoint, null, function(response) {
-            console.log("📨 Ответ удаления студента:", response);
 
             if (callback) {
                 if (response.success) {
@@ -1025,11 +876,9 @@ QtObject {
     }
 
     function addGroup(groupData, callback) {
-        console.log("➕ Добавление группы Данные:", JSON.stringify(groupData));
 
         var endpoint = "/groups";
         sendRequest("POST", endpoint, groupData, function(response) {
-            console.log("📨 Ответ добавления группы:", response);
 
             if (callback) {
                 if (response.success) {
@@ -1048,11 +897,9 @@ QtObject {
     }
 
     function updateGroup(groupId, groupData, callback) {
-        console.log("🔄 Обновление группы ID:", groupId, "Данные:", JSON.stringify(groupData));
 
         var endpoint = "/groups/" + groupId;
         sendRequest("PUT", endpoint, groupData, function(response) {
-            console.log("📨 Ответ обновления группы:", response);
 
             if (callback) {
                 if (response.success) {
@@ -1075,11 +922,9 @@ QtObject {
     }
 
     function deleteGroup(groupId, callback) {
-        console.log("🗑️ Удаление группы ID:", groupId);
 
         var endpoint = "/groups/" + groupId;
         sendRequest("DELETE", endpoint, null, function(response) {
-            console.log("📨 Ответ удаления группы:", response);
 
             if (callback) {
                 if (response.success) {
@@ -1100,11 +945,9 @@ QtObject {
     }
 
     function updateTeacher(teacherId, teacherData, callback) {
-        console.log("🔄 Обновление преподавателя ID:", teacherId, "Данные:", JSON.stringify(teacherData));
 
         var numericTeacherId = parseInt(teacherId);
         if (isNaN(numericTeacherId)) {
-            console.log("❌ Неверный teacherId:", teacherId);
             if (callback) callback({
                 success: false,
                 error: "Неверный ID преподавателя"
@@ -1114,7 +957,6 @@ QtObject {
 
         var endpoint = "/teachers/" + numericTeacherId;
         sendRequest("PUT", endpoint, teacherData, function(response) {
-            console.log("📨 Ответ обновления преподавателя:", response);
 
             if (callback) {
                 if (response.success) {
@@ -1137,11 +979,9 @@ QtObject {
     }
 
     function deleteTeacher(teacherId, callback) {
-        console.log("🗑️ Удаление преподавателя ID:", teacherId);
 
         var endpoint = "/teachers/" + teacherId;
         sendRequest("DELETE", endpoint, null, function(response) {
-            console.log("📨 Ответ удаления преподавателя:", response);
 
             if (callback) {
                 if (response.success) {
@@ -1163,7 +1003,6 @@ QtObject {
 
     function sendRequest(method, endpoint, data, callback) {
         if (!baseUrl || baseUrl === "") {
-            console.log("❌ Base URL не установлен");
             if (callback) callback({
                 success: false,
                 error: "API не инициализирован",
@@ -1187,18 +1026,12 @@ QtObject {
         var normalizedEndpoint = endpoint.startsWith('/') ? endpoint : '/' + endpoint;
         var url = normalizedBaseUrl + normalizedEndpoint;
 
-        console.log("🌐 Отправка запроса:", method, url);
-        console.log("   Платформа:", Qt.platform.os);
-        console.log("   Аутентифицирован:", isAuthenticated);
-
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.DONE) {
-                console.log("📨 Получен ответ:", xhr.status, "для", url);
 
                 if (xhr.status === 200 || xhr.status === 201) {
                     try {
                         var response = JSON.parse(xhr.responseText);
-                        console.log("✅ Успешный ответ от", endpoint);
 
                         if (callback) callback({
                             success: true,
@@ -1206,15 +1039,13 @@ QtObject {
                             status: xhr.status
                         });
                     } catch (e) {
-                        console.log("❌ Ошибка парсинга JSON:", e);
                         if (callback) callback({
                             success: false,
-                            error: "Ошибка формата ответа: " + e.toString(),
+                            error: "Ошибка формата ответа: " + error.toString(),
                             status: xhr.status
                         });
                     }
                 } else if (xhr.status === 0) {
-                    console.log("❌ Сетевая ошибка - сервер недоступен");
                     var errorMsg = "Сервер недоступен. ";
 
                     if (Qt.platform.os === "windows") {
@@ -1232,7 +1063,6 @@ QtObject {
                         status: xhr.status
                     });
                 } else if (xhr.status === 401) {
-                    console.log("🔐 Ошибка аутентификации");
                     if (callback) callback({
                         success: false,
                         error: "Ошибка доступа (401). Токен невалиден.",
@@ -1241,7 +1071,6 @@ QtObject {
                 } else {
                     try {
                         var errorResponse = JSON.parse(xhr.responseText);
-                        console.log("❌ Ошибка сервера:", errorResponse.error);
 
                         if (callback) callback({
                             success: false,
@@ -1249,7 +1078,6 @@ QtObject {
                             status: xhr.status
                         });
                     } catch (e) {
-                        console.log("❌ Ошибка парсинга ошибки:", e);
                         if (callback) callback({
                             success: false,
                             error: "Сетевая ошибка (" + xhr.status + ")",
@@ -1261,7 +1089,7 @@ QtObject {
         };
 
         xhr.ontimeout = function() {
-            console.log("⏰ Таймаут запроса к", url);
+            console.log("Таймаут запроса к ", url);
             var timeoutMsg = "Таймаут соединения. ";
 
             if (Qt.platform.os === "windows") {
@@ -1304,18 +1132,17 @@ QtObject {
 
             if (isAuthenticated && authToken) {
                 xhr.setRequestHeader("Authorization", "Bearer " + authToken);
-                console.log("   Добавлен заголовок Authorization");
             }
 
             if (data) {
                 var requestBody = JSON.stringify(data);
-                console.log("📦 Тело запроса:", requestBody.substring(0, 200) + "...");
+                console.log("  Тело запроса:", requestBody.substring(0, 200) + "...");
                 xhr.send(requestBody);
             } else {
                 xhr.send();
             }
         } catch (error) {
-            console.log("💥 Критическая ошибка отправки:", error);
+            console.log("  Критическая ошибка отправки:", error);
             if (callback) callback({
                 success: false,
                 error: "Ошибка отправки запроса: " + error.toString(),

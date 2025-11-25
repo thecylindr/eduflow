@@ -20,7 +20,7 @@ Window {
     property var portfolioList: []
     property bool portfoliosLoaded: false
     property bool portfoliosLoading: false
-    property string portfolioStatus: "⏳ Загрузка портфолио..."
+    property string portfolioStatus: "Загрузка портфолио..."
 
     signal saved(var eventData)
     signal cancelled()
@@ -36,7 +36,7 @@ Window {
         isSaving = false
         portfoliosLoaded = false
         portfoliosLoading = false
-        portfolioStatus = "⏳ Загрузка портфолио..."
+        portfolioStatus = "Загрузка портфолио..."
         clearForm()
         loadPortfolios()
         eventFormWindow.show()
@@ -53,13 +53,13 @@ Window {
     }
 
     function openForEdit(eventData) {
-        console.log("✏️ Открытие формы для редактирования:", JSON.stringify(eventData))
+        console.log("Открытие формы для редактирования:", JSON.stringify(eventData))
         currentEvent = eventData
         isEditMode = true
         isSaving = false
         portfoliosLoaded = false
         portfoliosLoading = false
-        portfolioStatus = "⏳ Загрузка портфолио..."
+        portfolioStatus = "Загрузка портфолио..."
         loadPortfolios()
         eventFormWindow.show()
         eventFormWindow.requestActivate()
@@ -81,7 +81,7 @@ Window {
     function clearForm() {
         portfolioComboBox.currentIndex = -1
         eventTypeField.text = ""
-        categoryField.text = "" // 🔥 ОЧИСТКА полного названия события
+        categoryField.text = ""
         startDateField.text = ""
         endDateField.text = ""
         locationField.text = ""
@@ -89,22 +89,22 @@ Window {
     }
 
     function fillForm(eventData) {
-        console.log("📝 Заполнение формы события:", JSON.stringify(eventData))
+        console.log("Заполнение формы события:", JSON.stringify(eventData))
 
         if (!portfoliosLoaded) {
-            console.log("⏳ Портфолио еще не загружены, отложим заполнение формы")
+            console.log("Портфолио еще не загружены, отложим заполнение формы")
             return
         }
 
         var measureCode = eventData.measureCode || eventData.portfolio_id || eventData.event_id || 0
-        console.log("🔍 Ищем портфолио с measure_code:", measureCode)
+        console.log("Ищем портфолио с measure_code:", measureCode)
 
         if (measureCode > 0) {
             var foundIndex = -1
             for (var i = 0; i < portfolioList.length; i++) {
                 if (portfolioList[i].measure_code === measureCode) {
                     foundIndex = i
-                    console.log("✅ Найдено портфолио, индекс:", i)
+                    console.log("Найдено портфолио, индекс:", i)
                     break
                 }
             }
@@ -112,72 +112,129 @@ Window {
             if (foundIndex >= 0) {
                 portfolioComboBox.currentIndex = foundIndex
             } else {
-                console.log("⚠️ Портфолио с measure_code", measureCode, "не найдено")
+                console.log("Портфолио с measure_code", measureCode, "не найдено")
             }
         }
 
-        // 🔥 КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: правильное заполнение всех полей
         eventTypeField.text = eventData.eventType || eventData.event_type || ""
 
-        // 🔥 ВАЖНО: категория должна браться из formattedEvent.category
         var categoryValue = eventData.category || ""
         categoryField.text = categoryValue
-        console.log("🏷️ Заполнено поле категории:", categoryValue)
+        console.log("Заполнено поле категории:", categoryValue)
 
-        startDateField.text = eventData.startDate || eventData.start_date || ""
-        endDateField.text = eventData.endDate || eventData.end_date || ""
+        // Преобразуем даты из ГГГГ-ММ-ДД в ДД.ММ.ГГГГ
+        var serverStartDate = eventData.startDate || eventData.start_date || ""
+        if (serverStartDate) {
+            var startParts = serverStartDate.split('-')
+            if (startParts.length === 3) {
+                startDateField.text = startParts[2] + "." + startParts[1] + "." + startParts[0]
+            } else {
+                startDateField.text = serverStartDate
+            }
+        } else {
+            startDateField.text = ""
+        }
+
+        var serverEndDate = eventData.endDate || eventData.end_date || ""
+        if (serverEndDate) {
+            var endParts = serverEndDate.split('-')
+            if (endParts.length === 3) {
+                endDateField.text = endParts[2] + "." + endParts[1] + "." + endParts[0]
+            } else {
+                endDateField.text = serverEndDate
+            }
+        } else {
+            endDateField.text = ""
+        }
+
         locationField.text = eventData.location || ""
         loreField.text = eventData.lore || ""
 
-        console.log("✅ Форма заполнена. Категория:", categoryField.text)
+        console.log("Форма заполнена. Категория:", categoryField.text)
     }
 
     function getEventData() {
         if (portfolioComboBox.currentIndex < 0) {
-            console.log("❌ Портфолио не выбрано")
+            console.log("Портфолио не выбрано")
             return null
         }
 
         var selectedPortfolio = portfolioList[portfolioComboBox.currentIndex]
 
         if (!selectedPortfolio || !selectedPortfolio.measure_code) {
-            console.log("❌ Выбранное портфолио невалидно")
+            console.log("Выбранное портфолио невалидно")
             return null
+        }
+
+        // Преобразуем даты из ДД.ММ.ГГГГ в ГГГГ-ММ-ДД для сервера
+        var startDateText = startDateField.text.trim()
+        var formattedStartDate = startDateText
+        if (startDateText) {
+            var startParts = startDateText.split('.')
+            if (startParts.length === 3) {
+                formattedStartDate = startParts[2] + "-" + startParts[1] + "-" + startParts[0]
+            }
+        }
+
+        var endDateText = endDateField.text.trim()
+        var formattedEndDate = endDateText
+        if (endDateText) {
+            var endParts = endDateText.split('.')
+            if (endParts.length === 3) {
+                formattedEndDate = endParts[2] + "-" + endParts[1] + "-" + endParts[0]
+            }
         }
 
         var eventData = {
             eventType: eventTypeField.text.trim(),
             category: categoryField.text.trim(),
             measureCode: selectedPortfolio.measure_code,
-            startDate: startDateField.text.trim(),
-            endDate: endDateField.text.trim(),
+            startDate: formattedStartDate,
+            endDate: formattedEndDate,
             location: locationField.text.trim(),
             lore: loreField.text.trim()
         }
 
         if (isEditMode && currentEvent) {
             eventData.id = currentEvent.id;
-            console.log("🔧 Добавлен уникальный ID события для редактирования:", eventData.id)
+            console.log("Добавлен уникальный ID события для редактирования:", eventData.id)
         }
 
-        console.log("📦 Сформированные данные события:", JSON.stringify(eventData))
-        console.log("🔑 measureCode:", eventData.measureCode)
-        console.log("🏷️ Категория для сохранения:", eventData.category)
-        console.log("✏️ Режим редактирования:", isEditMode)
+        console.log("Сформированные данные события:", JSON.stringify(eventData))
+        console.log("measureCode:", eventData.measureCode)
+        console.log("Категория для сохранения:", eventData.category)
+        console.log("Режим редактирования:", isEditMode)
         return eventData
+    }
+
+    function validateDate(text) {
+        if (!text) return true
+
+        var parts = text.split('.')
+        if (parts.length !== 3) return false
+
+        var day = parseInt(parts[0])
+        var month = parseInt(parts[1])
+        var year = parseInt(parts[2])
+
+        if (day < 1 || day > 31) return false
+        if (month < 1 || month > 12) return false
+        if (year < 1900 || year > 2100) return false
+
+        return true
     }
 
     function handleSaveResponse(response) {
         isSaving = false
-        console.log("🔔 Обработка ответа сохранения события:", JSON.stringify(response, null, 2))
+        console.log("Обработка ответа сохранения события:", JSON.stringify(response, null, 2))
 
         if (response.success) {
-            var message = response.message || (isEditMode ? "✅ Событие успешно обновлено!" : "✅ Событие успешно добавлено!")
+            var message = response.message || (isEditMode ? "Событие успешно обновлено!" : "Событие успешно добавлено!")
             showMessage(message, "success")
             saveCompleted(true, message)
             closeWindow()
         } else {
-            var errorMsg = "❌ " + (response.error || "Неизвестная ошибка")
+            var errorMsg = (response.error || "Неизвестная ошибка")
             showMessage(errorMsg, "error")
             saveCompleted(false, errorMsg)
         }
@@ -222,57 +279,38 @@ Window {
 
     function loadPortfolios() {
         if (portfoliosLoading) {
-            console.log("⚠️ Загрузка портфолио уже выполняется")
             return
         }
 
-        console.log("📚 Начинаем загрузку списка портфолио...")
         portfoliosLoading = true
-        portfolioStatus = "⏳ Загрузка портфолио..."
+        portfolioStatus = "Загрузка портфолио..."
+        mainApi.getPortfolioForEvents(function(response) {
+            portfoliosLoading = false
 
-        // Сначала используем отладочную функцию для понимания структуры данных
-        mainApi.debugGetPortfolio(function(debugResponse) {
-            console.log("🔍 Отладочная информация получена")
+            if (response.success) {
+                eventFormWindow.portfolioList = response.data
+                eventFormWindow.portfoliosLoaded = true
+                portfolioStatus = "Загружено: " + response.data.length + " портфолио"
 
-            // Затем загружаем данные для формы
-            mainApi.getPortfolioForEvents(function(response) {
-                portfoliosLoading = false
+                if (response.data.length > 0) {
+                    for (var i = 0; i < Math.min(3, response.data.length); i++) {
+                        var p = response.data[i]
+                    }
 
-                if (response.success) {
-                    eventFormWindow.portfolioList = response.data
-                    eventFormWindow.portfoliosLoaded = true
-                    portfolioStatus = "✅ Загружено: " + response.data.length + " портфолио"
-
-                    console.log("✅ Портфолио загружены:", response.data.length)
-
-                    if (response.data.length > 0) {
-                        console.log("📋 Примеры портфолио:")
-                        for (var i = 0; i < Math.min(3, response.data.length); i++) {
-                            var p = response.data[i]
-                            console.log("   " + p.measure_code + " - Приказ №" + p.decree + " - " + p.student_name)
-                        }
-
-                        // Если это режим редактирования, заполняем форму
-                        if (isEditMode && currentEvent) {
-                            console.log("🔄 Заполняем форму после загрузки портфолио")
-                            fillForm(currentEvent)
-                        }
-                    } else {
-                        console.log("⚠️ Список портфолио пуст")
-                        portfolioStatus = "⚠️ Нет доступных портфолио"
-                        showMessage("❌ Нет доступных портфолио для привязки событий", "error")
+                    if (isEditMode && currentEvent) {
+                        fillForm(currentEvent)
                     }
                 } else {
-                    console.log("❌ Ошибка загрузки портфолио:", response.error)
-                    portfolioStatus = "❌ Ошибка загрузки"
-                    showMessage("❌ Ошибка загрузки портфолио: " + response.error, "error")
+                    portfolioStatus = "Нет доступных портфолио"
+                    showMessage("Нет доступных портфолио для привязки событий", "error")
                 }
-            })
+            } else {
+                portfolioStatus = "Ошибка загрузки"
+                showMessage("Ошибка загрузки портфолио: " + response.error, "error")
+            }
         })
     }
 
-
-    // Основной контейнер
     Rectangle {
         id: windowContainer
         anchors.fill: parent
@@ -340,7 +378,6 @@ Window {
                         width: parent.width
                         spacing: 12
 
-                        // Выбор портфолио
                         Column {
                             width: parent.width
                             spacing: 6
@@ -439,8 +476,8 @@ Window {
                                 })
 
                                 displayText: {
-                                    if (portfoliosLoading) return "⏳ Загрузка..."
-                                    if (portfolioList.length === 0) return "❌ Нет портфолио"
+                                    if (portfoliosLoading) return "Загрузка..."
+                                    if (portfolioList.length === 0) return "Нет портфолио"
                                     return currentIndex >= 0 ? currentText : "Выберите портфолио..."
                                 }
 
@@ -451,11 +488,6 @@ Window {
 
                                 ToolTip.text: "Выберите портфолио студента для привязки события"
                                 ToolTip.visible: hovered
-
-                                onActivated: {
-                                    console.log("📚 Выбрано портфолио:", currentIndex,
-                                                "measure_code:", portfolioList[currentIndex].measure_code)
-                                }
                             }
 
                             Text {
@@ -474,13 +506,6 @@ Window {
                             width: parent.width
                             spacing: 6
 
-                            Text {
-                                text: "Тип мероприятия:"
-                                color: "#2c3e50"
-                                font.bold: true
-                                font.pixelSize: 13
-                            }
-
                             TextField {
                                 id: eventTypeField
                                 width: parent.width
@@ -496,7 +521,7 @@ Window {
                                     border.width: 1
                                 }
                                 color: "#000000"
-                                KeyNavigation.tab: startDateField
+                                KeyNavigation.tab: categoryField
                                 Keys.onReturnPressed: navigateToNextField(eventTypeField)
                                 Keys.onUpPressed: navigateToPreviousField(eventTypeField)
                                 Keys.onDownPressed: navigateToNextField(eventTypeField)
@@ -506,13 +531,6 @@ Window {
                         Column {
                             width: parent.width
                             spacing: 6
-
-                            Text {
-                                text: "Полное название события:"
-                                color: "#2c3e50"
-                                font.bold: true
-                                font.pixelSize: 13
-                            }
 
                             TextField {
                                 id: categoryField
@@ -565,7 +583,7 @@ Window {
                                         id: startDateField
                                         width: parent.width
                                         height: 30
-                                        placeholderText: "ГГГГ-ММ-ДД"
+                                        placeholderText: "ДД.ММ.ГГГГ"
                                         horizontalAlignment: Text.AlignLeft
                                         enabled: !isSaving
                                         font.pixelSize: 12
@@ -576,10 +594,19 @@ Window {
                                             border.width: 1
                                         }
                                         color: "#000000"
+                                        validator: RegularExpressionValidator {
+                                            regularExpression: /^[\d\.]*$/
+                                        }
                                         KeyNavigation.tab: endDateField
                                         Keys.onReturnPressed: navigateToNextField(startDateField)
                                         Keys.onUpPressed: navigateToPreviousField(startDateField)
                                         Keys.onDownPressed: navigateToNextField(startDateField)
+                                    }
+
+                                    Text {
+                                        text: !validateDate(startDateField.text) && startDateField.text !== "" ? "Неверный формат даты" : ""
+                                        color: !validateDate(startDateField.text) && startDateField.text !== "" ? "#e74c3c" : "#7f8c8d"
+                                        font.pixelSize: 10
                                     }
                                 }
 
@@ -597,7 +624,7 @@ Window {
                                         id: endDateField
                                         width: parent.width
                                         height: 30
-                                        placeholderText: "ГГГГ-ММ-ДД"
+                                        placeholderText: "ДД.ММ.ГГГГ"
                                         horizontalAlignment: Text.AlignLeft
                                         enabled: !isSaving
                                         font.pixelSize: 12
@@ -608,10 +635,19 @@ Window {
                                             border.width: 1
                                         }
                                         color: "#000000"
+                                        validator: RegularExpressionValidator {
+                                            regularExpression: /^[\d\.]*$/
+                                        }
                                         KeyNavigation.tab: locationField
                                         Keys.onReturnPressed: navigateToNextField(endDateField)
                                         Keys.onUpPressed: navigateToPreviousField(endDateField)
                                         Keys.onDownPressed: navigateToNextField(endDateField)
+                                    }
+
+                                    Text {
+                                        text: !validateDate(endDateField.text) && endDateField.text !== "" ? "Неверный формат даты" : ""
+                                        color: !validateDate(endDateField.text) && endDateField.text !== "" ? "#e74c3c" : "#7f8c8d"
+                                        font.pixelSize: 10
                                     }
                                 }
                             }
@@ -620,13 +656,6 @@ Window {
                         Column {
                             width: parent.width
                             spacing: 6
-
-                            Text {
-                                text: "Местоположение:"
-                                color: "#2c3e50"
-                                font.bold: true
-                                font.pixelSize: 13
-                            }
 
                             TextField {
                                 id: locationField
@@ -661,25 +690,38 @@ Window {
                                 font.pixelSize: 13
                             }
 
-                            TextArea {
-                                id: loreField
+                            Rectangle {
+                                id: loreFieldContainer
                                 width: parent.width
-                                height: 80
-                                placeholderText: "Введите описание события..."
-                                wrapMode: Text.WordWrap
-                                enabled: !isSaving
-                                font.pixelSize: 12
-                                background: Rectangle {
-                                    radius: 8
-                                    color: "#ffffff"
-                                    border.color: "#e0e0e0"
-                                    border.width: 1
+                                height: 100
+                                radius: 8
+                                border.color: "#e0e0e0"
+                                border.width: 1
+                                color: "#ffffff"
+
+                                ScrollView {
+                                    id: scrollView
+                                    anchors.fill: parent
+                                    anchors.margins: 4
+                                    clip: true
+
+                                    TextArea {
+                                        id: loreField
+                                        width: parent.width
+                                        placeholderText: "Введите описание события..."
+                                        wrapMode: Text.WrapAtWordBoundaryOrAnywhere
+                                        enabled: !isSaving
+                                        font.pixelSize: 12
+                                        color: "#000000"
+                                        selectByMouse: true
+                                        background: null
+
+                                        KeyNavigation.tab: saveButton
+                                        Keys.onReturnPressed: navigateToNextField(loreField)
+                                        Keys.onUpPressed: navigateToPreviousField(loreField)
+                                        Keys.onDownPressed: saveButton.forceActiveFocus()
+                                    }
                                 }
-                                color: "#000000"
-                                KeyNavigation.tab: saveButton
-                                Keys.onReturnPressed: navigateToNextField(loreField)
-                                Keys.onUpPressed: navigateToPreviousField(loreField)
-                                Keys.onDownPressed: saveButton.forceActiveFocus()
                             }
                         }
                     }
@@ -691,7 +733,7 @@ Window {
 
                     Button {
                         id: saveButton
-                        text: isSaving ? "⏳ Сохранение..." : "💾 Сохранить"
+                        text: isSaving ? "Сохранение..." : "Сохранить"
                         implicitWidth: 140
                         implicitHeight: 40
                         enabled: !isSaving &&
@@ -699,8 +741,8 @@ Window {
                                 portfolioList.length > 0 &&
                                 eventTypeField.text.trim() !== "" &&
                                 categoryField.text.trim() !== "" &&
-                                startDateField.text.trim() !== "" &&
-                                endDateField.text.trim() !== ""
+                                startDateField.text.trim() !== "" && validateDate(startDateField.text) &&
+                                endDateField.text.trim() !== "" && validateDate(endDateField.text)
                         font.pixelSize: 14
                         font.bold: true
 
@@ -711,12 +753,25 @@ Window {
                             border.width: 2
                         }
 
-                        contentItem: Text {
-                            text: saveButton.text
-                            color: "white"
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            font: saveButton.font
+                        contentItem: Row {
+                            spacing: 8
+                            anchors.centerIn: parent
+
+                            Image {
+                                source: isSaving ? "qrc:/icons/loading.png" : "qrc:/icons/save.png"
+                                width: 16
+                                height: 16
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+
+                            Text {
+                                text: saveButton.text
+                                color: "white"
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                font: saveButton.font
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
                         }
 
                         KeyNavigation.tab: cancelButton
@@ -725,46 +780,51 @@ Window {
 
                         onClicked: {
                             if (portfolioComboBox.currentIndex < 0) {
-                                showMessage("❌ Выберите портфолио студента", "error")
+                                showMessage("Выберите портфолио студента", "error")
                                 return
                             }
 
                             var selectedPortfolio = portfolioList[portfolioComboBox.currentIndex]
                             if (!selectedPortfolio || !selectedPortfolio.measure_code) {
-                                showMessage("❌ Выберите валидное портфолио", "error")
+                                showMessage("Выберите валидное портфолио", "error")
                                 return
                             }
 
                             if (eventTypeField.text.trim() === "") {
-                                showMessage("❌ Введите тип мероприятия", "error")
+                                showMessage("Введите тип мероприятия", "error")
                                 return
                             }
 
                             if (categoryField.text.trim() === "") {
-                                showMessage("❌ Введите полное название категории", "error") // 🔥 НОВАЯ ПРОВЕРКА
+                                showMessage("Введите полное название категории", "error")
                                 return
                             }
 
                             if (startDateField.text.trim() === "" || endDateField.text.trim() === "") {
-                                showMessage("❌ Заполните даты проведения", "error")
+                                showMessage("Заполните даты проведения", "error")
+                                return
+                            }
+
+                            if (!validateDate(startDateField.text) || !validateDate(endDateField.text)) {
+                                showMessage("Неверный формат дат", "error")
                                 return
                             }
 
                             isSaving = true
-                            console.log("💾 Сохранение события...")
+                            console.log("Сохранение события...")
                             var eventData = getEventData()
                             if (eventData) {
                                 saved(eventData)
                             } else {
                                 isSaving = false
-                                showMessage("❌ Ошибка формирования данных события", "error")
+                                showMessage("Ошибка формирования данных события", "error")
                             }
                         }
                     }
 
                     Button {
                         id: cancelButton
-                        text: "❌ Отмена"
+                        text: "Отмена"
                         implicitWidth: 140
                         implicitHeight: 40
                         enabled: !isSaving
@@ -778,12 +838,25 @@ Window {
                             border.width: 2
                         }
 
-                        contentItem: Text {
-                            text: cancelButton.text
-                            color: "white"
-                            horizontalAlignment: Text.AlignHCenter
-                            verticalAlignment: Text.AlignVCenter
-                            font: cancelButton.font
+                        contentItem: Row {
+                            spacing: 8
+                            anchors.centerIn: parent
+
+                            Image {
+                                source: "qrc:/icons/cross.png"
+                                width: 16
+                                height: 16
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
+
+                            Text {
+                                text: cancelButton.text
+                                color: "white"
+                                horizontalAlignment: Text.AlignHCenter
+                                verticalAlignment: Text.AlignVCenter
+                                font: cancelButton.font
+                                anchors.verticalCenter: parent.verticalCenter
+                            }
                         }
 
                         KeyNavigation.tab: portfolioComboBox

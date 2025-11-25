@@ -1,14 +1,13 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts 1.15
-import QtQuick.Controls.Material
+import QtQuick.Controls.Universal
 import "../../common" as Common
 
 Window {
     id: groupViewWindow
-    width: 480
-    height: 460
-    flags: Qt.platform.os === "android" ? Qt.Dialog : Qt.Dialog | Qt.FramelessWindowHint
+    width: Math.min(Screen.width * 0.95, 400)
+    height: Math.min(Screen.height * 0.8, 600)
     modality: Qt.ApplicationModal
     color: "transparent"
     visible: false
@@ -24,10 +23,6 @@ Window {
         isLoading = true
         groupStudents = []
         groupViewWindow.show()
-        groupViewWindow.requestActivate()
-        groupViewWindow.x = (Screen.width - groupViewWindow.width) / 2
-        groupViewWindow.y = (Screen.height - groupViewWindow.height) / 2
-
         loadGroupStudents()
     }
 
@@ -41,17 +36,12 @@ Window {
 
     function loadGroupStudents() {
         if (!currentGroup) return
-
-        console.log("Загрузка студентов группы:", currentGroup.groupId)
         isLoading = true
-
         mainApi.getStudentsByGroup(currentGroup.groupId, function(response) {
             isLoading = false
             if (response.success) {
                 groupStudents = response.data || []
             } else {
-                console.log("Ошибка загрузки студентов:", response.error)
-                showMessage("Ошибка загрузки студентов: " + response.error, "error")
                 groupStudents = []
             }
         })
@@ -60,7 +50,7 @@ Window {
     Rectangle {
         id: windowContainer
         anchors.fill: parent
-        radius: 12
+        radius: 16
         color: "transparent"
         clip: true
 
@@ -70,12 +60,11 @@ Window {
                 GradientStop { position: 0.0; color: "#6a11cb" }
                 GradientStop { position: 1.0; color: "#2575fc" }
             }
-            radius: 12
+            radius: 15
         }
 
         Common.PolygonBackground {
             anchors.fill: parent
-            polygonCount: 6
         }
 
         Common.DialogTitleBar {
@@ -84,9 +73,9 @@ Window {
                 top: parent.top
                 left: parent.left
                 right: parent.right
-                margins: 6
+                margins: 8
             }
-            height: 26
+            height: 28
             title: currentGroup ? "Группа: " + (currentGroup.name || "Без названия") : "Просмотр группы"
             window: groupViewWindow
             onClose: {
@@ -100,47 +89,54 @@ Window {
 
         Rectangle {
             id: whiteForm
-            width: 440
-            height: 390
+            width: parent.width - 20
+            height: parent.height - titleBar.height - 40
             anchors {
                 top: titleBar.bottom
-                topMargin: 12
+                topMargin: 20
                 horizontalCenter: parent.horizontalCenter
             }
             color: "#ffffff"
             opacity: 0.925
-            radius: 10
+            radius: 12
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 16
+                anchors.margins: 15
                 spacing: 12
 
                 Rectangle {
                     Layout.fillWidth: true
-                    height: 50
-                    radius: 6
+                    height: 70
+                    radius: 10
                     color: "#e8f4fd"
                     border.color: "#3498db"
                     border.width: 1
 
                     Row {
                         anchors.fill: parent
-                        anchors.margins: 8
+                        anchors.margins: 10
                         spacing: 12
+
+                        Image {
+                            source: "qrc:/icons/info.png"
+                            width: 24
+                            height: 24
+                            anchors.verticalCenter: parent.verticalCenter
+                        }
 
                         Column {
                             anchors.verticalCenter: parent.verticalCenter
-                            spacing: 2
+                            spacing: 4
 
-                            Text {
+                            Label {
                                 text: "Куратор: " + (currentGroup ? currentGroup.teacherName : "Не указан")
                                 font.pixelSize: 12
                                 color: "#2c3e50"
                             }
 
-                            Text {
-                                text: "Количество студентов: " + (groupStudents.length)
+                            Label {
+                                text: "Количество студентов: " + groupStudents.length
                                 font.pixelSize: 12
                                 color: "#2c3e50"
                             }
@@ -148,7 +144,7 @@ Window {
                     }
                 }
 
-                Text {
+                Label {
                     text: "Студенты группы:"
                     font.pixelSize: 14
                     font.bold: true
@@ -158,32 +154,30 @@ Window {
                 Rectangle {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
-                    color: "transparent"
+                    color: "white"
                     border.color: "#e0e0e0"
                     border.width: 1
-                    radius: 6
+                    radius: 8
 
                     ScrollView {
-                        id: scrollView
                         anchors.fill: parent
                         anchors.margins: 1
                         clip: true
 
                         ListView {
                             id: studentsList
-                            width: scrollView.availableWidth
+                            width: parent.width
                             model: groupStudents
                             spacing: 1
-                            boundsBehavior: Flickable.StopAtBounds
 
                             delegate: Rectangle {
                                 width: studentsList.width
-                                height: 40
+                                height: 60
                                 color: index % 2 === 0 ? "#f8f9fa" : "#ffffff"
 
                                 Row {
                                     anchors.fill: parent
-                                    anchors.margins: 8
+                                    anchors.margins: 10
                                     spacing: 12
 
                                     Text {
@@ -193,25 +187,24 @@ Window {
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
 
-                                    Text {
-                                        text: {
-                                            var lastName = modelData.last_name || ""
-                                            var firstName = modelData.first_name || ""
-                                            var middleName = modelData.middle_name || ""
-                                            return lastName + " " + firstName + " " + middleName
-                                        }
-                                        font.pixelSize: 12
-                                        color: "#2c3e50"
+                                    Column {
                                         anchors.verticalCenter: parent.verticalCenter
-                                        elide: Text.ElideRight
-                                        width: parent.width * 0.6
-                                    }
+                                        spacing: 2
 
-                                    Text {
-                                        text: "Код: " + (modelData.student_code || "")
-                                        font.pixelSize: 11
-                                        color: "#7f8c8d"
-                                        anchors.verticalCenter: parent.verticalCenter
+                                        Text {
+                                            text: (modelData.last_name || "") + " " +
+                                                  (modelData.first_name || "") + " " + (modelData.middle_name || "")
+                                            font.pixelSize: 14
+                                            color: "#2c3e50"
+                                            elide: Text.ElideRight
+                                            width: studentsList.width - 100
+                                        }
+
+                                        Text {
+                                            text: "Код: " + (modelData.student_code || "")
+                                            font.pixelSize: 12
+                                            color: "#7f8c8d"
+                                        }
                                     }
                                 }
                             }
@@ -219,7 +212,7 @@ Window {
                             Label {
                                 anchors.centerIn: parent
                                 text: "В группе нет студентов"
-                                font.pixelSize: 13
+                                font.pixelSize: 14
                                 color: "#7f8c8d"
                                 visible: groupStudents.length === 0 && !isLoading
                             }
@@ -229,7 +222,7 @@ Window {
 
                 Rectangle {
                     Layout.fillWidth: true
-                    height: 36
+                    height: 40
                     color: "transparent"
                     visible: isLoading
 
@@ -238,12 +231,12 @@ Window {
                         spacing: 8
 
                         BusyIndicator {
-                            width: 18
-                            height: 18
+                            width: 20
+                            height: 20
                             running: true
                         }
 
-                        Text {
+                        Label {
                             text: "Загрузка студентов..."
                             font.pixelSize: 12
                             color: "#7f8c8d"
@@ -254,16 +247,16 @@ Window {
                 Button {
                     Layout.alignment: Qt.AlignHCenter
                     text: "Закрыть"
-                    implicitWidth: 120
-                    implicitHeight: 36
-                    font.pixelSize: 13
+                    implicitWidth: 150
+                    implicitHeight: 45
+                    font.pixelSize: 14
                     font.bold: true
 
                     background: Rectangle {
-                        radius: 18
+                        radius: 22
                         color: "#3498db"
                         border.color: "#2980b9"
-                        border.width: 1
+                        border.width: 2
                     }
 
                     contentItem: Row {
@@ -272,8 +265,8 @@ Window {
 
                         Image {
                             source: "qrc:/icons/cross.png"
-                            width: 14
-                            height: 14
+                            width: 16
+                            height: 16
                             anchors.verticalCenter: parent.verticalCenter
                         }
 
@@ -282,15 +275,12 @@ Window {
                             color: "white"
                             horizontalAlignment: Text.AlignHCenter
                             verticalAlignment: Text.AlignVCenter
-                            font.pixelSize: 13
-                            font.bold: true
+                            font: parent.parent.font
                             anchors.verticalCenter: parent.verticalCenter
                         }
                     }
 
-                    onClicked: {
-                        closeWindow()
-                    }
+                    onClicked: closeWindow()
                 }
             }
         }

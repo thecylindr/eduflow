@@ -53,6 +53,62 @@ Window {
         Qt.callLater(function() { lastNameField.forceActiveFocus() })
     }
 
+    // Функция форматирования номера телефона
+    function formatPhoneNumber(text) {
+        // Удаляем все нецифровые символы
+        var digits = text.replace(/\D/g, '')
+
+        // Если номер начинается с 7 или 8, заменяем на +7
+        if (digits.startsWith('7') || digits.startsWith('8')) {
+            digits = digits.substring(1)
+        }
+
+        // Ограничиваем длину до 10 цифр
+        digits = digits.substring(0, 10)
+
+        // Форматируем номер в российский формат
+        if (digits.length === 0) {
+            return "+7 "
+        } else if (digits.length <= 3) {
+            return "+7 (" + digits
+        } else if (digits.length <= 6) {
+            return "+7 (" + digits.substring(0, 3) + ") " + digits.substring(3)
+        } else if (digits.length <= 8) {
+            return "+7 (" + digits.substring(0, 3) + ") " + digits.substring(3, 6) + "-" + digits.substring(6)
+        } else {
+            return "+7 (" + digits.substring(0, 3) + ") " + digits.substring(3, 6) + "-" + digits.substring(6, 8) + "-" + digits.substring(8)
+        }
+    }
+
+    function normalizePhoneNumber(phone) {
+        // Удаляем все нецифровые символы
+        var digits = phone.replace(/\D/g, '')
+
+        // Если номер пустой, возвращаем пустую строку
+        if (digits.length === 0) {
+            return ""
+        }
+
+        // Если номер начинается с 8, заменяем на 7
+        if (digits.startsWith('8')) {
+            digits = '7' + digits.substring(1)
+        }
+        // Если номер начинается не с 7 и не с 8, добавляем 7 в начало
+        else if (!digits.startsWith('7')) {
+            digits = '7' + digits
+        }
+
+        // Ограничиваем длину до 11 цифр
+        digits = digits.substring(0, 11)
+
+        // Если осталась только одна цифра 7, возвращаем пустую строку
+        if (digits === '7') {
+            return ""
+        }
+
+        return digits
+    }
+
     function closeWindow() {
         studentFormWindow.close()
     }
@@ -73,7 +129,13 @@ Window {
         firstNameField.text = studentData.firstName || studentData.first_name || ""
         middleNameField.text = studentData.middleName || studentData.middle_name || ""
         emailField.text = studentData.email || ""
-        phoneField.text = studentData.phoneNumber || studentData.phone_number || ""
+        // Форматируем номер телефона при заполнении формы
+        var phoneData = studentData.phoneNumber || studentData.phone_number || ""
+        if (phoneData && !phoneData.startsWith("+7")) {
+            phoneField.text = formatPhoneNumber(phoneData)
+        } else {
+            phoneField.text = phoneData
+        }
         passportSeriesField.text = studentData.passportSeries || studentData.passport_series || ""
         passportNumberField.text = studentData.passportNumber || studentData.passport_number || ""
 
@@ -104,13 +166,16 @@ Window {
         var groupId = selectedGroup ?
             (selectedGroup.groupId || selectedGroup.group_id) : 0
 
+        // Нормализуем телефон перед отправкой - только цифры, начинается с 7
+        var normalizedPhone = normalizePhoneNumber(phoneField.text)
+
         return {
             student_code: studentCode,
             last_name: lastNameField.text,
             first_name: firstNameField.text,
             middle_name: middleNameField.text,
             email: emailField.text,
-            phone_number: phoneField.text,
+            phone_number: normalizedPhone, // Используем нормализованный номер
             passport_series: passportSeriesField.text,
             passport_number: passportNumberField.text,
             group_id: groupId
@@ -119,15 +184,15 @@ Window {
 
     function handleSaveResponse(response) {
         isSaving = false
-        console.log("🔔 Обработка ответа сохранения студента:", JSON.stringify(response, null, 2))
+        console.log(" Обработка ответа сохранения студента:", JSON.stringify(response, null, 2))
 
         if (response.success) {
-            var message = response.message || (isEditMode ? "✅ Студент успешно обновлен!" : "✅ Студент успешно добавлен!")
+            var message = response.message || (isEditMode ? "Студент успешно обновлен!" : "Студент успешно добавлен!")
             showMessage(message, "success")
             saveCompleted(true, message)
             closeWindow()
         } else {
-            var errorMsg = "❌ " + (response.error || "Неизвестная ошибка")
+            var errorMsg = "" + (response.error || "Неизвестная ошибка")
             showMessage(errorMsg, "error")
             saveCompleted(false, errorMsg)
         }
@@ -332,10 +397,36 @@ Window {
                             width: 280
                             height: 34
                             anchors.horizontalCenter: parent.horizontalCenter
-                            placeholderText: "Телефон"
+                            placeholderText: "Номер телефона"
                             horizontalAlignment: Text.AlignHCenter
                             enabled: !isSaving
                             font.pixelSize: 12
+
+                            // Валидатор для ввода только цифр
+                            validator: RegularExpressionValidator {
+                                regularExpression: /^[0-9+\(\)\-\s]*$/
+                            }
+
+                            // Обработчик изменения текста для форматирования
+                            onTextChanged: {
+                                if (activeFocus) {
+                                    var cursorPosition = cursorPosition
+                                    var formatted = formatPhoneNumber(text)
+                                    if (formatted !== text) {
+                                        text = formatted
+                                        cursorPosition = Math.min(cursorPosition, formatted.length)
+                                        cursorPosition = formatted.length
+                                    }
+                                }
+                            }
+
+                            // Обработчик ввода текста для фильтрации нецифровых символов
+                            onActiveFocusChanged: {
+                                if (activeFocus && text === "") {
+                                    text = "+7 "
+                                }
+                            }
+
                             KeyNavigation.tab: passportSeriesField
                             Keys.onReturnPressed: navigateToNextField(phoneField)
                             Keys.onEnterPressed: navigateToNextField(phoneField)
@@ -539,15 +630,15 @@ Window {
 
                         onClicked: {
                             if (lastNameField.text.trim() === "" || firstNameField.text.trim() === "") {
-                                showMessage("❌ Заполните обязательные поля (Фамилия и Имя)", "error")
+                                showMessage("Заполните обязательные поля (Фамилия и Имя)", "error")
                                 return
                             }
                             if (passportSeriesField.text.trim() === "" || passportNumberField.text.trim() === "") {
-                                showMessage("❌ Заполните паспортные данные", "error")
+                                showMessage("Заполните паспортные данные", "error")
                                 return
                             }
                             if (groupComboBox.currentIndex < 0) {
-                                showMessage("❌ Выберите группу", "error")
+                                showMessage("Выберите группу", "error")
                                 return
                             }
                             isSaving = true
@@ -557,7 +648,7 @@ Window {
 
                     Button {
                         id: cancelButton
-                        text: "❌ Отмена"
+                        text: "Отмена"
                         implicitWidth: 140
                         implicitHeight: 40
                         enabled: !isSaving

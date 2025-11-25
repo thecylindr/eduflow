@@ -20,6 +20,33 @@ Rectangle {
     property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" ||
                            Qt.platform.os === "tvos" || Qt.platform.os === "wasm"
 
+    // Функции форматирования телефона как в других формах
+    function formatPhoneNumber(text) {
+        // Удаляем все нецифровые символы
+        var digits = text.replace(/\D/g, '')
+
+        // Если номер начинается с 7 или 8, заменяем на +7
+        if (digits.startsWith('7') || digits.startsWith('8')) {
+            digits = digits.substring(1)
+        }
+
+        // Ограничиваем длину до 10 цифр
+        digits = digits.substring(0, 10)
+
+        // Форматируем номер в российский формат
+        if (digits.length === 0) {
+            return "+7 "
+        } else if (digits.length <= 3) {
+            return "+7 (" + digits
+        } else if (digits.length <= 6) {
+            return "+7 (" + digits.substring(0, 3) + ") " + digits.substring(3)
+        } else if (digits.length <= 8) {
+            return "+7 (" + digits.substring(0, 3) + ") " + digits.substring(3, 6) + "-" + digits.substring(6)
+        } else {
+            return "+7 (" + digits.substring(0, 3) + ") " + digits.substring(3, 6) + "-" + digits.substring(6, 8) + "-" + digits.substring(8)
+        }
+    }
+
     function focusUsername() {
         usernameField.focus = true
         usernameField.cursorPosition = usernameField.text.length
@@ -401,6 +428,7 @@ Rectangle {
             }
         }
 
+        // Поле телефона с форматированием
         ColumnLayout {
             Layout.fillWidth: true
             spacing: 3
@@ -435,9 +463,35 @@ Rectangle {
                     anchors.fill: parent
                     anchors.margins: 8
                     verticalAlignment: TextInput.AlignVCenter
+                    text: ""
                     font.pixelSize: isMobile ? 14 : 12
                     color: "#000000"
                     selectByMouse: true
+
+                    // Валидатор для ввода только цифр
+                    validator: RegularExpressionValidator {
+                        regularExpression: /^[0-9+\(\)\-\s]*$/
+                    }
+
+                    // Обработчик изменения текста для форматирования
+                    onTextChanged: {
+                        if (activeFocus) {
+                            var cursorPosition = phoneField.cursorPosition
+                            var formatted = formatPhoneNumber(text)
+                            if (formatted !== text) {
+                                phoneField.text = formatted
+                                phoneField.cursorPosition = Math.min(cursorPosition, formatted.length)
+                                phoneField.cursorPosition = formatted.length
+                            }
+                        }
+                    }
+
+                    // Обработчик ввода текста для фильтрации нецифровых символов
+                    onActiveFocusChanged: {
+                        if (activeFocus && text === "") {
+                            phoneField.text = "+7 "
+                        }
+                    }
 
                     Keys.onPressed: (event) => {
                         if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {

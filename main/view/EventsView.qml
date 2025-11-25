@@ -17,16 +17,11 @@ Item {
         mainWindow.mainApi.getEvents(function(response) {
             isLoading = false;
             if (response && response.success) {
-                console.log("✅ Данные событий получены:", JSON.stringify(response.data));
-
                 var eventsData = response.data || [];
                 var processedEvents = [];
 
-                console.log("📊 Количество событий от сервера:", eventsData.length);
-
                 for (var i = 0; i < eventsData.length; i++) {
                     var event = eventsData[i];
-                    console.log("📋 Обработка события " + i + ":", JSON.stringify(event));
 
                     var processedEvent = {
                         id: event.id || event.eventId || 0,
@@ -43,46 +38,26 @@ Item {
                         status: event.status || "active"
                     };
 
-                    console.log("   🏷️ Категория события " + i + ":", processedEvent.category);
-                    console.log("   🏷️ eventCategory события " + i + ":", processedEvent.eventCategory);
-
                     processedEvents.push(processedEvent);
                 }
 
                 eventsView.events = processedEvents;
-                console.log("✅ События обработаны:", eventsView.events.length);
-
-                if (eventsView.events.length > 0) {
-                    console.log("📊 Первое событие:", JSON.stringify(eventsView.events[0]));
-                    console.log("🏷️ Категория первого события:", eventsView.events[0].category);
-                    console.log("🏷️ eventCategory первого события:", eventsView.events[0].eventCategory);
-                } else {
-                    console.log("⚠️ Нет событий для отображения");
-                }
             } else {
                 var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
-                console.log("❌ Ошибка загрузки событий:", errorMsg);
-                showMessage("❌ Ошибка загрузки событий: " + errorMsg, "error");
+                showMessage("Ошибка загрузки событий: " + errorMsg, "error");
             }
         });
     }
 
     function refreshEventCategories() {
-        console.log("📂 Загрузка категорий событий...");
         mainWindow.mainApi.getEventCategories(function(response) {
             if (response && response.success) {
                 eventsView.eventCategories = response.data || [];
-                console.log("✅ Категории событий загружены:", eventsView.eventCategories.length);
-
-                if (eventsView.eventCategories.length > 0) {
-                    console.log("📊 Первая категория:", JSON.stringify(eventsView.eventCategories[0]));
-                }
 
                 refreshEvents();
             } else {
                 var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
-                console.log("❌ Ошибка загрузки категорий событий:", errorMsg);
-                showMessage("❌ Ошибка загрузки категорий событий: " + errorMsg, "error");
+                showMessage("Ошибка загрузки категорий событий: " + errorMsg, "error");
             }
         });
     }
@@ -95,26 +70,24 @@ Item {
 
     function addEvent(eventData) {
         if (!eventData) {
-            showMessage("❌ Данные события не указаны", "error");
+            showMessage("Данные события не указаны", "error");
             return;
         }
 
         isLoading = true;
-        console.log("➕ Добавление события:", JSON.stringify(eventData));
 
         mainWindow.mainApi.addEvent(eventData, function(response) {
             isLoading = false;
-            console.log("📨 Ответ добавления события:", response);
 
             if (response && response.success) {
-                showMessage("✅ " + ((response.message || response.data?.message) || "Событие успешно добавлено"), "success");
+                showMessage("" + ((response.message || response.data?.message) || "Событие успешно добавлено"), "success");
                 if (eventFormWindow.item) {
                     eventFormWindow.close();
                 }
                 refreshEvents();
             } else {
                 var errorMsg = response?.error || "Неизвестная ошибка";
-                showMessage("❌ Ошибка добавления события: " + errorMsg, "error");
+                showMessage("Ошибка добавления события: " + errorMsg, "error");
                 if (eventFormWindow.item) {
                     eventFormWindow.item.isSaving = false;
                 }
@@ -124,13 +97,13 @@ Item {
 
     function updateEvent(eventData) {
         if (!eventData) {
-            showMessage("❌ Данные события не указаны", "error")
+            showMessage("Данные события не указаны", "error")
             return
         }
 
         var uniqueEventId = eventData.id
         if (!uniqueEventId) {
-            showMessage("❌ ID события не указан", "error")
+            showMessage("ID события не указан", "error")
             return
         }
 
@@ -150,14 +123,14 @@ Item {
             isLoading = false
 
             if (response && response.success) {
-                showMessage("✅ " + ((response.message || response.data && response.data.message) || "Событие успешно обновлено"), "success")
+                showMessage("" + ((response.message || response.data && response.data.message) || "Событие успешно обновлено"), "success")
                 if (eventFormWindow.item) {
                     eventFormWindow.close()
                 }
                 refreshEvents()
             } else {
                 var errorMsg = response && response.error ? response.error : "Неизвестная ошибка"
-                showMessage("❌ Ошибка обновления события: " + errorMsg, "error")
+                showMessage("Ошибка обновления события: " + errorMsg, "error")
                 if (eventFormWindow.item) {
                     eventFormWindow.item.isSaving = false
                 }
@@ -167,7 +140,7 @@ Item {
 
     function deleteEvent(eventId, eventName) {
         if (!eventId) {
-            showMessage("❌ ID события не указан", "error");
+            showMessage("ID события не указан", "error");
             return;
         }
 
@@ -179,11 +152,11 @@ Item {
             mainWindow.mainApi.deleteEvent(uniqueEventId, function(response) {
                 isLoading = false;
                 if (response && response.success) {
-                    showMessage("✅ " + ((response.message || response.data && response.data.message) || "Событие успешно удалено"), "success");
+                    showMessage("" + ((response.message || response.data && response.data.message) || "Событие успешно удалено"), "success");
                     refreshEvents();
                 } else {
                     var errorMsg = response && response.error ? response.error : "Неизвестная ошибка";
-                    showMessage("❌ Ошибка удаления события: " + errorMsg, "error");
+                    showMessage("Ошибка удаления события: " + errorMsg, "error");
                 }
             });
         }
@@ -490,11 +463,10 @@ Item {
     // Загрузчик формы события
     Loader {
         id: eventFormWindow
-        source: "../forms/EventFormWindow.qml"
+        source: isMobile ? "../forms/EventFormMobile.qml" : "../forms/EventFormWindow.qml"
         active: true
 
         onLoaded: {
-
             if (item) {
                 item.saved.connect(function(eventData) {
                     if (!eventData) return;
@@ -515,27 +487,27 @@ Item {
         }
 
         function openForAdd() {
-            if (eventFormWindow.item) {
-                eventFormWindow.item.eventCategories = eventsView.eventCategories || [];
-                eventFormWindow.item.openForAdd();
-            } else {
-                eventFormWindow.active = true;
+                if (eventFormWindow.item) {
+                    eventFormWindow.item.eventCategories = eventsView.eventCategories || [];
+                    eventFormWindow.item.openForAdd();
+                } else {
+                    eventFormWindow.active = true;
+                }
             }
-        }
 
-        function openForEdit(eventData) {
-            if (eventFormWindow.item) {
-                eventFormWindow.item.eventCategories = eventsView.eventCategories || [];
-                eventFormWindow.item.openForEdit(eventData);
-            } else {
-                eventFormWindow.active = true;
+            function openForEdit(eventData) {
+                if (eventFormWindow.item) {
+                    eventFormWindow.item.eventCategories = eventsView.eventCategories || [];
+                    eventFormWindow.item.openForEdit(eventData);
+                } else {
+                    eventFormWindow.active = true;
+                }
             }
-        }
 
-        function close() {
-            if (eventFormWindow.item) {
-                eventFormWindow.item.closeWindow();
+            function close() {
+                if (eventFormWindow.item) {
+                    eventFormWindow.item.closeWindow();
+                }
             }
-        }
     }
 }

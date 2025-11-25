@@ -96,6 +96,13 @@ qt_add_qml_module(EduFlowApp
         main/view/NewsView.qml
         main/view/FormattedText.qml
         main/view/FAQView.qml
+        QML_FILES
+        QML_FILES main/forms/GroupViewFormMobile.qml
+        QML_FILES main/forms/EventFormMobile.qml
+        QML_FILES main/forms/GroupFormMobile.qml
+        QML_FILES main/forms/PortfolioFormMobile.qml
+        QML_FILES main/forms/StudentFormMobile.qml
+        QML_FILES main/forms/TeacherFormMobile.qml
     )
 
 qt_add_resources(EduFlowApp "resources"

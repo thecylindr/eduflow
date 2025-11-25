@@ -1,17 +1,16 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts 1.15
-import QtQuick.Controls.Material
+import QtQuick.Controls.Universal
 import "../../common" as Common
 
 Window {
-id: portfolioFormWindow
-width: 420
-height: 500
-flags: Qt.Dialog | Qt.FramelessWindowHint
-modality: Qt.ApplicationModal
-color: "transparent"
-visible: false
+    id: portfolioFormWindow
+    width: Math.min(Screen.width * 0.95, 400)
+    height: Math.min(Screen.height * 0.8, 600)
+    modality: Qt.ApplicationModal
+    color: "transparent"
+    visible: false
 
     property var currentPortfolio: null
     property bool isEditMode: false
@@ -22,32 +21,22 @@ visible: false
     signal cancelled()
     signal saveCompleted(bool success, string message)
 
-    property var fieldNavigation: [
-        studentComboBox, dateField, decreeField
-    ]
-
     ListModel {
         id: studentDisplayModel
     }
 
     function updateStudentModel() {
         studentDisplayModel.clear()
-        console.log("Обновление модели студентов. Всего:", students.length)
-
         for (var i = 0; i < students.length; i++) {
             var student = students[i]
             var displayName = formatStudentName(student)
             var studentCode = student.studentCode || student.student_code || ""
-
             studentDisplayModel.append({
                 displayName: displayName,
                 studentCode: studentCode,
                 originalIndex: i
             })
-
-            console.log("  Добавлен студент:", displayName, "(код:", studentCode + ")")
         }
-
         if (isEditMode && currentPortfolio) {
             restoreSelectedStudent()
         }
@@ -69,7 +58,6 @@ visible: false
                 var currentCode = parseInt(studentDisplayModel.get(i).studentCode || 0)
                 if (currentCode === numericStudentCode) {
                     studentComboBox.currentIndex = i
-                    console.log("Восстановлен выбранный студент:", studentDisplayModel.get(i).displayName)
                     break
                 }
             }
@@ -83,10 +71,6 @@ visible: false
         clearForm()
         updateStudentModel()
         portfolioFormWindow.show()
-        portfolioFormWindow.requestActivate()
-        portfolioFormWindow.x = (Screen.width - portfolioFormWindow.width) / 2
-        portfolioFormWindow.y = (Screen.height - portfolioFormWindow.height) / 2
-        Qt.callLater(function() { studentComboBox.forceActiveFocus() })
     }
 
     function openForEdit(portfolioData) {
@@ -96,10 +80,6 @@ visible: false
         updateStudentModel()
         fillForm(portfolioData)
         portfolioFormWindow.show()
-        portfolioFormWindow.requestActivate()
-        portfolioFormWindow.x = (Screen.width - portfolioFormWindow.width) / 2
-        portfolioFormWindow.y = (Screen.height - portfolioFormWindow.height) / 2
-        Qt.callLater(function() { studentComboBox.forceActiveFocus() })
     }
 
     function closeWindow() {
@@ -113,8 +93,6 @@ visible: false
     }
 
     function fillForm(portfolioData) {
-        console.log("Заполнение формы портфолио:", JSON.stringify(portfolioData))
-
         var studentCode = portfolioData.studentCode || portfolioData.student_code
         if (studentCode) {
             var numericStudentCode = parseInt(studentCode)
@@ -122,7 +100,6 @@ visible: false
                 var currentCode = parseInt(studentDisplayModel.get(i).studentCode || 0)
                 if (currentCode === numericStudentCode) {
                     studentComboBox.currentIndex = i
-                    console.log("Найден студент в модели, индекс:", i)
                     break
                 }
             }
@@ -146,112 +123,48 @@ visible: false
     }
 
     function getPortfolioData() {
-        var portfolioId = 0;
+        var portfolioId = 0
         if (isEditMode && currentPortfolio) {
-            portfolioId = currentPortfolio.portfolioId || currentPortfolio.portfolio_id || 0;
+            portfolioId = currentPortfolio.portfolioId || currentPortfolio.portfolio_id || 0
         }
 
-        var selectedStudent = null;
-        var studentCode = 0;
-
+        var studentCode = 0
         if (studentComboBox.currentIndex >= 0) {
             var selectedItem = studentDisplayModel.get(studentComboBox.currentIndex)
             studentCode = parseInt(selectedItem.studentCode || 0)
-            selectedStudent = students[selectedItem.originalIndex]
-            console.log("Выбран студент:", selectedItem.displayName, "код:", studentCode)
-        } else {
-            console.log("Студент не выбран")
         }
 
-        var dateText = dateField.text;
-        var formattedDate = dateText;
+        var dateText = dateField.text
+        var formattedDate = dateText
         if (dateText) {
-            var parts = dateText.split('.');
+            var parts = dateText.split('.')
             if (parts.length === 3) {
-                formattedDate = parts[2] + "-" + parts[1] + "-" + parts[0];
+                formattedDate = parts[2] + "-" + parts[1] + "-" + parts[0]
             }
         }
 
-        var portfolioData = {
+        return {
             portfolio_id: portfolioId,
             student_code: studentCode,
             date: formattedDate,
             decree: decreeField.text
-        };
-
-        console.log("Подготовленные данные портфолио:", JSON.stringify(portfolioData));
-        return portfolioData;
+        }
     }
 
     function validateDate(text) {
         if (!text) return true
-
         var parts = text.split('.')
         if (parts.length !== 3) return false
-
         var day = parseInt(parts[0])
         var month = parseInt(parts[1])
         var year = parseInt(parts[2])
-
         if (day < 1 || day > 31) return false
         if (month < 1 || month > 12) return false
         if (year < 1900 || year > 2100) return false
-
         return true
     }
 
-    function handleSaveResponse(response) {
-        isSaving = false
-        console.log("Обработка ответа сохранения портфолио:", JSON.stringify(response, null, 2))
-
-        if (response.success) {
-            var message = response.message || (isEditMode ? "Портфолио успешно обновлено!" : "Портфолио успешно добавлено!")
-            showMessage(message, "success")
-            saveCompleted(true, message)
-            closeWindow()
-        } else {
-            var errorMsg = (response.error || "Неизвестная ошибка")
-            showMessage(errorMsg, "error")
-            saveCompleted(false, errorMsg)
-        }
-    }
-
-    function showMessage(text, type) {
-        console.log(type.toUpperCase() + ":", text)
-    }
-
-    function navigateToNextField(currentField) {
-        var currentIndex = -1
-        for (var i = 0; i < fieldNavigation.length; i++) {
-            if (fieldNavigation[i] === currentField) {
-                currentIndex = i
-                break
-            }
-        }
-
-        if (currentIndex !== -1 && currentIndex < fieldNavigation.length - 1) {
-            fieldNavigation[currentIndex + 1].forceActiveFocus()
-        } else if (currentIndex === fieldNavigation.length - 1) {
-            saveButton.forceActiveFocus()
-        }
-    }
-
-    function navigateToPreviousField(currentField) {
-        var currentIndex = -1
-        for (var i = 0; i < fieldNavigation.length; i++) {
-            if (fieldNavigation[i] === currentField) {
-                currentIndex = i
-                break
-            }
-        }
-
-        if (currentIndex > 0) {
-            fieldNavigation[currentIndex - 1].forceActiveFocus()
-        }
-    }
-
     onStudentsChanged: {
-        console.log("Список студентов изменен, количество:", students.length)
         updateStudentModel()
     }
 
@@ -294,11 +207,11 @@ visible: false
 
         Rectangle {
             id: whiteForm
-            width: 370
-            height: 400
+            width: parent.width - 20
+            height: parent.height - titleBar.height - 40
             anchors {
                 top: titleBar.bottom
-                topMargin: 30
+                topMargin: 20
                 horizontalCenter: parent.horizontalCenter
             }
             color: "#ffffff"
@@ -307,8 +220,8 @@ visible: false
 
             ColumnLayout {
                 anchors.fill: parent
-                anchors.margins: 20
-                spacing: 16
+                anchors.margins: 15
+                spacing: 12
 
                 ScrollView {
                     Layout.fillWidth: true
@@ -317,130 +230,49 @@ visible: false
 
                     Column {
                         width: parent.width
-                        spacing: 20
+                        spacing: 15
 
                         Column {
                             width: parent.width
                             spacing: 8
 
-                            Text {
+                            Label {
                                 text: "Студент:"
-                                color: "#2c3e50"
                                 font.bold: true
                                 font.pixelSize: 14
-                                anchors.horizontalCenter: parent.horizontalCenter
+                                color: "#2c3e50"
                             }
 
                             ComboBox {
                                 id: studentComboBox
-                                width: parent.width - 40
-                                height: 40
-                                anchors.horizontalCenter: parent.horizontalCenter
+                                width: parent.width
+                                height: 45
                                 enabled: !isSaving && studentDisplayModel.count > 0
                                 font.pixelSize: 14
 
                                 background: Rectangle {
-                                    radius: 6
+                                    radius: 8
                                     color: "#ffffff"
                                     border.color: studentComboBox.enabled ? "#e0e0e0" : "#f0f0f0"
                                     border.width: 1
                                 }
 
-                                contentItem: Text {
-                                    text: studentComboBox.currentIndex >= 0 ?
-                                          studentDisplayModel.get(studentComboBox.currentIndex).displayName : ""
-                                    color: "#000000"
-                                    horizontalAlignment: Text.AlignLeft
-                                    verticalAlignment: Text.AlignVCenter
-                                    leftPadding: 10
-                                    rightPadding: studentComboBox.indicator.width + 10
-                                    font: studentComboBox.font
-                                }
-
-                                indicator: Rectangle {
-                                    x: studentComboBox.width - width - 5
-                                    y: studentComboBox.topPadding + (studentComboBox.height - height) / 2
-                                    width: 12
-                                    height: 8
-                                    color: "transparent"
-                                    Rectangle {
-                                        width: 8
-                                        height: 8
-                                        color: "#666666"
-                                        rotation: 45
-                                        anchors.centerIn: parent
-                                    }
-                                }
-
-                                popup: Popup {
-                                    y: studentComboBox.height - 1
-                                    width: studentComboBox.width
-                                    implicitHeight: contentItem.implicitHeight
-                                    padding: 1
-
-                                    contentItem: ListView {
-                                        clip: true
-                                        implicitHeight: contentHeight
-                                        model: studentComboBox.popup.visible ? studentComboBox.delegateModel : null
-                                        currentIndex: studentComboBox.highlightedIndex
-
-                                        ScrollIndicator.vertical: ScrollIndicator { }
-                                    }
-
-                                    background: Rectangle {
-                                        color: "#ffffff"
-                                        border.color: "#e0e0e0"
-                                        radius: 6
-                                    }
-                                }
-
-                                delegate: ItemDelegate {
-                                    width: studentComboBox.width
-                                    contentItem: Text {
-                                        text: model.displayName
-                                        color: "#000000"
-                                        font: studentComboBox.font
-                                        elide: Text.ElideRight
-                                        verticalAlignment: Text.AlignVCenter
-                                        leftPadding: 10
-                                    }
-                                    background: Rectangle {
-                                        color: highlighted ? "#e0e0e0" : "#ffffff"
-                                    }
-                                    highlighted: studentComboBox.highlightedIndex === index
-                                }
-
                                 model: studentDisplayModel
                                 textRole: "displayName"
-
-                                KeyNavigation.tab: dateField
-                                Keys.onReturnPressed: navigateToNextField(studentComboBox)
-                                Keys.onEnterPressed: navigateToNextField(studentComboBox)
-                                Keys.onUpPressed: navigateToPreviousField(studentComboBox)
-                                Keys.onDownPressed: navigateToNextField(studentComboBox)
-
-                                onCurrentIndexChanged: {
-                                    if (currentIndex >= 0) {
-                                        var selected = studentDisplayModel.get(currentIndex)
-                                        console.log("Выбран студент:", selected.displayName, "код:", selected.studentCode)
-                                    }
-                                }
                             }
 
-                            Text {
+                            Label {
                                 text: studentDisplayModel.count === 0 ? "Нет доступных студентов" : ""
                                 color: "#e74c3c"
                                 font.pixelSize: 12
-                                anchors.horizontalCenter: parent.horizontalCenter
                                 visible: studentDisplayModel.count === 0
                             }
 
-                            Text {
+                            Label {
                                 visible: studentDisplayModel.count > 0
                                 text: "Доступно студентов: " + studentDisplayModel.count
                                 color: "#27ae60"
-                                font.pixelSize: 11
-                                anchors.horizontalCenter: parent.horizontalCenter
+                                font.pixelSize: 12
                             }
                         }
 
@@ -448,29 +280,19 @@ visible: false
                             width: parent.width
                             spacing: 8
 
-                            Text {
+                            Label {
                                 text: "Дата:"
-                                color: "#2c3e50"
                                 font.bold: true
                                 font.pixelSize: 14
-                                anchors.horizontalCenter: parent.horizontalCenter
+                                color: "#2c3e50"
                             }
 
                             TextField {
                                 id: dateField
-                                width: parent.width - 40
-                                height: 40
-                                anchors.horizontalCenter: parent.horizontalCenter
+                                width: parent.width
+                                height: 45
                                 placeholderText: "ДД.ММ.ГГГГ"
-                                horizontalAlignment: Text.AlignHCenter
-                                enabled: !isSaving
                                 font.pixelSize: 14
-                                KeyNavigation.tab: decreeField
-                                Keys.onReturnPressed: navigateToNextField(dateField)
-                                Keys.onEnterPressed: navigateToNextField(dateField)
-                                Keys.onUpPressed: navigateToPreviousField(dateField)
-                                Keys.onDownPressed: navigateToNextField(dateField)
-
                                 validator: RegularExpressionValidator {
                                     regularExpression: /^[\d\.]*$/
                                 }
@@ -482,11 +304,11 @@ visible: false
                                 }
                             }
 
-                            Text {
-                                text: !validateDate(dateField.text) && dateField.text !== "" ? "Неверный формат даты" : "Формат: ДД.ММ.ГГГГ"
+                            Label {
+                                text: !validateDate(dateField.text) && dateField.text !== "" ?
+                                      "Неверный формат даты" : "Формат: ДД.ММ.ГГГГ"
                                 color: !validateDate(dateField.text) && dateField.text !== "" ? "#e74c3c" : "#7f8c8d"
-                                font.pixelSize: 11
-                                anchors.horizontalCenter: parent.horizontalCenter
+                                font.pixelSize: 12
                             }
                         }
 
@@ -494,28 +316,19 @@ visible: false
                             width: parent.width
                             spacing: 8
 
-                            Text {
+                            Label {
                                 text: "Приказ:"
-                                color: "#2c3e50"
                                 font.bold: true
                                 font.pixelSize: 14
-                                anchors.horizontalCenter: parent.horizontalCenter
+                                color: "#2c3e50"
                             }
 
                             TextField {
                                 id: decreeField
-                                width: parent.width - 40
-                                height: 40
-                                anchors.horizontalCenter: parent.horizontalCenter
+                                width: parent.width
+                                height: 45
                                 placeholderText: "Введите номер приказа*"
-                                horizontalAlignment: Text.AlignHCenter
-                                enabled: !isSaving
                                 font.pixelSize: 14
-                                KeyNavigation.tab: saveButton
-                                Keys.onReturnPressed: navigateToNextField(decreeField)
-                                Keys.onEnterPressed: navigateToNextField(decreeField)
-                                Keys.onUpPressed: navigateToPreviousField(decreeField)
-                                Keys.onDownPressed: saveButton.forceActiveFocus()
                             }
                         }
                     }
@@ -529,16 +342,15 @@ visible: false
                         id: saveButton
                         text: isSaving ? "Сохранение..." : "Сохранить"
                         implicitWidth: 140
-                        implicitHeight: 40
+                        implicitHeight: 45
                         enabled: !isSaving && studentComboBox.currentIndex >= 0 &&
                                 dateField.text.trim() !== "" && validateDate(dateField.text) &&
-                                decreeField.text.trim() !== "" &&
-                                studentDisplayModel.count > 0
+                                decreeField.text.trim() !== "" && studentDisplayModel.count > 0
                         font.pixelSize: 14
                         font.bold: true
 
                         background: Rectangle {
-                            radius: 20
+                            radius: 22
                             color: saveButton.enabled ? "#27ae60" : "#95a5a6"
                             border.color: saveButton.enabled ? "#219a52" : "transparent"
                             border.width: 2
@@ -565,28 +377,11 @@ visible: false
                             }
                         }
 
-                        KeyNavigation.tab: cancelButton
-                        Keys.onReturnPressed: if (enabled && !isSaving) saveButton.clicked()
-                        Keys.onEnterPressed: if (enabled && !isSaving) saveButton.clicked()
-                        Keys.onUpPressed: decreeField.forceActiveFocus()
-
                         onClicked: {
-                            if (studentComboBox.currentIndex < 0) {
-                                showMessage("Выберите студента", "error")
-                                return
-                            }
-                            if (dateField.text.trim() === "") {
-                                showMessage("Введите дату", "error")
-                                return
-                            }
-                            if (!validateDate(dateField.text)) {
-                                showMessage("Неверный формат даты", "error")
-                                return
-                            }
-                            if (decreeField.text.trim() === "") {
-                                showMessage("Введите номер приказа", "error")
-                                return
-                            }
+                            if (studentComboBox.currentIndex < 0) return
+                            if (dateField.text.trim() === "") return
+                            if (!validateDate(dateField.text)) return
+                            if (decreeField.text.trim() === "") return
                             isSaving = true
                             saved(getPortfolioData())
                         }
@@ -596,13 +391,13 @@ visible: false
                         id: cancelButton
                         text: "Отмена"
                         implicitWidth: 140
-                        implicitHeight: 40
+                        implicitHeight: 45
                         enabled: !isSaving
                         font.pixelSize: 14
                         font.bold: true
 
                         background: Rectangle {
-                            radius: 20
+                            radius: 22
                             color: "#e74c3c"
                             border.color: "#c0392b"
                             border.width: 2
@@ -628,11 +423,6 @@ visible: false
                                 anchors.verticalCenter: parent.verticalCenter
                             }
                         }
-
-                        KeyNavigation.tab: studentComboBox
-                        Keys.onReturnPressed: if (enabled) cancelButton.clicked()
-                        Keys.onEnterPressed: if (enabled) cancelButton.clicked()
-                        Keys.onUpPressed: saveButton.forceActiveFocus()
 
                         onClicked: {
                             cancelled()

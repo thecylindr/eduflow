@@ -193,7 +193,7 @@ Item {
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/teachers.png"
-                                sourceSize: Qt.size(isMobile ? 24 : 28, isMobile ? 24 : 28)
+                                sourceSize: Qt.size(isMobile ? 26 : 30, isMobile ? 26 : 30)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -257,7 +257,7 @@ Item {
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/students.png"
-                                sourceSize: Qt.size(isMobile ? 24 : 28, isMobile ? 24 : 28)
+                                sourceSize: Qt.size(isMobile ? 26 : 30, isMobile ? 26 : 30)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -321,7 +321,7 @@ Item {
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/groups.png"
-                                sourceSize: Qt.size(isMobile ? 24 : 28, isMobile ? 24 : 28)
+                                sourceSize: Qt.size(isMobile ? 26 : 30, isMobile ? 26 : 30)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -385,7 +385,7 @@ Item {
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/portfolio.png"
-                                sourceSize: Qt.size(isMobile ? 24 : 28, isMobile ? 24 : 28)
+                                sourceSize: Qt.size(isMobile ? 26 : 30, isMobile ? 26 : 30)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -449,7 +449,7 @@ Item {
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/events.png"
-                                sourceSize: Qt.size(isMobile ? 24 : 28, isMobile ? 24 : 28)
+                                sourceSize: Qt.size(isMobile ? 26 : 30, isMobile ? 26 : 30)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -513,7 +513,7 @@ Item {
                             Image {
                                 anchors.centerIn: parent
                                 source: "qrc:/icons/settings.png"
-                                sourceSize: Qt.size(isMobile ? 24 : 28, isMobile ? 24 : 28)
+                                sourceSize: Qt.size(isMobile ? 26 : 30, isMobile ? 26 : 30)
                                 fillMode: Image.PreserveAspectFit
                             }
                         }
@@ -530,7 +530,7 @@ Item {
                             }
 
                             Text {
-                                text: "Системы, вашего профиля и т.д."
+                                text: isMobile ? "Системы, профиля... ": "Системы, вашего профиля и т.д."
                                 font.pixelSize: isMobile ? 11 : 12
                                 color: "#7f8c8d"
                             }
@@ -551,7 +551,7 @@ Item {
             Column {
                 width: parent.width
                 spacing: isMobile ? 10 : 20
-                visible: !isMobile // На мобильных скрываем эту секцию для экономии места
+                visible: !isMobile
 
                 // Статус системы
                 Rectangle {

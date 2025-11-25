@@ -38,11 +38,13 @@ Window {
     // Мобильное меню
     property bool mobileMenuOpen: false
 
-    // Обработчик кнопки "Назад" для Android
+    // Обработчик кнопки "Назад" для Android и Десктопа
     onClosing: (close) => {
         if (isMobile) {
             close.accepted = false
             handleBackButton()
+        } else {
+            Qt.quit()
         }
     }
 
@@ -65,7 +67,7 @@ Window {
                 var authWin = component.createObject(mainWindow);
                 authWin.show();
             } else {
-                console.error("❌ Ошибка создания окна авторизации:", component.errorString());
+                console.error("Ошибка создания окна авторизации:", component.errorString());
         }
     }
 
@@ -150,7 +152,7 @@ Window {
     // Функции загрузки данных с улучшенной обработкой ошибок
     function loadStudents() {
         if (!mainApi.isAuthenticated) {
-            showMessage("❌ Требуется аутентификация", "error");
+            showMessage("Требуется аутентификация", "error");
             return;
         }
 
@@ -158,14 +160,14 @@ Window {
             if (response.success) {
                 mainWindow.students = response.data || [];
             } else {
-                showMessage("❌ Ошибка загрузки студентов: " + response.error, "error");
+                showMessage("Ошибка загрузки студентов: " + response.error, "error");
             }
         });
     }
 
     function loadGroups() {
         if (!mainApi.isAuthenticated) {
-            showMessage("❌ Требуется аутентификация", "error");
+            showMessage("Требуется аутентификация", "error");
             return;
         }
 
@@ -173,14 +175,14 @@ Window {
             if (response.success) {
                 mainWindow.groups = response.data || [];
             } else {
-                showMessage("❌ Ошибка загрузки групп: " + response.error, "error");
+                showMessage("Ошибка загрузки групп: " + response.error, "error");
             }
         });
     }
 
     function loadTeachers() {
         if (!mainApi.isAuthenticated) {
-            showMessage("❌ Требуется аутентификация", "error");
+            showMessage("Требуется аутентификация", "error");
             return;
         }
 
@@ -188,7 +190,7 @@ Window {
             if (response.success) {
                 mainWindow.teachers = response.data || [];
             } else {
-                showMessage("❌ Ошибка загрузки преподавателей: " + response.error, "error");
+                showMessage("Ошибка загрузки преподавателей: " + response.error, "error");
             }
         });
     }

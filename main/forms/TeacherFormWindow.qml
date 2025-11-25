@@ -7,7 +7,7 @@ import "../../common" as Common
 Window {
     id: teacherFormWindow
     width: 450
-    height: 600
+    height: 640
     flags: Qt.Dialog | Qt.FramelessWindowHint
     modality: Qt.ApplicationModal
     color: "transparent"
@@ -145,11 +145,40 @@ Window {
             first_name: firstNameField.text.trim(),
             middle_name: middleNameField.text.trim(),
             email: emailField.text.trim(),
-            phone_number: phoneField.text.trim(),
+            phone_number: normalizePhoneNumber(phoneField.text), // Нормализованный номер
             experience: experienceField.value,
             specialization: specs.join(", "),
             specializations: specs
         }
+    }
+
+    function normalizePhoneNumber(phone) {
+        // Удаляем все нецифровые символы
+        var digits = phone.replace(/\D/g, '')
+
+        // Если номер пустой, возвращаем пустую строку
+        if (digits.length === 0) {
+            return ""
+        }
+
+        // Если номер начинается с 8, заменяем на 7
+        if (digits.startsWith('8')) {
+            digits = '7' + digits.substring(1)
+        }
+        // Если номер начинается не с 7 и не с 8, добавляем 7 в начало
+        else if (!digits.startsWith('7')) {
+            digits = '7' + digits
+        }
+
+        // Ограничиваем длину до 11 цифр
+        digits = digits.substring(0, 11)
+
+        // Если осталась только одна цифра 7, возвращаем пустую строку
+        if (digits === '7') {
+            return ""
+        }
+
+        return digits
     }
 
     function handleSaveResponse(response) {
@@ -216,6 +245,33 @@ Window {
         fieldNavigation[nextIndex].forceActiveFocus()
     }
 
+    // Функция форматирования номера телефона
+    function formatPhoneNumber(text) {
+        // Удаляем все нецифровые символы
+        var digits = text.replace(/\D/g, '')
+
+        // Если номер начинается с 7 или 8, заменяем на +7
+        if (digits.startsWith('7') || digits.startsWith('8')) {
+            digits = digits.substring(1)
+        }
+
+        // Ограничиваем длину до 10 цифр
+        digits = digits.substring(0, 10)
+
+        // Форматируем номер в российский формат
+        if (digits.length === 0) {
+            return "+7 "
+        } else if (digits.length <= 3) {
+            return "+7 (" + digits
+        } else if (digits.length <= 6) {
+            return "+7 (" + digits.substring(0, 3) + ") " + digits.substring(3)
+        } else if (digits.length <= 8) {
+            return "+7 (" + digits.substring(0, 3) + ") " + digits.substring(3, 6) + "-" + digits.substring(6)
+        } else {
+            return "+7 (" + digits.substring(0, 3) + ") " + digits.substring(3, 6) + "-" + digits.substring(6, 8) + "-" + digits.substring(8)
+        }
+    }
+
     // Основной контейнер с градиентом
     Rectangle {
         id: windowContainer
@@ -261,7 +317,7 @@ Window {
         Rectangle {
             id: whiteForm
             width: 420
-            height: 530
+            height: 560
             anchors {
                 top: titleBar.bottom
                 topMargin: 20
@@ -307,7 +363,7 @@ Window {
                                 TextField {
                                     id: lastNameField
                                     width: (parent.width - 16) / 3
-                                    height: 32  // Уменьшена высота
+                                    height: 32
                                     placeholderText: "Фамилия*"
                                     horizontalAlignment: Text.AlignHCenter
                                     enabled: !isSaving
@@ -323,7 +379,7 @@ Window {
                                 TextField {
                                     id: firstNameField
                                     width: (parent.width - 16) / 3
-                                    height: 32  // Уменьшена высота
+                                    height: 32
                                     placeholderText: "Имя*"
                                     horizontalAlignment: Text.AlignHCenter
                                     enabled: !isSaving
@@ -339,7 +395,7 @@ Window {
                                 TextField {
                                     id: middleNameField
                                     width: (parent.width - 16) / 3
-                                    height: 32  // Уменьшена высота
+                                    height: 32
                                     placeholderText: "Отчество"
                                     horizontalAlignment: Text.AlignHCenter
                                     enabled: !isSaving
@@ -357,13 +413,13 @@ Window {
                         GridLayout {
                             columns: 2
                             columnSpacing: 10
-                            rowSpacing: 8
+                            rowSpacing: 4
                             width: parent.width
 
                             TextField {
                                 id: emailField
                                 Layout.fillWidth: true
-                                height: 32  // Уменьшена высота
+                                Layout.preferredHeight: 36
                                 placeholderText: "Email (опционально)"
                                 horizontalAlignment: Text.AlignHCenter
                                 enabled: !isSaving
@@ -375,15 +431,39 @@ Window {
                                 Keys.onDownPressed: navigateToNextField(emailField)
                             }
 
-
                             TextField {
                                 id: phoneField
                                 Layout.fillWidth: true
-                                height: 32  // Уменьшена высота
-                                placeholderText: "Телефон (опционально)"
+                                Layout.preferredHeight: 36
+                                placeholderText: "Введите номер"
                                 horizontalAlignment: Text.AlignHCenter
                                 enabled: !isSaving
                                 font.pixelSize: 12
+
+                                // Валидатор для ввода только цифр
+                                validator: RegularExpressionValidator {
+                                    regularExpression: /^[0-9+\(\)\-\s]*$/
+                                }
+
+                                // Обработчик изменения текста для форматирования
+                                onTextChanged: {
+                                    if (activeFocus) {
+                                        var cursorPosition = cursorPosition
+                                        var formatted = formatPhoneNumber(text)
+                                        if (formatted !== text) {
+                                            text = formatted
+                                            cursorPosition = Math.min(cursorPosition, formatted.length)
+                                            cursorPosition = formatted.length
+                                        }
+                                    }
+                                }
+
+                                onActiveFocusChanged: {
+                                    if (activeFocus && text === "") {
+                                        text = "+7 "
+                                    }
+                                }
+
                                 KeyNavigation.tab: experienceField
                                 Keys.onReturnPressed: navigateToNextField(phoneField)
                                 Keys.onEnterPressed: navigateToNextField(phoneField)
@@ -394,20 +474,21 @@ Window {
 
                         RowLayout {
                             width: parent.width
-                            spacing: 10
+                            spacing: 4
+                            Layout.preferredHeight: 36
 
                             Text {
                                 text: "Стаж (лет):"
                                 color: "#2c3e50"
                                 font.pixelSize: 11
                                 Layout.alignment: Qt.AlignLeft
-                                Layout.preferredWidth: 70
+                                Layout.preferredWidth: 60
                             }
 
                             SpinBox {
                                 id: experienceField
-                                Layout.fillWidth: true
-                                height: 32
+                                width: 60
+                                Layout.preferredHeight: 36
                                 from: 0
                                 to: 100
                                 value: 0
@@ -421,8 +502,6 @@ Window {
                                 Keys.onDownPressed: navigateToNextField(experienceField)
                             }
                         }
-
-                        // Блок специализаций
 
                         // Блок специализаций
                         Column {
@@ -486,10 +565,34 @@ Window {
                                             enabled: !isSaving
 
                                             background: Rectangle {
+                                                anchors.fill: parent
                                                 color: "#e74c3c"
                                                 radius: 4
                                                 border.color: "#c0392b"
                                                 border.width: 1
+
+                                                states: [
+                                                    State {
+                                                        name: "hovered"
+                                                        when: parent.hovered && parent.enabled
+                                                        PropertyChanges {
+                                                            target: background
+                                                            color: "#c0392b"
+                                                        }
+                                                    },
+                                                    State {
+                                                        name: "pressed"
+                                                        when: parent.pressed && parent.enabled
+                                                        PropertyChanges {
+                                                            target: background
+                                                            color: "#a93226"
+                                                        }
+                                                    }
+                                                ]
+
+                                                Behavior on color {
+                                                    ColorAnimation { duration: 150 }
+                                                }
                                             }
 
                                             contentItem: Text {
@@ -501,6 +604,12 @@ Window {
                                                 verticalAlignment: Text.AlignVCenter
                                                 anchors.centerIn: parent
                                             }
+
+                                            padding: 0
+                                            topInset: 0
+                                            bottomInset: 0
+                                            leftInset: 0
+                                            rightInset: 0
 
                                             onClicked: specializationModel.remove(index)
                                         }
@@ -536,12 +645,12 @@ Window {
 
                                     ComboBox {
                                         id: existingSpecializationsCombo
-                                        width: parent.width - 45
-                                        height: 36
+                                        width: parent.width - 48
+                                        height: 40
                                         model: teacherFormWindow.existingSpecializations
                                         enabled: !isSaving && teacherFormWindow.existingSpecializations.length > 0
 
-                                        // ФИКС: Добавляем отображение элементов списка
+                                        // Добавляем отображение элементов списка
                                         delegate: ItemDelegate {
                                             width: existingSpecializationsCombo.width
                                             text: modelData
@@ -549,7 +658,7 @@ Window {
                                             highlighted: existingSpecializationsCombo.highlightedIndex === index
                                         }
 
-                                        // ФИКС: Добавляем popup для отображения списка
+                                        // Добавляем popup для отображения списка
                                         popup: Popup {
                                             y: existingSpecializationsCombo.height
                                             width: existingSpecializationsCombo.width
@@ -601,13 +710,37 @@ Window {
                                     }
 
                                     Button {
-                                        width: 36
-                                        height: 36
+                                        width: 40
+                                        height: 40
                                         enabled: !isSaving && existingSpecializationsCombo.currentIndex >= 0
 
                                         background: Rectangle {
-                                            radius: 4
+                                            anchors.fill: parent
+                                            radius: 6
                                             color: parent.enabled ? "#28a745" : "#6c757d"
+
+                                            states: [
+                                                State {
+                                                    name: "hovered"
+                                                    when: parent.hovered && parent.enabled
+                                                    PropertyChanges {
+                                                        target: background
+                                                        color: "#218838"
+                                                    }
+                                                },
+                                                State {
+                                                    name: "pressed"
+                                                    when: parent.pressed && parent.enabled
+                                                    PropertyChanges {
+                                                        target: background
+                                                        color: "#1e7e34"
+                                                    }
+                                                }
+                                            ]
+
+                                            Behavior on color {
+                                                ColorAnimation { duration: 150 }
+                                            }
                                         }
 
                                         contentItem: Text {
@@ -619,6 +752,12 @@ Window {
                                             font.bold: true
                                             anchors.centerIn: parent
                                         }
+
+                                        padding: 0
+                                        topInset: 0
+                                        bottomInset: 0
+                                        leftInset: 0
+                                        rightInset: 0
 
                                         onClicked: addExistingSpecialization()
                                     }
@@ -637,8 +776,8 @@ Window {
 
                                     TextField {
                                         id: newSpecializationField
-                                        width: parent.width - 45
-                                        height: 32
+                                        width: parent.width - 48
+                                        height: 40
                                         placeholderText: "Введите новую специализацию"
                                         horizontalAlignment: Text.AlignHCenter
                                         enabled: !isSaving
@@ -651,13 +790,37 @@ Window {
                                     }
 
                                     Button {
-                                        width: 36
-                                        height: 32
+                                        width: 40
+                                        height: 40
                                         enabled: !isSaving && newSpecializationField.text.trim() !== ""
 
                                         background: Rectangle {
-                                            radius: 4
+                                            anchors.fill: parent
+                                            radius: 6
                                             color: parent.enabled ? "#28a745" : "#6c757d"
+
+                                            states: [
+                                                State {
+                                                    name: "hovered"
+                                                    when: parent.hovered && parent.enabled
+                                                    PropertyChanges {
+                                                        target: background
+                                                        color: "#218838"
+                                                    }
+                                                },
+                                                State {
+                                                    name: "pressed"
+                                                    when: parent.pressed && parent.enabled
+                                                    PropertyChanges {
+                                                        target: background
+                                                        color: "#1e7e34"
+                                                    }
+                                                }
+                                            ]
+
+                                            Behavior on color {
+                                                ColorAnimation { duration: 150 }
+                                            }
                                         }
 
                                         contentItem: Text {
@@ -669,6 +832,12 @@ Window {
                                             font.bold: true
                                             anchors.centerIn: parent
                                         }
+
+                                        padding: 0
+                                        topInset: 0
+                                        bottomInset: 0
+                                        leftInset: 0
+                                        rightInset: 0
 
                                         onClicked: addSpecialization()
                                     }

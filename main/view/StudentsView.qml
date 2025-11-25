@@ -13,12 +13,10 @@ Item {
                            Qt.platform.os === "tvos" || Qt.platform.os === "wasm"
 
     function refreshStudents() {
-        console.log("🔄 Загрузка студентов...");
         isLoading = true;
         mainWindow.mainApi.getStudents(function(response) {
             isLoading = false;
             if (response.success) {
-                console.log("✅ Данные студентов получены:", JSON.stringify(response.data));
 
                 var studentsData = response.data || [];
                 var processedStudents = [];
@@ -41,22 +39,19 @@ Item {
                 }
 
                 students = processedStudents;
-                console.log("✅ Студенты обработаны:", students.length);
             } else {
-                showMessage("❌ Ошибка загрузки студентов: " + response.error, "error");
+                showMessage("Ошибка загрузки студентов: " + response.error, "error");
             }
         });
     }
 
     function refreshGroups() {
-        console.log("👥 Загрузка групп для студентов...");
         mainWindow.mainApi.getGroups(function(response) {
             if (response.success) {
                 groups = response.data || [];
-                console.log("✅ Группы загружены для студентов:", groups.length);
                 refreshStudents();
             } else {
-                showMessage("❌ Ошибка загрузки групп: " + response.error, "error");
+                showMessage("Ошибка загрузки групп: " + response.error, "error");
             }
         });
     }
@@ -86,11 +81,11 @@ Item {
         mainWindow.mainApi.addStudent(studentData, function(response) {
             isLoading = false;
             if (response.success) {
-                showMessage("✅ " + response.message, "success");
+                showMessage("" + response.message, "success");
                 studentFormWindow.closeForm();
                 refreshStudents();
             } else {
-                showMessage("❌ Ошибка добавления студента: " + response.error, "error");
+                showMessage("Ошибка добавления студента: " + response.error, "error");
                 if (studentFormWindow.item) {
                     studentFormWindow.item.isSaving = false;
                 }
@@ -103,7 +98,7 @@ Item {
         var studentCode = studentData.student_code || studentData.studentCode;
 
         if (!studentCode) {
-            showMessage("❌ Ошибка: ID студента не найден", "error");
+            showMessage("Ошибка: ID студента не найден", "error");
             isLoading = false;
             if (studentFormWindow.item) {
                 studentFormWindow.item.isSaving = false;
@@ -114,11 +109,11 @@ Item {
         mainWindow.mainApi.updateStudent(studentCode, studentData, function(response) {
             isLoading = false;
             if (response.success) {
-                showMessage("✅ " + response.message, "success");
+                showMessage("" + response.message, "success");
                 studentFormWindow.closeForm();
                 refreshStudents();
             } else {
-                showMessage("❌ Ошибка обновления студента: " + response.error, "error");
+                showMessage("Ошибка обновления студента: " + response.error, "error");
                 if (studentFormWindow.item) {
                     studentFormWindow.item.isSaving = false;
                 }
@@ -132,27 +127,26 @@ Item {
             mainWindow.mainApi.deleteStudent(studentCode, function(response) {
                 isLoading = false;
                 if (response.success) {
-                    showMessage("✅ " + response.message, "success");
+                    showMessage("" + response.message, "success");
                     refreshStudents();
                 } else {
-                    showMessage("❌ Ошибка удаления студента: " + response.error, "error");
+                    showMessage("Ошибка удаления студента: " + response.error, "error");
                 }
             });
         }
     }
 
     function confirm(message) {
-        console.log("❓ Подтверждение:", message);
+        console.log("Подтверждение:", message);
         return true;
     }
 
     Component.onCompleted: {
-        console.log("🎯 StudentsView создан");
         refreshGroups();
     }
 
     onStudentsChanged: {
-        console.log("🔄 StudentsView: students изменен, длина:", students.length);
+        console.log("StudentsView: students изменен, длина:", students.length);
     }
 
     ColumnLayout {
@@ -385,19 +379,16 @@ Item {
             sortRoles: ["full_name", "group_name", "email", "phone_number"]
 
             onItemEditRequested: function(itemData) {
-                console.log("✏️ StudentsView: редактирование запрошено для", itemData);
                 studentFormWindow.openForEdit(itemData);
             }
 
             onItemDoubleClicked: function(itemData) {
-                console.log("🎓 Двойной клик по студенту:", itemData);
                 studentFormWindow.openForEdit(itemData);
             }
 
             onItemDeleteRequested: function(itemData) {
                 var studentName = (itemData.last_name || "") + " " + (itemData.first_name || "");
                 var studentCode = itemData.studentCode;
-                console.log("🗑️ StudentsView: удаление запрошено для", studentName, "ID:", studentCode);
                 deleteStudent(studentCode, studentName);
             }
         }
@@ -406,15 +397,11 @@ Item {
     // Загрузчик формы студента
     Loader {
         id: studentFormWindow
-        source: "../forms/StudentFormWindow.qml"
+        source: isMobile ? "../forms/StudentFormMobile.qml" : "../forms/StudentFormWindow.qml"
         active: true
 
         onLoaded: {
-            console.log("✅ StudentFormWindow загружен");
-
             item.saved.connect(function(studentData) {
-                console.log("💾 Сохранение студента:", JSON.stringify(studentData));
-
                 if (studentData.student_code && studentData.student_code !== "") {
                     updateStudent(studentData);
                 } else {
@@ -423,7 +410,6 @@ Item {
             });
 
             item.cancelled.connect(function() {
-                console.log("❌ Отмена редактирования студента");
                 closeForm();
             });
         }

@@ -46,8 +46,6 @@ Rectangle {
                     newsList = []
                 }
 
-                console.log("Загружено новостей:", newsList.length)
-
                 if (newsList.length > 0 && !currentNews) {
                     loadNewsItem(newsList[0])
                 }
@@ -60,12 +58,10 @@ Rectangle {
 
     function loadNewsItem(newsItem) {
         if (!newsItem || !newsItem.filename) {
-            console.log("Неверный элемент новости")
             return
         }
 
         isLoading = true
-        console.log("Загрузка новости:", newsItem.filename)
 
         mainWindow.mainApi.getNews(newsItem.filename, function(response) {
             isLoading = false
@@ -85,19 +81,15 @@ Rectangle {
                     currentNews.date = newsItem.date || currentNews.date
                 }
 
-                console.log("Новость загружена:", currentNews ? currentNews.title : "null")
-
                 // Обновляем layout после загрузки новости
                 Qt.callLater(updateLayout)
             } else {
-                console.log("Ошибка загрузки новости:", response.error)
                 mainWindow.showMessage("Ошибка загрузки новости", "error")
             }
         })
     }
 
     Component.onCompleted: {
-        console.log("NewsView инициализирован")
         loadNewsList()
     }
 
@@ -136,7 +128,7 @@ Rectangle {
 
                     Text {
                         text: "Новости"
-                        font.pixelSize: 20  // УВЕЛИЧЕНО с 18
+                        font.pixelSize: 20
                         font.bold: true
                         color: "#2c3e50"
                         anchors.verticalCenter: parent.verticalCenter

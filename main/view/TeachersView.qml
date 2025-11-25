@@ -55,7 +55,7 @@ Item {
                     teachersTable.sourceModel = teachers;
                 }
             } else {
-                showMessage("❌ Ошибка загрузки преподавателей: " + response.error, "error");
+                showMessage("Ошибка загрузки преподавателей: " + response.error, "error");
             }
         });
     }
@@ -67,20 +67,18 @@ Item {
     // Функции для работы с преподавателями - ИСПРАВЛЕННЫЕ
     function addTeacher(teacherData) {
         isLoading = true;
-        console.log("➕ Добавление преподавателя:", JSON.stringify(teacherData));
 
         mainWindow.mainApi.addTeacher(teacherData, function(response) {
             isLoading = false;
-            console.log("📨 Ответ добавления преподавателя:", response);
 
             if (response.success) {
-                showMessage("✅ " + (response.message || "Преподаватель успешно добавлен"), "success");
+                showMessage("" + (response.message || "Преподаватель успешно добавлен"), "success");
                 if (teacherFormWindow.item) {
                     teacherFormWindow.item.closeWindow();
                 }
                 refreshTeachers();
             } else {
-                showMessage("❌ Ошибка добавления преподавателя: " + (response.error || "Неизвестная ошибка"), "error");
+                showMessage("Ошибка добавления преподавателя: " + (response.error || "Неизвестная ошибка"), "error");
                 // Разблокируем форму в случае ошибки
                 if (teacherFormWindow.item) {
                     teacherFormWindow.item.isSaving = false;
@@ -95,7 +93,7 @@ Item {
         var teacherId = teacherData.teacher_id || teacherData.teacherId;
 
         if (!teacherId || teacherId === 0) {
-            showMessage("❌ Ошибка: ID преподавателя не найден", "error");
+            showMessage("Ошибка: ID преподавателя не найден", "error");
             isLoading = false;
             if (teacherFormWindow.item) {
                 teacherFormWindow.item.isSaving = false;
@@ -105,7 +103,6 @@ Item {
 
         mainWindow.mainApi.updateTeacher(teacherId, teacherData, function(response) {
             isLoading = false;
-            console.log("📨 Ответ обновления преподавателя:", response);
 
             if (response.success) {
                 showMessage((response.message || "Данные преподавателя обновлены"), "success");
@@ -114,7 +111,7 @@ Item {
                 }
                 refreshTeachers();
             } else {
-                showMessage("❌ Ошибка обновления преподавателя: " + (response.error || "Неизвестная ошибка"), "error");
+                showMessage("Ошибка обновления преподавателя: " + (response.error || "Неизвестная ошибка"), "error");
                 // Разблокируем форму в случае ошибки
                 if (teacherFormWindow.item) {
                     teacherFormWindow.item.isSaving = false;
@@ -129,32 +126,27 @@ Item {
             mainWindow.mainApi.sendRequest("DELETE", "/teachers/" + teacherId, null, function(response) {
                 isLoading = false;
                 if (response.success) {
-                    showMessage("✅ Преподаватель успешно удален", "success");
+                    showMessage("Преподаватель успешно удален", "success");
                     refreshTeachers();
                 } else {
-                    showMessage("❌ Ошибка удаления преподавателя: " + response.error, "error");
+                    showMessage("Ошибка удаления преподавателя: " + response.error, "error");
                 }
             });
         }
     }
 
     function openFormForAdd() {
-            console.log("➕ Добавить преподавателя - вызов функции openFormForAdd");
             if (!teacherFormWindow.item) {
-                console.log("🔄 Загрузчик не готов, активируем...");
                 teacherFormWindow.active = true;
                 teacherFormWindow.onLoaded = function() {
-                    console.log("✅ Загрузчик готов, открываем форму для добавления");
                     teacherFormWindow.item.openForAdd();
                 };
             } else {
-                console.log("✅ Загрузчик готов, сразу открываем форму");
                 teacherFormWindow.item.openForAdd();
             }
         }
 
         function openFormForEdit(teacherData) {
-            console.log("✏️ Редактирование преподавателя - вызов функции openFormForEdit");
             if (!teacherFormWindow.item) {
                 teacherFormWindow.active = true;
                 teacherFormWindow.onLoaded = function() {
@@ -170,7 +162,7 @@ Item {
     }
 
     onTeachersChanged: {
-        console.log("🔄 TeachersView: teachers изменен, длина:", teachers.length);
+        console.log("TeachersView: teachers изменен, длина:", teachers.length);
     }
 
     ColumnLayout {
@@ -270,7 +262,6 @@ Item {
                         id: addMouseAreaMobile
                         anchors.fill: parent
                         onClicked: {
-                            console.log("➕ Добавить преподавателя - клик");
                             if (!teacherFormWindow.item) {
                                 teacherFormWindow.active = true;
                                 teacherFormWindow.onLoaded = function() {
@@ -370,7 +361,6 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         onClicked: {
-                            console.log("➕ Добавить преподавателя - клик");
                             if (!teacherFormWindow.item) {
                                 teacherFormWindow.active = true;
                                 teacherFormWindow.onLoaded = function() {
@@ -440,7 +430,6 @@ Item {
             onItemDeleteRequested: function(itemData) {
                 var teacherName = (itemData.lastName || "") + " " + (itemData.firstName || "");
                 var teacherId = itemData.teacherId;
-                console.log("🗑️ TeachersView: удаление запрошено для", teacherName, "ID:", teacherId);
                 deleteTeacher(teacherId, teacherName);
             }
         }
@@ -449,16 +438,11 @@ Item {
     // Загрузчик формы преподавателя - РАБОЧАЯ ВЕРСИЯ
     Loader {
         id: teacherFormWindow
-        source: "../forms/TeacherFormWindow.qml"
+        source: isMobile ? "../forms/TeacherFormMobile.qml" : "../forms/TeacherFormWindow.qml"
         active: true
 
         onLoaded: {
-            console.log("✅ TeacherFormWindow загружен");
-
             item.saved.connect(function(teacherData) {
-                console.log("💾 Сохранение преподавателя:", JSON.stringify(teacherData));
-
-                // ИСПРАВЛЕНИЕ: Определяем, это добавление или обновление
                 var teacherId = teacherData.teacher_id || teacherData.teacherId;
                 if (teacherId && teacherId !== 0) {
                     updateTeacher(teacherData)
@@ -468,7 +452,6 @@ Item {
             })
 
             item.cancelled.connect(function() {
-                console.log("❌ Отмена редактирования преподавателя");
                 if (item) {
                     item.closeWindow();
                 }
@@ -489,7 +472,7 @@ Item {
     }
 
     function confirm(message) {
-        console.log("❓ Подтверждение:", message);
+        console.log("Подтверждение:", message);
         return true;
     }
 }

@@ -33,6 +33,81 @@ Rectangle {
     property string editEmailInternal: ""
     property string editPhoneNumberInternal: ""
 
+    // Функция для инициализации форматированного номера
+    function initializeFormattedPhone() {
+        if (editPhoneNumberInternal && !editPhoneNumberInternal.startsWith("+7")) {
+            editPhoneNumberInternal = formatPhoneNumber(editPhoneNumberInternal)
+        }
+    }
+
+    // Функция форматирования номера телефона
+    function formatPhoneNumber(text) {
+        // Удаляем все нецифровые символы
+        var digits = text.replace(/\D/g, '')
+
+        // Если номер начинается с 7 или 8, заменяем на +7
+        if (digits.startsWith('7') || digits.startsWith('8')) {
+            digits = digits.substring(1)
+        }
+
+        // Ограничиваем длину до 10 цифр
+        digits = digits.substring(0, 10)
+
+        // Форматируем номер в российский формат
+        if (digits.length === 0) {
+            return "+7 "
+        } else if (digits.length <= 3) {
+            return "+7 (" + digits
+        } else if (digits.length <= 6) {
+            return "+7 (" + digits.substring(0, 3) + ") " + digits.substring(3)
+        } else if (digits.length <= 8) {
+            return "+7 (" + digits.substring(0, 3) + ") " + digits.substring(3, 6) + "-" + digits.substring(6)
+        } else {
+            return "+7 (" + digits.substring(0, 3) + ") " + digits.substring(3, 6) + "-" + digits.substring(6, 8) + "-" + digits.substring(8)
+        }
+    }
+
+    function normalizePhoneNumber(phone) {
+        // Удаляем все нецифровые символы
+        var digits = phone.replace(/\D/g, '')
+
+        // Если номер пустой, возвращаем пустую строку
+        if (digits.length === 0) {
+            return ""
+        }
+
+        // Если номер начинается с 8, заменяем на 7
+        if (digits.startsWith('8')) {
+            digits = '7' + digits.substring(1)
+        }
+        // Если номер начинается не с 7 и не с 8, добавляем 7 в начало
+        else if (!digits.startsWith('7')) {
+            digits = '7' + digits
+        }
+
+        // Ограничиваем длину до 11 цифр
+        digits = digits.substring(0, 11)
+
+        // Если осталась только одна цифра 7, возвращаем пустую строку
+        if (digits === '7') {
+            return ""
+        }
+
+        return digits
+    }
+
+    // Инициализируем форматированный номер при загрузке компонента
+    Component.onCompleted: {
+        initializeFormattedPhone()
+    }
+
+    // Также обновляем при изменении номера извне
+    onEditPhoneNumberInternalChanged: {
+        if (editPhoneNumberInternal && !editPhoneNumberInternal.startsWith("+7")) {
+            editPhoneNumberInternal = formatPhoneNumber(editPhoneNumberInternal)
+        }
+    }
+
     signal fieldChanged(string field, string value)
     signal saveRequested()
 
@@ -243,7 +318,7 @@ Rectangle {
                                 }
 
                                 Text {
-                                    text: userPhoneNumberInternal || "Не указан"
+                                    text: formatPhoneNumber(userPhoneNumberInternal) || "Не указан"
                                     font.pixelSize: isMobile ? 12 : 14
                                     color: userPhoneNumberInternal ? "#2c3e50" : "#95a5a6"
                                     font.bold: !!userPhoneNumberInternal
@@ -507,9 +582,31 @@ Rectangle {
                                     font.pixelSize: isMobile ? 13 : 14
                                     selectByMouse: true
 
+                                    // Валидатор для ввода только цифр
+                                    validator: RegularExpressionValidator {
+                                        regularExpression: /^[0-9+\(\)\-\s]*$/
+                                    }
+
+                                    // Обработчик изменения текста для форматирования
                                     onTextChanged: {
+                                        if (activeFocus) {
+                                            var cursorPosition = cursorPosition
+                                            var formatted = formatPhoneNumber(text)
+                                            if (formatted !== text) {
+                                                text = formatted
+                                                cursorPosition = Math.min(cursorPosition, formatted.length)
+                                                cursorPosition = formatted.length
+                                            }
+                                        }
                                         profilePage.editPhoneNumberInternal = text
                                         fieldChanged("phoneNumber", text)
+                                    }
+
+                                    // Обработчик ввода текста для фильтрации нецифровых символов
+                                    onActiveFocusChanged: {
+                                        if (activeFocus && text === "") {
+                                            text = "+7 "
+                                        }
                                     }
                                 }
 
@@ -517,7 +614,7 @@ Rectangle {
                                     anchors.fill: parent
                                     anchors.margins: isMobile ? 6 : 8
                                     verticalAlignment: Text.AlignVCenter
-                                    text: "Введите телефон"
+                                    text: "Номер телефона"
                                     color: "#a0a0a0"
                                     visible: !phoneField.text && !phoneField.activeFocus
                                     font.pixelSize: isMobile ? 13 : 14
@@ -562,7 +659,14 @@ Rectangle {
                                 anchors.fill: parent
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: saveRequested()
+                                onClicked: {
+                                    var normalizedPhone = normalizePhoneNumber(phoneField.text)
+                                    if (normalizedPhone !== profilePage.editPhoneNumberInternal) {
+                                        profilePage.editPhoneNumberInternal = normalizedPhone
+                                        fieldChanged("phoneNumber", normalizedPhone)
+                                    }
+                                    saveRequested()
+                                }
                             }
                         }
                     }

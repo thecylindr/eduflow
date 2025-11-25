@@ -484,7 +484,7 @@ Item {
     // Загрузчик формы портфолио
     Loader {
         id: portfolioFormWindow
-        source: "../forms/PortfolioFormWindow.qml"
+        source: isMobile ? "../forms/PortfolioFormMobile.qml" : "../forms/PortfolioFormWindow.qml"
         active: true
 
         onLoaded: {

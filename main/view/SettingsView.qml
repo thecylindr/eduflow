@@ -77,7 +77,6 @@ Rectangle {
                 sessions = profileData.sessions || []
 
             } else {
-                console.log("Ошибка загрузки профиля:", response.error)
                 mainWindow.showMessage("Ошибка загрузки профиля: " + (response.error || "Неизвестная ошибка"), "error")
             }
         })
@@ -169,7 +168,7 @@ Rectangle {
 
     function revokeSession(token) {
         mainWindow.mainApi.revokeSession(token, function(response) {
-            console.log("📨 Ответ отзыва сессии:", JSON.stringify(response))
+            console.log("  Ответ отзыва сессии:", JSON.stringify(response))
             if (response.success) {
                 mainWindow.showMessage("Сессия успешно отозвана", "success")
                 loadProfile()
@@ -304,7 +303,6 @@ Rectangle {
             editPhoneNumber: settingsView.editPhoneNumber
 
             onFieldChanged: function(field, value) {
-                console.log("Field changed:", field, value)
                 if (field === "firstName") settingsView.editFirstName = value
                 else if (field === "lastName") settingsView.editLastName = value
                 else if (field === "middleName") settingsView.editMiddleName = value

@@ -66,7 +66,7 @@ QtObject {
                 }
                 testXhr.send();
             } catch (error) {
-                console.log("💥 Ошибка теста соединения:", error);
+                console.log("Ошибка теста соединения:", error);
                 if (callback) callback(false);
             }
         }
@@ -170,11 +170,11 @@ QtObject {
 
         // КРОССПЛАТФОРМЕННЫЕ ТАЙМАУТЫ
         if (Qt.platform.os === "windows") {
-            xhr.timeout = 5000 // 5 секунд для windows
+            xhr.timeout = 6000 // 6 секунд для windows
         } else if (Qt.platform.os === "android") {
             xhr.timeout = 7500 // 7.5 секунд для android
         } else {
-            xhr.timeout = 3500; // 3.5 секунд для других ОС
+            xhr.timeout = 4500; // 4.5 секунд для других ОС
         }
 
         var normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
@@ -267,7 +267,6 @@ QtObject {
             xhr.send(requestBody);
 
         } catch (error) {
-            console.log("💥 Критическая ошибка отправки:", error);
             if (callback) callback({
                 success: false,
                 error: "Ошибка отправки запроса: " + error.toString(),
