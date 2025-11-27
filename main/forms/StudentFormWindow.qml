@@ -612,7 +612,7 @@ Window {
                             radius: 20
                             color: saveButton.enabled ? "#27ae60" : "#95a5a6"
                             border.color: saveButton.enabled ? "#219a52" : "transparent"
-                            border.width: 2
+                            border.width: 1
                         }
 
                         contentItem: Text {
@@ -659,7 +659,7 @@ Window {
                             radius: 20
                             color: "#e74c3c"
                             border.color: "#c0392b"
-                            border.width: 2
+                            border.width: 1
                         }
 
                         contentItem: Text {

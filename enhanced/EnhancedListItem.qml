@@ -2,7 +2,7 @@ import QtQuick
 
 Rectangle {
     id: listItem
-    height: isMobile ? 50 : 60
+    height: isMobile ? 60 : 70
     radius: isMobile ? 6 : 8
     color: itemMouseArea.containsMouse ? "#f8f9fa" : "#ffffff"
     border.color: itemMouseArea.containsMouse ? "#3498db" : "#e0e0e0"

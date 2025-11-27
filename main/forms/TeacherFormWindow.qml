@@ -79,7 +79,12 @@ Window {
         firstNameField.text = teacherData.firstName || ""
         middleNameField.text = teacherData.middleName || ""
         emailField.text = teacherData.email || ""
-        phoneField.text = teacherData.phoneNumber || ""
+        var phoneData = teacherData.phoneNumber || studentData.phone_number || ""
+        if (phoneData && !phoneData.startsWith("+7")) {
+            phoneField.text = formatPhoneNumber(phoneData)
+        } else {
+            phoneField.text = phoneData
+        }
         experienceField.value = teacherData.experience || 0
 
         specializationModel.clear()
@@ -145,7 +150,7 @@ Window {
             first_name: firstNameField.text.trim(),
             middle_name: middleNameField.text.trim(),
             email: emailField.text.trim(),
-            phone_number: normalizePhoneNumber(phoneField.text), // Нормализованный номер
+            phone_number: normalizePhoneNumber(phoneField.text),
             experience: experienceField.value,
             specialization: specs.join(", "),
             specializations: specs

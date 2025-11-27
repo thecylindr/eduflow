@@ -16,7 +16,7 @@ SettingsManager::SettingsManager(QObject *parent)
     , m_firstRun(true)
 {
     QCoreApplication::setApplicationName("EduFlow");
-    QCoreApplication::setOrganizationName("EduFlow");
+    QCoreApplication::setOrganizationName("NameLess");
     QCoreApplication::setOrganizationDomain("eduflow.com");
     loadSettings();
 }
@@ -185,7 +185,7 @@ void SettingsManager::saveSettings()
         qDebug() << "  authToken length:" << m_authToken.length();
         qDebug() << "  firstRun:" << m_firstRun;
         if (m_authToken.length() > 0) {
-            qDebug() << "  authToken (first 10):" << m_authToken.left(10) + "...";
+            qDebug() << "  authToken (first 7):" << m_authToken.left(7) + "...";
         }
     } else {
         qDebug() << "Failed to open config file for writing:" << file.errorString();

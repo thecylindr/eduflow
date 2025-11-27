@@ -103,6 +103,10 @@ qt_add_qml_module(EduFlowApp
         QML_FILES main/forms/PortfolioFormMobile.qml
         QML_FILES main/forms/StudentFormMobile.qml
         QML_FILES main/forms/TeacherFormMobile.qml
+        SOURCES
+        SOURCES
+        QML_FILES
+        QML_FILES common/DragPoint.qml
     )
 
 qt_add_resources(EduFlowApp "resources"

@@ -24,7 +24,6 @@ Item {
     function updateDisplayedModel() {
         if (!sourceModel || sourceModel.length === 0) {
             filteredModel = [];
-            console.log("Source model is empty");
             return;
         }
 
