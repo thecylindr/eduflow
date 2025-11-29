@@ -79,7 +79,7 @@ Window {
         firstNameField.text = teacherData.firstName || ""
         middleNameField.text = teacherData.middleName || ""
         emailField.text = teacherData.email || ""
-        var phoneData = teacherData.phoneNumber || studentData.phone_number || ""
+        var phoneData = teacherData.phoneNumber || teacherData.phone_number || ""
         if (phoneData && !phoneData.startsWith("+7")) {
             phoneField.text = formatPhoneNumber(phoneData)
         } else {

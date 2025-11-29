@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
 
     app.setWindowIcon(QIcon(":/icons/app_icon.png"));
-    app.setApplicationName("EduFlow");
+    app.setApplicationName("ЕдуФлоу");
     app.setApplicationVersion("0.0.31");
     app.setOrganizationName("NameLess Club");
     app.setOrganizationDomain("securesystems.com");

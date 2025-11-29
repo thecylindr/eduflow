@@ -70,7 +70,7 @@ Rectangle {
 
                     Text {
                         text: "Официальный\nEduFlow"
-                        font.pixelSize: isMobile ? 13 : 11
+                        font.pixelSize: isMobile ? 12 : 11
                         color: !settingsManager.useLocalServer ? "#1976d2" : "#9e9e9e"
                         horizontalAlignment: Text.AlignHCenter
                         anchors.verticalCenter: parent.verticalCenter
@@ -108,7 +108,7 @@ Rectangle {
 
                     Text {
                         text: "Локальный\nНастраиваемый"
-                        font.pixelSize: isMobile ? 13 : 11
+                        font.pixelSize: isMobile ? 12 : 11
                         color: settingsManager.useLocalServer ? "#2e7d32" : "#9e9e9e"
                         horizontalAlignment: Text.AlignHCenter
                         anchors.verticalCenter: parent.verticalCenter

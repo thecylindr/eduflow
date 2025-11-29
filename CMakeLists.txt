@@ -34,9 +34,11 @@ qt_add_qml_module(EduFlowApp
     URI EduFlow
     VERSION 1.0
     QML_FILES
-    splash/SplashScreenMobile.qml
-    splash/WelcomeScreen.qml
-    splash/SplashScreen.qml
+
+        # Загрузочные сплеши
+        splash/SplashScreenMobile.qml
+        splash/WelcomeScreen.qml
+        splash/SplashScreen.qml
 
         # Формы для авторизации & регистрации
         auth/Auth.qml
@@ -47,12 +49,14 @@ qt_add_qml_module(EduFlowApp
         auth/CopyrightFooter.qml
         auth/LoadingAnimation.qml
         auth/RegistrationForm.qml
+
         # Формы главного меню
         main/main/Main.qml
-        #main/main/InteractionsList.qml
         main/main/MainAPI.qml
+        main/main/AdaptiveSideBarMobile.qml
         main/main/AdaptiveSideBar.qml
         main/main/MainMessage.qml
+
         # Представления (Views)
         main/view/DashboardView.qml
         main/view/TeachersView.qml
@@ -61,16 +65,28 @@ qt_add_qml_module(EduFlowApp
         main/view/EventsView.qml
         main/view/PortfolioView.qml
         main/view/SettingsView.qml
+        main/view/NewsView.qml
+        main/view/FAQView.qml
+        main/view/FormattedText.qml
+
         # Общие компоненты
         common/PolygonBackground.qml
+        common/SparksBackground.qml
         common/DialogTitleBar.qml
+        common/DragPoint.qml
+        common/TitleBarMobile.qml
         common/TitleBar.qml
+        common/BottomBlur.qml
+        common/MobileCloseApp.qml
+
         # Формы вывода информации и для добавления в таблицу данных
         main/forms/TeacherFormWindow.qml
         main/forms/GroupFormWindow.qml
         main/forms/StudentFormWindow.qml
         main/forms/PortfolioFormWindow.qml
         main/forms/EventFormWindow.qml
+        main/forms/GroupViewFormWindow.qml
+
         # Компонет отображения данных с таблиц
         enhanced/EnhancedTableView.qml
         enhanced/EnhancedSearchBox.qml
@@ -87,26 +103,15 @@ qt_add_qml_module(EduFlowApp
         main/view/settings/ProfilePage.qml
         main/view/settings/SettingsMainPage.qml
         main/view/settings/AboutPage.qml
-        main/forms/GroupViewFormWindow.qml
-        common/SparksBackground.qml
-        common/TitleBarMobile.qml
-        main/main/AdaptiveSideBarMobile.qml
-        common/MobileCloseApp.qml
-        common/BottomBlur.qml
-        main/view/NewsView.qml
-        main/view/FormattedText.qml
-        main/view/FAQView.qml
-        QML_FILES
-        QML_FILES main/forms/GroupViewFormMobile.qml
-        QML_FILES main/forms/EventFormMobile.qml
-        QML_FILES main/forms/GroupFormMobile.qml
-        QML_FILES main/forms/PortfolioFormMobile.qml
-        QML_FILES main/forms/StudentFormMobile.qml
-        QML_FILES main/forms/TeacherFormMobile.qml
-        SOURCES
-        SOURCES
-        QML_FILES
-        QML_FILES common/DragPoint.qml
+
+
+        # Формы мобильные
+        main/forms/GroupViewFormMobile.qml
+        main/forms/EventFormMobile.qml
+        main/forms/GroupFormMobile.qml
+        main/forms/PortfolioFormMobile.qml
+        main/forms/StudentFormMobile.qml
+        main/forms/TeacherFormMobile.qml
     )
 
 qt_add_resources(EduFlowApp "resources"
@@ -114,6 +119,8 @@ qt_add_resources(EduFlowApp "resources"
     FILES
         # Основные иконки
         icons/app_icon.png
+        icons/app_icon_mobile.png
+
         icons/faq.png
         icons/copy.png
         icons/check.png
