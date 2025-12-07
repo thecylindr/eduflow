@@ -14,6 +14,7 @@ SettingsManager::SettingsManager(QObject *parent)
     , m_apiPath("/api")
     , m_authToken("")
     , m_firstRun(true)
+    , m_isGridView(false)
 {
     QCoreApplication::setApplicationName("EduFlow");
     QCoreApplication::setOrganizationName("NameLess");
@@ -83,6 +84,21 @@ void SettingsManager::setAuthToken(const QString &authToken)
     }
 }
 
+bool SettingsManager::isGridView() const
+{
+    return m_isGridView;
+}
+
+void SettingsManager::setIsGridView(bool isGridView)
+{
+    if (m_isGridView != isGridView) {
+        m_isGridView = isGridView;
+        qDebug() << "Setting isGridView to:" << m_isGridView;
+        emit isGridViewChanged();
+        saveSettings();
+    }
+}
+
 bool SettingsManager::hasValidToken() const
 {
     // Токен считается валидным если он не пустой и имеет достаточную длину (сессионные токены обычно 64 символа)
@@ -146,11 +162,13 @@ void SettingsManager::loadSettings()
                 m_apiPath = obj.value("apiPath").toString("/api");
                 m_authToken = obj.value("authToken").toString("");
                 m_firstRun = obj.value("firstRun").toBool(true);
+                m_isGridView = obj.value("isGridView").toBool(false);
                 qDebug() << "Config loaded successfully:";
                 qDebug() << "  useLocalServer:" << m_useLocalServer;
                 qDebug() << "  serverAddress:" << m_serverAddress;
                 qDebug() << "  authToken length:" << m_authToken.length();
                 qDebug() << "  firstRun:" << m_firstRun;
+                qDebug() << "  isGridView:" << m_isGridView;
                 if (m_authToken.length() > 0) {
                     qDebug() << "  authToken (first 10):" << m_authToken.left(10) + "...";
                 }
@@ -177,6 +195,7 @@ void SettingsManager::saveSettings()
         obj["apiPath"] = m_apiPath;
         obj["authToken"] = m_authToken;
         obj["firstRun"] = m_firstRun;
+        obj["isGridView"] = m_isGridView;
         QJsonDocument doc(obj);
         QByteArray data = doc.toJson(QJsonDocument::Indented);
         qint64 bytesWritten = file.write(data);
@@ -184,6 +203,7 @@ void SettingsManager::saveSettings()
         qDebug() << "Settings saved to:" << configFile;
         qDebug() << "  authToken length:" << m_authToken.length();
         qDebug() << "  firstRun:" << m_firstRun;
+        qDebug() << "  isGridView:" << m_isGridView;
         if (m_authToken.length() > 0) {
             qDebug() << "  authToken (first 7):" << m_authToken.left(7) + "...";
         }

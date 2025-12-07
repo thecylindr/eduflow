@@ -855,7 +855,7 @@ Window {
                 // Кнопки действий
                 Row {
                     spacing: 15
-                    anchors.horizontalCenter: parent.horizontalCenter
+                    Layout.alignment: Qt.AlignHCenter
 
                     Button {
                         id: saveButton

@@ -9,8 +9,8 @@ Item {
     property string searchPlaceholder: "Поиск..."
     property var sortOptions: []
     property var sortRoles: []
-    property bool isGridView: false
-    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios" || Qt.platform.os === "tvos" || Qt.platform.os === "wasm"
+    property bool isGridView: settingsManager ? settingsManager.isGridView : false
+    property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
 
     signal itemEditRequested(var itemData)
     signal itemDeleteRequested(var itemData)
@@ -70,7 +70,6 @@ Item {
         // Сортировка
         if (sortRoles.length > sortIndex) {
             var sortRole = sortRoles[sortIndex];
-            console.log("Sorting by role:", sortRole, "for itemType:", itemType);
 
             filtered.sort(function(a, b) {
                 var aVal = "";
@@ -189,13 +188,20 @@ Item {
         }
 
         filteredModel = filtered;
-        console.log("Displayed model length:", filteredModel.length);
     }
 
     onSourceModelChanged: updateDisplayedModel()
     onSearchTextChanged: updateDisplayedModel()
     onSortIndexChanged: updateDisplayedModel()
     onSortAscendingChanged: updateDisplayedModel()
+
+    // Синхронизация с SettingsManager
+    Connections {
+        target: settingsManager
+        function onIsGridViewChanged() {
+            enhancedTable.isGridView = settingsManager.isGridView
+        }
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -243,9 +249,13 @@ Item {
                     EnhancedViewToggle {
                         Layout.preferredHeight: 36
                         Layout.preferredWidth: 80
+                        isGridView: enhancedTable.isGridView
                         isMobile: enhancedTable.isMobile
                         onViewToggled: function(gridView) {
-                            enhancedTable.isGridView = gridView
+                            if (settingsManager) {
+                                // ПРАВИЛЬНОЕ ПРИСВАИВАНИЕ - без вызова функции
+                                settingsManager.isGridView = gridView
+                            }
                         }
                     }
                 }
@@ -282,9 +292,13 @@ Item {
                 EnhancedViewToggle {
                     Layout.preferredWidth: 80
                     Layout.preferredHeight: 35
+                    isGridView: enhancedTable.isGridView
                     isMobile: enhancedTable.isMobile
                     onViewToggled: function(gridView) {
-                        enhancedTable.isGridView = gridView
+                        if (settingsManager) {
+                            // ПРАВИЛЬНОЕ ПРИСВАИВАНИЕ - без вызова функции
+                            settingsManager.isGridView = gridView
+                        }
                     }
                 }
             }

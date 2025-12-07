@@ -25,7 +25,7 @@ Window {
     }
     property int realheight: Math.min(Screen.height * 0.75, 550)
 
-    // Отступы для Android системных кнопок - как в Main.qml
+    // Отступы для Android системных кнопок
     property int androidTopMargin: (Qt.platform.os === "android") ? 16 : 0
     property int androidBottomMargin: (Qt.platform.os === "android" && Screen.primaryOrientation === Qt.PortraitOrientation) ? 28 : 0
     property bool isMobile: Qt.platform.os === "android" || Qt.platform.os === "ios"
@@ -53,6 +53,52 @@ Window {
 
     ListModel {
         id: studentDisplayModel
+    }
+
+    // Обработчик изменения ориентации экрана
+    onWidthChanged: {
+        if (visible && isMobile) {
+            Qt.callLater(adjustPositionToScreen);
+        }
+    }
+
+    onHeightChanged: {
+        if (visible && isMobile) {
+            Qt.callLater(adjustPositionToScreen);
+        }
+    }
+
+    function adjustPositionToScreen() {
+        if (!isMobile) return;
+
+        var newX = windowContainer.x;
+        var newY = windowContainer.y;
+        var needsAdjustment = false;
+
+        // Проверяем и корректируем позицию по X
+        if (windowContainer.x < 0) {
+            newX = 0;
+            needsAdjustment = true;
+        } else if (windowContainer.x + windowContainer.width > Screen.width) {
+            newX = Screen.width - windowContainer.width;
+            needsAdjustment = true;
+        }
+
+        // Проверяем и корректируем позицию по Y
+        if (windowContainer.y < 0) {
+            newY = 0;
+            needsAdjustment = true;
+        } else if (windowContainer.y + windowContainer.height > Screen.height) {
+            newY = Screen.height - windowContainer.height;
+            needsAdjustment = true;
+        }
+
+        // Если нужна корректировка, анимируем перемещение
+        if (needsAdjustment) {
+            orientationAdjustAnimation.xTo = newX;
+            orientationAdjustAnimation.yTo = newY;
+            orientationAdjustAnimation.start();
+        }
     }
 
     function updateStudentModel() {
@@ -232,16 +278,48 @@ Window {
         var newX = windowContainer.x + deltaX
         var newY = windowContainer.y + deltaY
 
-        // Ограничиваем позицию в пределах экрана
-        newX = Math.max(0, Math.min(newX, Screen.width - windowContainer.width))
-        newY = Math.max(0, Math.min(newY, Screen.height - windowContainer.height))
+        // Проверяем, выходит ли форма за границы экрана
+        var needsCorrection = false
 
-        // Анимация перемещения контейнера
-        moveAnimation.xTo = newX
-        moveAnimation.yTo = newY
-        moveAnimation.start()
+        // Проверка левой границы
+        if (newX < 0) {
+            newX = 0
+            needsCorrection = true
+        }
+
+        // Проверка правой границы
+        if (newX + windowContainer.width > Screen.width) {
+            newX = Screen.width - windowContainer.width
+            needsCorrection = true
+        }
+
+        // Проверка верхней границы
+        if (newY < 0) {
+            newY = 0
+            needsCorrection = true
+        }
+
+        // Проверка нижней границы
+        if (newY + windowContainer.height > Screen.height) {
+            newY = Screen.height - windowContainer.height
+            needsCorrection = true
+        }
+
+        // Анимация перемещения контейнера с поведением возврата
+        if (needsCorrection) {
+            // Используем Behavior анимацию для плавного возврата
+            returnToBoundsAnimation.xTo = newX
+            returnToBoundsAnimation.yTo = newY
+            returnToBoundsAnimation.start()
+        } else {
+            // Обычная анимация перемещения
+            moveAnimation.xTo = newX
+            moveAnimation.yTo = newY
+            moveAnimation.start()
+        }
     }
 
+    // Обычная анимация перемещения
     ParallelAnimation {
         id: moveAnimation
         property real xTo: 0
@@ -260,6 +338,52 @@ Window {
             property: "y"
             to: moveAnimation.yTo
             duration: 300
+            easing.type: Easing.OutCubic
+        }
+    }
+
+    // Анимация возврата к границам с поведением
+    ParallelAnimation {
+        id: returnToBoundsAnimation
+        property real xTo: 0
+        property real yTo: 0
+
+        NumberAnimation {
+            target: windowContainer
+            property: "x"
+            to: returnToBoundsAnimation.xTo
+            duration: 500
+            easing.type: Easing.OutBack
+        }
+
+        NumberAnimation {
+            target: windowContainer
+            property: "y"
+            to: returnToBoundsAnimation.yTo
+            duration: 500
+            easing.type: Easing.OutBack
+        }
+    }
+
+    // Анимация корректировки позиции при смене ориентации
+    ParallelAnimation {
+        id: orientationAdjustAnimation
+        property real xTo: 0
+        property real yTo: 0
+
+        NumberAnimation {
+            target: windowContainer
+            property: "x"
+            to: orientationAdjustAnimation.xTo
+            duration: 400
+            easing.type: Easing.OutCubic
+        }
+
+        NumberAnimation {
+            target: windowContainer
+            property: "y"
+            to: orientationAdjustAnimation.yTo
+            duration: 400
             easing.type: Easing.OutCubic
         }
     }

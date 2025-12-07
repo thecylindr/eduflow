@@ -410,7 +410,7 @@ Rectangle {
 
                 Image {
                     source: "qrc:/icons/logout.png"
-                    sourceSize: Qt.size(isMobile ? 24 : 48, isMobile ? 24 : 48)
+                    sourceSize: Qt.size(isMobile ? 64 : 48, isMobile ? 64 : 48)
                     fillMode: Image.PreserveAspectFit
                     mipmap: true
                     antialiasing: true

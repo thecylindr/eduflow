@@ -1038,7 +1038,7 @@ QtObject {
                             data: response,
                             status: xhr.status
                         });
-                    } catch (e) {
+                    } catch (error) {
                         if (callback) callback({
                             success: false,
                             error: "Ошибка формата ответа: " + error.toString(),
@@ -1136,7 +1136,6 @@ QtObject {
 
             if (data) {
                 var requestBody = JSON.stringify(data);
-                console.log("  Тело запроса:", requestBody.substring(0, 200) + "...");
                 xhr.send(requestBody);
             } else {
                 xhr.send();

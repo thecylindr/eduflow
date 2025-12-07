@@ -94,7 +94,8 @@ Rectangle {
                     }
                     return "Неизвестный тип";
                 }
-                font.pixelSize: isMobile ? 11 : 13
+                // Увеличиваем шрифт на 2 единицы для мобильной версии
+                font.pixelSize: isMobile ? 13 : 13  // Было 11 : 13
                 font.bold: true
                 color: "#2c3e50"
                 elide: Text.ElideRight
@@ -150,7 +151,8 @@ Rectangle {
                     }
                     return "";
                 }
-                font.pixelSize: isMobile ? 9 : 11
+                // Увеличиваем шрифт на 2 единицы для мобильной версии
+                font.pixelSize: isMobile ? 11 : 11  // Было 9 : 11
                 color: "#7f8c8d"
                 elide: Text.ElideRight
                 width: parent.width

@@ -11,6 +11,7 @@ class SettingsManager : public QObject
     Q_PROPERTY(QString serverAddress READ serverAddress WRITE setServerAddress NOTIFY serverAddressChanged)
     Q_PROPERTY(QString apiPath READ apiPath WRITE setApiPath NOTIFY apiPathChanged)
     Q_PROPERTY(QString authToken READ authToken WRITE setAuthToken NOTIFY authTokenChanged)
+    Q_PROPERTY(bool isGridView READ isGridView WRITE setIsGridView NOTIFY isGridViewChanged)
 
 public:
     explicit SettingsManager(QObject *parent = nullptr);
@@ -26,6 +27,9 @@ public:
 
     QString authToken() const;
     void setAuthToken(const QString &authToken);
+
+    bool isGridView() const;
+    void setIsGridView(bool isGridView);
 
     // Новый метод для проверки валидности токена
     Q_INVOKABLE bool hasValidToken() const;
@@ -43,13 +47,15 @@ private:
     QString m_serverAddress;
     QString m_apiPath;
     QString m_authToken;
-    bool m_firstRun; // Добавляем поле для отслеживания первого запуска
+    bool m_firstRun;
+    bool m_isGridView;
 
 signals:
     void useLocalServerChanged();
     void serverAddressChanged();
     void apiPathChanged();
     void authTokenChanged();
+    void isGridViewChanged();
 };
 
 #endif
