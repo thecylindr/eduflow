@@ -81,7 +81,7 @@ Window {
 
     Timer {
         id: tokenCheckTimer
-        interval: 100
+        interval: 200
         onTriggered: {
             var savedToken = settingsManager.authToken || "";
             checkSavedToken(savedToken);
@@ -114,11 +114,9 @@ Window {
 
         // Проверка сервера через AuthAPI
         authAPI.testConnection(function(success) {
-            console.log("🧪 Статус сервера:", success ? "доступен" : "недоступен");
 
             var savedToken = settingsManager.authToken || "";
             if (savedToken && savedToken.length > 0) {
-                console.log("🔐 Найден сохраненный токен, проверяем...");
                 tokenCheckTimer.start();
             }
         });

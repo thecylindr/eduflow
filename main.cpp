@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 
     app.setWindowIcon(QIcon(":/icons/app_icon.png"));
     app.setApplicationName("ЕдуФлоу");
-    app.setApplicationVersion("0.0.32");
+    app.setApplicationVersion("0.0.34");
     app.setOrganizationName("NameLess Club");
     app.setOrganizationDomain("securesystems.com");
 

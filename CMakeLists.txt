@@ -112,6 +112,7 @@ qt_add_qml_module(EduFlowApp
         main/forms/PortfolioFormMobile.qml
         main/forms/StudentFormMobile.qml
         main/forms/TeacherFormMobile.qml
+        QML_FILES common/ConfirmDialog.qml
     )
 
 qt_add_resources(EduFlowApp "resources"
@@ -200,7 +201,7 @@ set_target_properties(EduFlowApp PROPERTIES
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
-    WIN32_EXECUTABLE TRUE`
+    WIN32_EXECUTABLE TRUE
 )
 
 target_link_libraries(EduFlowApp

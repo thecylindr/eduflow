@@ -28,7 +28,6 @@ QtObject {
 
         // Отправляем DELETE запрос без тела
         sendRequest("DELETE", endpoint, null, function(response) {
-            console.log("📨 Ответ отзыва сессии:", JSON.stringify(response))
 
             if (callback) {
                 if (response.success) {
@@ -1015,11 +1014,11 @@ QtObject {
 
         // КРОССПЛАТФОРМЕННЫЕ ТАЙМАУТЫ
         if (Qt.platform.os === "windows") {
-            xhr.timeout = 5000 // 5 секунд для windows
+            xhr.timeout = 7500 // 7.5 секунд для windows
         } else if (Qt.platform.os === "android") {
             xhr.timeout = 7500 // 7.5 секунд для android
         } else {
-            xhr.timeout = 3500; // 3.5 секунд для других ОС
+            xhr.timeout = 4500; // 4.5 секунд для других ОС
         }
 
         var normalizedBaseUrl = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;

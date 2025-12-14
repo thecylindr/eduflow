@@ -7,10 +7,10 @@ Window {
     id: mainWindow
     width: 1200
     height: 800
-    visible: false
+    visible: true
     title: "EduFlow"
     color: "transparent"
-    flags: Qt.Window | Qt.FramelessWindowHint
+    flags: Qt.Window | Qt.FramelessWindowHint | Qt.WindowSystemMenuHint
     minimumWidth: 1000
     minimumHeight: 700
 
@@ -38,13 +38,15 @@ Window {
     // Мобильное меню
     property bool mobileMenuOpen: false
 
+    property bool _isGoodClosing: false;
+
     // Обработчик кнопки "Назад" для Android и Десктопа
     onClosing: (close) => {
         if (isMobile) {
-            close.accepted = false
-            handleBackButton()
-        } else {
-            Qt.quit()
+            close.accepted = false;
+            handleBackButton();
+        } else if (!_isGoodClosing) {
+            Qt.quit();
         }
     }
 
@@ -61,14 +63,20 @@ Window {
     }
 
     function showAuthWindow() {
-            // Если окно авторизации не существует, создаем его
-            var component = Qt.createComponent("../../auth/Auth.qml");
-            if (component.status === Component.Ready) {
-                var authWin = component.createObject(mainWindow);
-                authWin.show();
-            } else {
-                console.error("Ошибка создания окна авторизации:", component.errorString());
-        }
+        _isGoodClosing = true;
+        // Полностью перезагружаем окно авторизации
+        authWindowLoader.active = true;
+
+        // Делаем главное окно невидимым
+        mainWindow.close();
+    }
+
+    Loader {
+        id: authWindowLoader
+        active: false
+        asynchronous: true
+        source: "../../auth/Auth.qml"
+        onLoaded: if (item) item.show()
     }
 
     function navigateTo(view) {
@@ -102,18 +110,6 @@ Window {
 
     function toggleMobileMenu() {
         mobileMenuOpen = !mobileMenuOpen;
-    }
-
-    function logout() {
-        // Очищаем токен аутентификации
-        settingsManager.authToken = "";
-        authToken = "";
-
-        // Очищаем авторизацию в API
-        mainApi.clearAuth();
-
-        // Показываем окно авторизации
-        showAuthWindow();
     }
 
     function toggleMaximize() {
@@ -208,7 +204,6 @@ Window {
         id: mainApiObject
     }
 
-    // УЛУЧШЕННАЯ зона жестов для открытия меню
     Rectangle {
         id: globalSwipeArea
         anchors.fill: parent
@@ -227,7 +222,7 @@ Window {
                 top: parent.top
                 bottom: parent.bottom
             }
-            width: 60 // УВЕЛИЧЕНА зона жестов до 60px
+            width: 60
             propagateComposedEvents: true
 
             onPressed: (mouse) => {
@@ -453,7 +448,7 @@ Window {
             anchors.fill: parent
             color: "transparent"
             enabled: isMobile && mobileMenuOpen
-            z: 950 // МЕЖДУ САЙДБАРОМ И ЗАТЕМНЕНИЕМ
+            z: 950
 
             property real startX: 0
             property bool tracking: false

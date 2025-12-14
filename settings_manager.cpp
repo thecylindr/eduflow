@@ -4,7 +4,7 @@
 #include <QFile>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QDebug>
+//#include <//QDebug>
 #include <QCoreApplication>
 
 SettingsManager::SettingsManager(QObject *parent)
@@ -31,7 +31,7 @@ void SettingsManager::setUseLocalServer(bool useLocalServer)
 {
     if (m_useLocalServer != useLocalServer) {
         m_useLocalServer = useLocalServer;
-        qDebug() << "Setting useLocalServer to:" << m_useLocalServer;
+        //QDebug() << "Setting useLocalServer to:" << m_useLocalServer;
         emit useLocalServerChanged();
         saveSettings();
     }
@@ -46,7 +46,7 @@ void SettingsManager::setServerAddress(const QString &serverAddress)
 {
     if (m_serverAddress != serverAddress) {
         m_serverAddress = serverAddress;
-        qDebug() << "Setting serverAddress to:" << m_serverAddress;
+        //QDebug() << "Setting serverAddress to:" << m_serverAddress;
         emit serverAddressChanged();
         saveSettings();
     }
@@ -75,9 +75,9 @@ void SettingsManager::setAuthToken(const QString &authToken)
 {
     if (m_authToken != authToken) {
         m_authToken = authToken;
-        qDebug() << "Setting authToken, length:" << m_authToken.length();
+        //QDebug() << "Setting authToken, length:" << m_authToken.length();
         if (m_authToken.length() > 0) {
-            qDebug() << "Auth token first 10 chars:" << m_authToken.left(10) + "...";
+            //QDebug() << "Auth token first 10 chars:" << m_authToken.left(10) + "...";
         }
         emit authTokenChanged();
         saveSettings();
@@ -93,7 +93,7 @@ void SettingsManager::setIsGridView(bool isGridView)
 {
     if (m_isGridView != isGridView) {
         m_isGridView = isGridView;
-        qDebug() << "Setting isGridView to:" << m_isGridView;
+        //QDebug() << "Setting isGridView to:" << m_isGridView;
         emit isGridViewChanged();
         saveSettings();
     }
@@ -115,7 +115,7 @@ void SettingsManager::setFirstRun(bool firstRun)
 {
     if (m_firstRun != firstRun) {
         m_firstRun = firstRun;
-        qDebug() << "Setting firstRun to:" << m_firstRun;
+        //QDebug() << "Setting firstRun to:" << m_firstRun;
         saveSettings();
     }
 }
@@ -138,10 +138,10 @@ QString SettingsManager::getConfigPath() const
     QDir dir(configDir);
     if (!dir.exists()) {
         bool created = dir.mkpath(".");
-        qDebug() << "Config directory created:" << created << "at:" << configDir;
+        //QDebug() << "Config directory created:" << created << "at:" << configDir;
     }
     QString configFile = configDir + "/config.json";
-    qDebug() << "Config file path:" << configFile;
+    //QDebug() << "Config file path:" << configFile;
     return configFile;
 }
 
@@ -150,7 +150,7 @@ void SettingsManager::loadSettings()
     QString configFile = getConfigPath();
     QFile file(configFile);
     if (file.exists()) {
-        qDebug() << "Config file exists, loading...";
+        //QDebug() << "Config file exists, loading...";
         if (file.open(QIODevice::ReadOnly)) {
             QByteArray data = file.readAll();
             file.close();
@@ -163,23 +163,23 @@ void SettingsManager::loadSettings()
                 m_authToken = obj.value("authToken").toString("");
                 m_firstRun = obj.value("firstRun").toBool(true);
                 m_isGridView = obj.value("isGridView").toBool(false);
-                qDebug() << "Config loaded successfully:";
-                qDebug() << "  useLocalServer:" << m_useLocalServer;
-                qDebug() << "  serverAddress:" << m_serverAddress;
-                qDebug() << "  authToken length:" << m_authToken.length();
-                qDebug() << "  firstRun:" << m_firstRun;
-                qDebug() << "  isGridView:" << m_isGridView;
+                //QDebug() << "Config loaded successfully:";
+                //QDebug() << "  useLocalServer:" << m_useLocalServer;
+                //QDebug() << "  serverAddress:" << m_serverAddress;
+                //QDebug() << "  authToken length:" << m_authToken.length();
+                //QDebug() << "  firstRun:" << m_firstRun;
+                //QDebug() << "  isGridView:" << m_isGridView;
                 if (m_authToken.length() > 0) {
-                    qDebug() << "  authToken (first 10):" << m_authToken.left(10) + "...";
+                    //QDebug() << "  authToken (first 10):" << m_authToken.left(10) + "...";
                 }
             } else {
-                qDebug() << "Invalid JSON in config file, using defaults";
+                //QDebug() << "Invalid JSON in config file, using defaults";
             }
         } else {
-            qDebug() << "Failed to open config file for reading, using defaults";
+            //QDebug() << "Failed to open config file for reading, using defaults";
         }
     } else {
-        qDebug() << "Config file not found, using defaults and creating new config";
+        //QDebug() << "Config file not found, using defaults and creating new config";
         saveSettings(); // Create with default values
     }
 }
@@ -200,14 +200,14 @@ void SettingsManager::saveSettings()
         QByteArray data = doc.toJson(QJsonDocument::Indented);
         qint64 bytesWritten = file.write(data);
         file.close();
-        qDebug() << "Settings saved to:" << configFile;
-        qDebug() << "  authToken length:" << m_authToken.length();
-        qDebug() << "  firstRun:" << m_firstRun;
-        qDebug() << "  isGridView:" << m_isGridView;
+        //QDebug() << "Settings saved to:" << configFile;
+        //QDebug() << "  authToken length:" << m_authToken.length();
+        //QDebug() << "  firstRun:" << m_firstRun;
+        //QDebug() << "  isGridView:" << m_isGridView;
         if (m_authToken.length() > 0) {
-            qDebug() << "  authToken (first 7):" << m_authToken.left(7) + "...";
+            //QDebug() << "  authToken (first 7):" << m_authToken.left(7) + "...";
         }
     } else {
-        qDebug() << "Failed to open config file for writing:" << file.errorString();
+        //QDebug() << "Failed to open config file for writing:" << file.errorString();
     }
 }

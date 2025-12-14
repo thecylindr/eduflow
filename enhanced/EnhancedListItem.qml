@@ -21,6 +21,49 @@ Rectangle {
     signal doubleClicked(var data)
     signal deleteRequested(var data)
 
+    // Функция для форматирования даты в дд.мм.гггг
+    function formatDate(dateString) {
+        if (!dateString) return "";
+
+        try {
+            var date = new Date(dateString);
+            if (isNaN(date.getTime())) return dateString;
+
+            var day = date.getDate().toString().padStart(2, '0');
+            var month = (date.getMonth() + 1).toString().padStart(2, '0');
+            var year = date.getFullYear();
+
+            return day + "." + month + "." + year;
+        } catch(e) {
+            return dateString;
+        }
+    }
+
+    // Функция для проверки активности события
+    function isEventActive(eventData) {
+        var status = eventData.status || "active";
+
+        // Если статус не "active", возвращаем false
+        if (status !== "active") return false;
+
+        var startDate = eventData.startDate;
+        if (!startDate) return true; // Если даты нет, считаем активным
+
+        try {
+            var eventDate = new Date(startDate);
+            var today = new Date();
+
+            // Сбрасываем время для сравнения только дат
+            eventDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+
+            // Событие активно, если его дата сегодня или в будущем
+            return eventDate >= today;
+        } catch(e) {
+            return true;
+        }
+    }
+
     Behavior on color {
         ColorAnimation { duration: 150 }
     }
@@ -94,8 +137,7 @@ Rectangle {
                     }
                     return "Неизвестный тип";
                 }
-                // Увеличиваем шрифт на 2 единицы для мобильной версии
-                font.pixelSize: isMobile ? 13 : 13  // Было 11 : 13
+                font.pixelSize: isMobile ? 13 : 13
                 font.bold: true
                 color: "#2c3e50"
                 elide: Text.ElideRight
@@ -121,17 +163,26 @@ Rectangle {
                         var date = itemData.startDate || "";
                         var status = itemData.status || "active";
 
+                        // Форматируем дату
+                        var formattedDate = date ? formatDate(date) : "";
+
+                        // Проверяем активность события
                         var statusText = "";
-                        if (status === "active") statusText = "Активно";
-                        else if (status === "completed") statusText = "Завершено";
-                        else if (status === "cancelled") statusText = "Отменено";
-                        else statusText = status;
+                        if (status === "active") {
+                            statusText = isEventActive(itemData) ? "Активно" : "Неактивно";
+                        } else if (status === "completed") {
+                            statusText = "Завершено";
+                        } else if (status === "cancelled") {
+                            statusText = "Отменено";
+                        } else {
+                            statusText = status;
+                        }
 
                         if (isMobile) {
-                            return location;
+                            return formattedDate || location;
                         } else {
-                            if (date) {
-                                return location + " · " + date + " · " + statusText;
+                            if (formattedDate) {
+                                return location + " · " + formattedDate + " · " + statusText;
                             } else {
                                 return location + " · " + statusText;
                             }
@@ -139,11 +190,13 @@ Rectangle {
                     } else if (itemType === "portfolio") {
                         var studentName = itemData.studentName || "Неизвестный студент";
                         var date = itemData.date || "";
+                        var formattedDate = date ? formatDate(date) : "";
+
                         if (isMobile) {
-                            return studentName;
+                            return formattedDate || studentName;
                         } else {
-                            if (date) {
-                                return studentName + " · " + date;
+                            if (formattedDate) {
+                                return studentName + " · " + formattedDate;
                             } else {
                                 return studentName;
                             }
@@ -151,8 +204,7 @@ Rectangle {
                     }
                     return "";
                 }
-                // Увеличиваем шрифт на 2 единицы для мобильной версии
-                font.pixelSize: isMobile ? 11 : 11  // Было 9 : 11
+                font.pixelSize: isMobile ? 11 : 11
                 color: "#7f8c8d"
                 elide: Text.ElideRight
                 width: parent.width

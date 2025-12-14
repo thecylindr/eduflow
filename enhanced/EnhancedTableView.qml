@@ -21,6 +21,79 @@ Item {
     property int sortIndex: 0
     property bool sortAscending: true
 
+    // Функция для форматирования даты в дд.мм.гггг
+    function formatDate(dateString) {
+        if (!dateString) return "";
+
+        try {
+            var date = new Date(dateString);
+            if (isNaN(date.getTime())) return "";
+
+            var day = date.getDate().toString().padStart(2, '0');
+            var month = (date.getMonth() + 1).toString().padStart(2, '0');
+            var year = date.getFullYear();
+
+            return day + "." + month + "." + year;
+        } catch(e) {
+            return "";
+        }
+    }
+
+    // Проверка активности события по дате
+    function isEventActive(event) {
+        var status = event.status || "active";
+
+        // Если статус не "active", возвращаем false
+        if (status !== "active") return false;
+
+        var startDate = event.startDate;
+        if (!startDate) return true; // Если даты нет, считаем активным
+
+        try {
+            var eventDate = new Date(startDate);
+            var today = new Date();
+
+            // Сбрасываем время для сравнения только дат
+            eventDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+
+            // Событие активно, если его дата сегодня или в будущем
+            return eventDate >= today;
+        } catch(e) {
+            return true;
+        }
+    }
+
+    // Вспомогательная функция для форматирования даты в поиске
+    function formatDateForSearch(dateString) {
+        if (!dateString) return "";
+
+        try {
+            var date = new Date(dateString);
+            if (isNaN(date.getTime())) return "";
+
+            var day = date.getDate().toString().padStart(2, '0');
+            var month = (date.getMonth() + 1).toString().padStart(2, '0');
+            var year = date.getFullYear();
+
+            return day + "." + month + "." + year;
+        } catch(e) {
+            return "";
+        }
+    }
+
+    // Вспомогательная функция для определения статуса события для сортировки
+    function getEventStatusForSort(event) {
+        var status = event.status || "active";
+
+        // Если статус активный, проверяем актуальность по дате
+        if (status === "active") {
+            return isEventActive(event) ? "active" : "inactive";
+        }
+
+        return status;
+    }
+
     function updateDisplayedModel() {
         if (!sourceModel || sourceModel.length === 0) {
             filteredModel = [];
@@ -53,16 +126,21 @@ Item {
                 var eventLocation = (item.location || "").toLowerCase();
                 var eventStatus = (item.status || "").toLowerCase();
                 var eventDescription = (item.lore || "").toLowerCase();
+                // Добавляем форматированную дату в поиск
+                var eventDate = formatDateForSearch(item.startDate || "");
 
                 return eventCategory.includes(searchLower) ||
                        eventType.includes(searchLower) ||
                        eventLocation.includes(searchLower) ||
                        eventStatus.includes(searchLower) ||
-                       eventDescription.includes(searchLower);
+                       eventDescription.includes(searchLower) ||
+                       eventDate.includes(searchLower);
             } else if (itemType === "portfolio") {
                 var studentName = (item.studentName || "").toLowerCase();
                 var decree = (item.decree || "").toString().toLowerCase();
-                return studentName.includes(searchLower) || decree.includes(searchLower);
+                // Добавляем форматированную дату в поиск
+                var portfolioDate = formatDateForSearch(item.date || "");
+                return studentName.includes(searchLower) || decree.includes(searchLower) || portfolioDate.includes(searchLower);
             }
             return true;
         });
@@ -128,11 +206,13 @@ Item {
                         aVal = (a.eventType || "Без типа").toString();
                         bVal = (b.eventType || "Без типа").toString();
                     } else if (sortRole === "startDate") {
+                        // Для сортировки используем оригинальную дату
                         aVal = (a.startDate || "").toString();
                         bVal = (b.startDate || "").toString();
                     } else if (sortRole === "status") {
-                        aVal = (a.status || "active").toString();
-                        bVal = (b.status || "active").toString();
+                        // Для сортировки по статусу учитываем фактический статус
+                        aVal = getEventStatusForSort(a).toString();
+                        bVal = getEventStatusForSort(b).toString();
                     } else if (sortRole === "location") {
                         aVal = (a.location || "").toString();
                         bVal = (b.location || "").toString();
