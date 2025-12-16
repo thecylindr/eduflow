@@ -285,7 +285,7 @@ Rectangle {
 
                                 Image {
                                     source: securityPage.newPassword.length >= 6 ? "qrc:/icons/check.png" : "qrc:/icons/cross.png"
-                                    sourceSize: Qt.size(isMobile ? 8 : 10, isMobile ? 8 : 10)
+                                    sourceSize: Qt.size(isMobile ? 12 : 16, isMobile ? 12 : 16)
                                     fillMode: Image.PreserveAspectFit
                                     mipmap: true
                                     antialiasing: true
@@ -303,7 +303,7 @@ Rectangle {
 
                                 Image {
                                     source: (securityPage.newPassword === securityPage.confirmPassword && securityPage.newPassword.length > 0) ? "qrc:/icons/check.png" : "qrc:/icons/cross.png"
-                                    sourceSize: Qt.size(isMobile ? 8 : 10, isMobile ? 8 : 10)
+                                    sourceSize: Qt.size(isMobile ? 12 : 16, isMobile ? 12 : 16)
                                     fillMode: Image.PreserveAspectFit
                                     mipmap: true
                                     antialiasing: true

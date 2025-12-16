@@ -167,7 +167,7 @@ QtObject {
 
         // КРОССПЛАТФОРМЕННЫЕ ТАЙМАУТЫ
         if (Qt.platform.os === "windows") {
-            xhr.timeout = 7500 // 7.5 секунд для windows
+            xhr.timeout = 8500 // 8.5 секунд для windows
         } else if (Qt.platform.os === "android") {
             xhr.timeout = 7500 // 7.5 секунд для android
         } else {

@@ -284,7 +284,7 @@ Rectangle {
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
                         if (typeof showError === "function") {
-                            showError("Пхпхахахах, лузер");
+                            showError("Данный функционал пока не реализован.");
                         }
                     }
                 }
